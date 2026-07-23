@@ -1,0 +1,29 @@
+---
+title: Tokens
+description: Colors, typography and radius from the Platform styleguide.
+---
+
+import { Palette, TypeScale } from "@/components/showcase";
+
+Use **semantic tokens**, never raw hex or pixel values. `bg-primary`, `text-muted-foreground`,
+`border`, `rounded-lg`. The values below come from `@plainconceptsplatform/ui-theme`.
+
+## Color
+
+<Palette />
+
+The primary action color is the brand blue `#2f69ff`. The functional palette (error, warning,
+success, info) each has a light tint, a solid base, and a dark variant for text on tint.
+
+> The Special Days, Unit, Area, and Teams palettes are app-specific data-viz sets. They
+> live in the app, not in the shared theme.
+
+## Typography
+
+The single typeface is **Outfit**. Load it with `next/font/google` and expose it as `--font-sans`.
+
+<TypeScale />
+
+## Radius
+
+Radius base is `0.375rem` (~4-5px, measured from the Figma buttons and cards) with `sm`/`md`/`lg`/`xl` steps. The design uses **no shadows**.

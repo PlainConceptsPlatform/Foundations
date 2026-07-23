@@ -1,0 +1,38 @@
+---
+title: Overview
+description: The shared theme, conventions, and showcase for PlainConcepts Platform apps.
+---
+
+Platform Foundations keeps many independent Platform apps consistent without a heavy in-house
+framework. It ships **tokens and conventions**, not a component library.
+
+## What this showcase is for
+
+- See the **Platform theme** applied to real components and screens.
+- Copy the token names and patterns your app should use.
+- It is **not** a copy of the shadcn docs. For full component APIs, use
+  [ui.shadcn.com](https://ui.shadcn.com).
+
+## Start here
+
+- [Tokens](/docs/tokens): colors, typography, radius.
+- [Components](/docs/components): themed buttons, states, and feedback.
+- [Plain logo](/docs/components/plain-logo): responsive brand logo with copy instructions.
+- [Examples](/docs/examples): realistic screens.
+- [Reference](/docs/reference): architecture, design, and agent docs.
+
+## What you get from the foundation
+
+- **`@plainconceptsplatform/ui-theme`**: the design tokens (CSS only, no components). Install it
+  in your app to get the full Platform look.
+- **`PlainLogo`**: a responsive brand logo component you copy into your app (not shipped in the
+  theme package).
+- **shadcn/ui components**: added per app via the CLI, themed by the shared tokens.
+- **Reference docs**: architecture, design guidelines, and AI agent setup.
+
+## The stack
+
+Next.js (App Router) + React + TypeScript, shadcn/ui on Radix + Tailwind v4, themed by
+`@plainconceptsplatform/ui-theme`, icons from Lucide. DI via inversify-hooks (mandatory).
+Package manager pnpm. See the [Reference / Architecture](/docs/reference/architecture) page for
+the full list.

@@ -1,0 +1,38 @@
+---
+title: "Calendar"
+description: "A date field component that allows users to enter and edit date."
+---
+
+import { CalendarDemo } from "@/components/previews/calendar-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add calendar
+```
+
+## Usage
+
+```tsx
+"use client"
+
+import * as React from "react"
+import { Calendar } from "@/components/ui/calendar"
+
+export function CalendarDemo() {
+  const [date, setDate] = React.useState<Date | undefined>(new Date())
+  return (
+    <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <CalendarDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/calendar](https://ui.shadcn.com/docs/components/calendar)

@@ -1,0 +1,32 @@
+---
+title: "Progress"
+description: "Displays an indicator showing the completion progress of a task."
+---
+
+import { ProgressDemo } from "@/components/previews/progress-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add progress
+```
+
+## Usage
+
+```tsx
+import { Progress } from "@/components/ui/progress"
+
+export function ProgressDemo() {
+  return <Progress value={66} className="w-full max-w-sm" />
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ProgressDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/progress](https://ui.shadcn.com/docs/components/progress)

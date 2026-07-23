@@ -1,0 +1,69 @@
+---
+title: "Table"
+description: "A responsive table component."
+---
+
+import { TableDemo } from "@/components/previews/table-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add table
+```
+
+## Usage
+
+```tsx
+import { Badge } from "@/components/ui/badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+const rows = [
+  { app: "Numa", stack: "React", status: "Active" },
+  { app: "Docs", stack: "Next.js", status: "Active" },
+  { app: "Legacy", stack: ".NET", status: "Deprecated" },
+]
+
+export function TableDemo() {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>App</TableHead>
+          <TableHead>Stack</TableHead>
+          <TableHead>Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.app}>
+            <TableCell className="font-medium">{row.app}</TableCell>
+            <TableCell>{row.stack}</TableCell>
+            <TableCell>
+              <Badge variant={row.status === "Active" ? "default" : "secondary"}>
+                {row.status}
+              </Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <TableDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/table](https://ui.shadcn.com/docs/components/table)

@@ -1,0 +1,28 @@
+---
+title: Components
+description: shadcn/ui components with the shared theme, plus our custom components.
+---
+
+Components come from **shadcn/ui** (Radix + Tailwind), themed by the shared tokens
+(`@plainconceptsplatform/ui-theme`). Each page shows installation, usage, and a live preview
+with our theme applied. For the full API, variants, and accessibility notes, see
+[ui.shadcn.com](https://ui.shadcn.com).
+
+## Adding components
+
+```bash
+npx @plainconceptsplatform/ui-theme@latest init   # run once: copies components.json, wires theme
+npx shadcn@latest add button card dialog ...       # add any component
+```
+
+Components use [Lucide](https://lucide.dev) icons, the shadcn default.
+
+## Custom components
+
+From `@plainconceptsplatform/ui-components`:
+
+```bash
+pnpm add @plainconceptsplatform/ui-components
+```
+
+- [Plain logo](/docs/components/plain-logo): responsive brand logo.

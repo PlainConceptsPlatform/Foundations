@@ -1,0 +1,59 @@
+---
+title: "Sheet"
+description: "A panel that slides out from the edge of the screen, extending a dialog."
+---
+
+import { SheetDemo } from "@/components/previews/sheet-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add sheet
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
+export function SheetDemo() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline">Open sheet</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit profile</SheetTitle>
+          <SheetDescription>Make changes to your profile here.</SheetDescription>
+        </SheetHeader>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button variant="outline">Close</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <SheetDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/sheet](https://ui.shadcn.com/docs/components/sheet)

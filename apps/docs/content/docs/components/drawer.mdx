@@ -1,0 +1,62 @@
+---
+title: "Drawer"
+description: "A panel that slides in from the edge of the screen."
+---
+
+import { DrawerDemo } from "@/components/previews/drawer-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add drawer
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+
+export function DrawerDemo() {
+  return (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="outline">Open drawer</Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle>Move goal</DrawerTitle>
+            <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter>
+            <Button>Submit</Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <DrawerDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/drawer](https://ui.shadcn.com/docs/components/drawer)

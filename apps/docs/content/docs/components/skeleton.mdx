@@ -1,0 +1,40 @@
+---
+title: "Skeleton"
+description: "Used to show a placeholder while content is loading."
+---
+
+import { SkeletonDemo } from "@/components/previews/skeleton-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add skeleton
+```
+
+## Usage
+
+```tsx
+import { Skeleton } from "@/components/ui/skeleton"
+
+export function SkeletonDemo() {
+  return (
+    <div className="flex items-center gap-4">
+      <Skeleton className="h-12 w-12 rounded-full" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <SkeletonDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/skeleton](https://ui.shadcn.com/docs/components/skeleton)

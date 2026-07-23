@@ -1,0 +1,38 @@
+---
+title: "Label"
+description: "Renders an accessible label associated with controls."
+---
+
+import { LabelDemo } from "@/components/previews/label-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add label
+```
+
+## Usage
+
+```tsx
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+
+export function LabelDemo() {
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox id="label-demo" />
+      <Label htmlFor="label-demo">Accept terms and conditions</Label>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <LabelDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/label](https://ui.shadcn.com/docs/components/label)

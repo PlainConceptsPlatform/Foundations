@@ -1,0 +1,28 @@
+/* @plainconceptsplatform/ui-theme, base layer.
+ * Import AFTER theme.css. Sets element defaults using semantic tokens.
+ *
+ * Font: load "Outfit" in the app (Next.js: next/font/google, recommended,
+ * self-hosted, no layout shift). This file only references the family via
+ * --font-sans; it does not fetch a webfont, to keep the package offline-safe.
+ */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans, "Outfit", system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Type scale from the Platform styleguide (Outfit). */
+  h1 {
+    font-weight: 700;
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.5625rem; /* 25px */
+  }
+}

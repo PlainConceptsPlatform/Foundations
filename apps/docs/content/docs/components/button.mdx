@@ -1,0 +1,42 @@
+---
+title: "Button"
+description: "Displays a button or a component that looks like a button."
+---
+
+import { ButtonDemo } from "@/components/previews/button-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add button
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+
+export function ButtonDemo() {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button>Primary</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="outline">Outline</Button>
+      <Button variant="destructive">Destructive</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Button variant="link">Link</Button>
+      <Button disabled>Disabled</Button>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ButtonDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/button](https://ui.shadcn.com/docs/components/button)

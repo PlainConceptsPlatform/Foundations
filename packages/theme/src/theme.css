@@ -1,0 +1,157 @@
+/* @plainconceptsplatform/ui-theme
+ * Design tokens, the Platform styleguide.
+ * This file is the single source of truth for color, radius and typography tokens.
+ * Values are extracted from the Platform Figma. Light + dark.
+ *
+ * Structure:
+ *   1. Primitive palettes (--pc-*): raw brand values, rarely used directly.
+ *   2. Semantic tokens (:root / .dark): shadcn slots that components consume.
+ *   3. @theme inline: exposes semantic tokens as Tailwind v4 utilities.
+ */
+
+:root {
+  /* 1. PRIMITIVES ---------------------------------------------------------- */
+
+  /* Brand blue ramp */
+  --pc-blue-50: #f5f8ff;
+  --pc-blue-100: #ebf0ff;
+  --pc-blue-200: #dce6ff;
+  --pc-blue-400: #5282ff;
+  --pc-blue-500: #2f69ff; /* brand primary (confirmed: main button fill) */
+  --pc-blue-600: #0043f0; /* pressed/active */
+  --pc-blue-700: #0032b2;
+
+  /* Neutral ramp */
+  --pc-neutral-0: #ffffff;
+  --pc-neutral-50: #fafafc;
+  --pc-neutral-100: #f2f3f7;
+  --pc-neutral-200: #e9eaf2;
+  --pc-neutral-300: #dfe1ec;
+  --pc-neutral-400: #8e8f95;
+  --pc-neutral-500: #6a6f74;
+  --pc-neutral-600: #4a4a4a;
+  --pc-neutral-700: #383838;
+  --pc-neutral-900: #0d0e0f;
+
+  /* Functional (bg / light / base / dark) */
+  --pc-error-100: #fde1e6;
+  --pc-error-300: #f99bac;
+  --pc-error-500: #f33859;
+  --pc-error-700: #c72e49;
+  --pc-warning-100: #feeec6;
+  --pc-warning-300: #fddd8c;
+  --pc-warning-500: #fbc740;
+  --pc-warning-700: #a6842a;
+  --pc-success-100: #d8f1ef;
+  --pc-success-300: #9cdcd7;
+  --pc-success-500: #3abaaf;
+  --pc-success-700: #257770;
+  --pc-info-100: #e3f8ff;
+  --pc-info-300: #99e1f9;
+  --pc-info-500: #00b5f1;
+  --pc-info-700: #008ebd;
+
+  /* 2. SEMANTIC TOKENS (light) -------------------------------------------- */
+  --background: var(--pc-neutral-0);
+  --foreground: var(--pc-neutral-900);
+  --card: var(--pc-neutral-0);
+  --card-foreground: var(--pc-neutral-900);
+  --popover: var(--pc-neutral-0);
+  --popover-foreground: var(--pc-neutral-900);
+
+  --primary: var(--pc-blue-500);
+  --primary-foreground: var(--pc-neutral-0);
+  --secondary: var(--pc-neutral-100);
+  --secondary-foreground: var(--pc-neutral-700);
+  --muted: var(--pc-neutral-100);
+  --muted-foreground: var(--pc-neutral-500);
+  --accent: var(--pc-blue-100);
+  --accent-foreground: var(--pc-blue-700);
+  --destructive: var(--pc-error-500);
+  --destructive-foreground: var(--pc-neutral-0);
+
+  --border: var(--pc-neutral-200);
+  --input: var(--pc-neutral-300);
+  --ring: var(--pc-blue-500);
+
+  /* Extended semantic tokens (beyond base shadcn) */
+  --success: var(--pc-success-500);
+  --success-foreground: var(--pc-neutral-0);
+  --warning: var(--pc-warning-500);
+  --warning-foreground: var(--pc-neutral-900);
+  --info: var(--pc-info-500);
+  --info-foreground: var(--pc-neutral-0);
+
+  /* Radius, foundation-chosen; TODO verify against Figma component specs */
+  --radius: 0.375rem; /* ~4-5px, measured from Figma buttons/cards */
+
+}
+
+.dark {
+  /* Derived dark palette (Figma defines light only). */
+  --background: #0d0e0f;
+  --foreground: #fafafc;
+  --card: #17181b;
+  --card-foreground: #fafafc;
+  --popover: #17181b;
+  --popover-foreground: #fafafc;
+
+  --primary: var(--pc-blue-500);
+  --primary-foreground: #ffffff;
+  --secondary: #22242a;
+  --secondary-foreground: #fafafc;
+  --muted: #22242a;
+  --muted-foreground: #8e8f95;
+  --accent: #17244a;
+  --accent-foreground: #dce6ff;
+  --destructive: var(--pc-error-500);
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2c33;
+  --input: #2a2c33;
+  --ring: var(--pc-blue-400);
+
+  --success: var(--pc-success-500);
+  --success-foreground: #06231f;
+  --warning: var(--pc-warning-500);
+  --warning-foreground: #0d0e0f;
+  --info: var(--pc-info-500);
+  --info-foreground: #04222c;
+
+}
+
+/* 3. Expose semantic tokens as Tailwind v4 utilities ---------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+}

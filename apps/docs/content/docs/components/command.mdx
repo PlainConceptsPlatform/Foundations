@@ -1,0 +1,57 @@
+---
+title: "Command"
+description: "Fast, composable, unstyled command menu."
+---
+
+import { CommandDemo } from "@/components/previews/command-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add command
+```
+
+## Usage
+
+```tsx
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command"
+
+export function CommandDemo() {
+  return (
+    <Command className="max-w-md rounded-lg border">
+      <CommandInput placeholder="Type a command or search..." />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandGroup heading="Suggestions">
+          <CommandItem>Tokens</CommandItem>
+          <CommandItem>Components</CommandItem>
+          <CommandItem>Examples</CommandItem>
+        </CommandGroup>
+        <CommandSeparator />
+        <CommandGroup heading="Docs">
+          <CommandItem>Architecture</CommandItem>
+          <CommandItem>Design guidelines</CommandItem>
+        </CommandGroup>
+      </CommandList>
+    </Command>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <CommandDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/command](https://ui.shadcn.com/docs/components/command)

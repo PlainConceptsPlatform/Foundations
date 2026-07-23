@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* Platform Foundations theme (Platform tokens). Fumadocs uses --color-fd-*
+   namespaced vars, so our shadcn tokens (--background, --primary, ...) coexist. */
+@import "@plainconceptsplatform/ui-theme/theme.css";
+@import "@plainconceptsplatform/ui-theme/base.css";
+
+/* Let Tailwind scan Fumadocs UI so its classes are generated. */
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+@custom-variant dark (&:where(.dark, .dark *));

@@ -1,0 +1,48 @@
+{
+  "name": "@plainconceptsplatform/ui-components",
+  "version": "0.1.0",
+  "description": "Shared React components for Platform frontend apps (Plain logo and more).",
+  "type": "module",
+  "license": "UNLICENSED",
+  "files": ["src", "dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./plain-logo": {
+      "types": "./dist/plain-logo/plain-logo.d.ts",
+      "import": "./dist/plain-logo/plain-logo.js"
+    }
+  },
+  "sideEffects": ["**/*.css","**/*.ts","**/*.tsx"],
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0",
+    "@plainconceptsplatform/ui-theme": "workspace:*"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PlainConceptsPlatform/Platform-Foundations.git",
+    "directory": "packages/ui-components"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  }
+}

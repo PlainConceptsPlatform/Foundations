@@ -1,0 +1,56 @@
+---
+title: "Card"
+description: "Displays content and actions in a card, with a header, content, and footer."
+---
+
+import { CardDemo } from "@/components/previews/card-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add card
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+export function CardDemo() {
+  return (
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Create project</CardTitle>
+        <CardDescription>Deploy your new project in one click.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Themed with @plainconceptsplatform/ui-theme tokens.
+        </p>
+      </CardContent>
+      <CardFooter className="gap-2">
+        <Button variant="outline">Cancel</Button>
+        <Button>Deploy</Button>
+      </CardFooter>
+    </Card>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <CardDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/card](https://ui.shadcn.com/docs/components/card)

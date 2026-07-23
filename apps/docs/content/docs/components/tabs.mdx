@@ -1,0 +1,45 @@
+---
+title: "Tabs"
+description: "A set of layered sections of content, shown one at a time."
+---
+
+import { TabsDemo } from "@/components/previews/tabs-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add tabs
+```
+
+## Usage
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+export function TabsDemo() {
+  return (
+    <Tabs defaultValue="account" className="w-full max-w-sm">
+      <TabsList>
+        <TabsTrigger value="account">Account</TabsTrigger>
+        <TabsTrigger value="password">Password</TabsTrigger>
+      </TabsList>
+      <TabsContent value="account" className="text-sm text-muted-foreground">
+        Update your account details here.
+      </TabsContent>
+      <TabsContent value="password" className="text-sm text-muted-foreground">
+        Change your password here.
+      </TabsContent>
+    </Tabs>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <TabsDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/tabs](https://ui.shadcn.com/docs/components/tabs)

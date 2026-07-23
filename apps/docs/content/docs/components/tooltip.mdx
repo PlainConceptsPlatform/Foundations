@@ -1,0 +1,49 @@
+---
+title: "Tooltip"
+description: "A popup that displays information when hovering or focusing an element."
+---
+
+import { TooltipDemo } from "@/components/previews/tooltip-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add tooltip
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+export function TooltipDemo() {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="outline">Hover me</Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Themed with our tokens</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <TooltipDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/tooltip](https://ui.shadcn.com/docs/components/tooltip)
