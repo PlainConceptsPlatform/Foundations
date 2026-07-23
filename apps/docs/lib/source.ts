@@ -6,9 +6,11 @@ import { loader } from "fumadocs-core/source";
 // the function to an array so both work together. Remove once the versions are
 // aligned (core >= the release that accepts a function).
 const mdxSource = docs.toFumadocsSource();
-const files = typeof mdxSource.files === "function" ? mdxSource.files() : mdxSource.files;
+type Files = typeof mdxSource.files;
+const files = (mdxSource as { files: Files | (() => Files) }).files;
+const resolvedFiles = typeof files === "function" ? files() : files;
 
 export const source = loader({
   baseUrl: "/docs",
-  source: { files },
+  source: { files: resolvedFiles },
 });

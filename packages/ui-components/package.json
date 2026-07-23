@@ -32,9 +32,9 @@
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build --force",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc --build --force"
   },
   "repository": {
     "type": "git",

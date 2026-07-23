@@ -35,6 +35,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build shared components
+        run: pnpm --filter @plainconceptsplatform/ui-components build
       - name: Build (standalone)
         run: pnpm --filter @plainconceptsplatform/docs build
       - name: Assemble standalone bundle
