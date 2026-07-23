@@ -15,7 +15,7 @@
       "import": "./dist/plain-logo/plain-logo.js"
     }
   },
-  "sideEffects": ["**/*.css","**/*.ts","**/*.tsx"],
+  "sideEffects": ["**/*.css", "**/*.ts", "**/*.tsx"],
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

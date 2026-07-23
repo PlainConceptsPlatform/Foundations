@@ -84,7 +84,6 @@
 
   /* Radius, foundation-chosen; TODO verify against Figma component specs */
   --radius: 0.375rem; /* ~4-5px, measured from Figma buttons/cards */
-
 }
 
 .dark {
@@ -117,7 +116,6 @@
   --warning-foreground: #0d0e0f;
   --info: var(--pc-info-500);
   --info-foreground: #04222c;
-
 }
 
 /* 3. Expose semantic tokens as Tailwind v4 utilities ---------------------- */

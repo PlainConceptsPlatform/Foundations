@@ -1,5 +1,5 @@
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export function CheckboxDemo() {
   return (
@@ -7,5 +7,5 @@ export function CheckboxDemo() {
       <Checkbox id="terms" defaultChecked />
       <Label htmlFor="terms">Accept terms and conditions</Label>
     </div>
-  )
+  );
 }

@@ -6,7 +6,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 
 export function CommandDemo() {
   return (
@@ -26,5 +26,5 @@ export function CommandDemo() {
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 export function ButtonDemo() {
   return (
@@ -11,5 +11,5 @@ export function ButtonDemo() {
       <Button variant="link">Link</Button>
       <Button disabled>Disabled</Button>
     </div>
-  )
+  );
 }

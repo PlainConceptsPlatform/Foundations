@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function TabsDemo() {
   return (
@@ -14,5 +14,5 @@ export function TabsDemo() {
         Change your password here.
       </TabsContent>
     </Tabs>
-  )
+  );
 }

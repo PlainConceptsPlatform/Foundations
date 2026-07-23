@@ -11,9 +11,24 @@ const outDir = resolve(here, "../content/docs/reference");
 
 // source path (relative to repo root) -> page meta
 const DOCS = [
-  { src: "ai/ARCHITECTURE.md", slug: "architecture", title: "Architecture", description: "Reference architecture for Platform apps, frontend and backend." },
-  { src: "ai/DESIGN.md", slug: "design", title: "Design guidelines", description: "Design principles and UI rules for the theme." },
-  { src: "ai/AGENTS.md", slug: "agents", title: "AI agents", description: "Guidance and recommended skills for AI coding agents." },
+  {
+    src: "ai/ARCHITECTURE.md",
+    slug: "architecture",
+    title: "Architecture",
+    description: "Reference architecture for Platform apps, frontend and backend.",
+  },
+  {
+    src: "ai/DESIGN.md",
+    slug: "design",
+    title: "Design guidelines",
+    description: "Design principles and UI rules for the theme.",
+  },
+  {
+    src: "ai/AGENTS.md",
+    slug: "agents",
+    title: "AI agents",
+    description: "Guidance and recommended skills for AI coding agents.",
+  },
 ];
 
 // rewrite links between these docs to their in-site paths

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -6,13 +6,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
 const rows = [
   { app: "Numa", stack: "React", status: "Active" },
   { app: "Docs", stack: "Next.js", status: "Active" },
   { app: "Legacy", stack: ".NET", status: "Deprecated" },
-]
+];
 
 export function TableDemo() {
   return (
@@ -38,5 +38,5 @@ export function TableDemo() {
         ))}
       </TableBody>
     </Table>
-  )
+  );
 }

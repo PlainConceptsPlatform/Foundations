@@ -1,13 +1,7 @@
-"use client"
+"use client";
 
-import {
-  CircleCheck,
-  Info,
-  LoaderCircle,
-  OctagonAlert,
-  TriangleAlert,
-} from "lucide-react"
-import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { CircleCheck, Info, LoaderCircle, OctagonAlert, TriangleAlert } from "lucide-react";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 // No next-themes in this app: "system" follows prefers-color-scheme on its own.
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -32,7 +26,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster }
+export { Toaster };

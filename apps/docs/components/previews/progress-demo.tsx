@@ -1,5 +1,5 @@
-import { Progress } from "@/components/ui/progress"
+import { Progress } from "@/components/ui/progress";
 
 export function ProgressDemo() {
-  return <Progress value={66} className="w-full max-w-sm" />
+  return <Progress value={66} className="w-full max-w-sm" />;
 }

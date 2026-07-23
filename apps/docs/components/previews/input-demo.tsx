@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function InputDemo() {
   return (
@@ -7,5 +7,5 @@ export function InputDemo() {
       <Label htmlFor="email">Email</Label>
       <Input type="email" id="email" placeholder="you@example.com" />
     </div>
-  )
+  );
 }

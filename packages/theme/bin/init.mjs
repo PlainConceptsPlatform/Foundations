@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { existsSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve, dirname, basename } from "node:path";
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -44,7 +44,9 @@ if (existsSync(targetCss)) {
     log(`Added theme import to ${basename(targetCss)}.`);
   }
 } else {
-  warn("No src/app/globals.css or src/app/global.css found. Add this line to your global stylesheet:");
+  warn(
+    "No src/app/globals.css or src/app/global.css found. Add this line to your global stylesheet:",
+  );
   console.log(`  ${CYAN}@import "@plainconceptsplatform/ui-theme";${RESET}`);
 }
 
