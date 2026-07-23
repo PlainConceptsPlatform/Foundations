@@ -16,11 +16,17 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{css,js,json,jsx,md,mdx,mjs,ts,tsx,yaml,yml}": "biome check --write"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.48.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
   }
