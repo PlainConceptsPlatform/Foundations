@@ -40,7 +40,7 @@ if (existsSync(targetCss)) {
   if (css.includes("@plainconceptsplatform/ui-theme")) {
     warn("Theme import already present in global stylesheet, skipping.");
   } else {
-    writeFileSync(targetCss, `@import "@plainconceptsplatform/ui-theme";\n` + css, "utf8");
+    writeFileSync(targetCss, `@import "@plainconceptsplatform/ui-theme";\n${css}`, "utf8");
     log(`Added theme import to ${basename(targetCss)}.`);
   }
 } else {

@@ -13,6 +13,7 @@ function LogoSvg({ html, className }: { html: string; className?: string }) {
       role="img"
       aria-label="Plain"
       className={className}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: Logo markup is static, package-owned SVG data.
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

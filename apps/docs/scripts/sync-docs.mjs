@@ -76,7 +76,7 @@ for (const doc of DOCS) {
   }
   const body = transform(readFileSync(abs, "utf8"));
   const frontmatter = `---\ntitle: "${esc(doc.title)}"\ndescription: "${esc(doc.description)}"\n---\n\n`;
-  writeFileSync(resolve(outDir, `${doc.slug}.md`), frontmatter + body + "\n");
+  writeFileSync(resolve(outDir, `${doc.slug}.md`), `${frontmatter + body}\n`);
   written.push(doc.slug);
 }
 
