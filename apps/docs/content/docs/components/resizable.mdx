@@ -1,0 +1,55 @@
+---
+title: "Resizable"
+description: "Resizable panels with drag handles, built on react-resizable-panels."
+---
+
+import { ResizableDemo } from "@/components/previews/resizable-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add resizable
+```
+
+This pulls in `react-resizable-panels` as a runtime dependency.
+
+## Usage
+
+```tsx
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
+
+export function ResizableDemo() {
+  return (
+    <ResizablePanelGroup
+      orientation="horizontal"
+      className="max-w-md rounded-lg border"
+    >
+      <ResizablePanel defaultSize={50}>
+        <div className="flex h-[180px] items-center justify-center p-4 text-center text-sm">
+          Left panel
+        </div>
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={50}>
+        <div className="flex h-[180px] items-center justify-center p-4 text-center text-sm">
+          Right panel
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ResizableDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/resizable](https://ui.shadcn.com/docs/components/resizable)

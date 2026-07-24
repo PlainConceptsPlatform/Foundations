@@ -1,0 +1,116 @@
+---
+title: "Sidebar"
+description: "A composable, collapsible sidebar with a provider and many sub-parts."
+---
+
+import { SidebarDemo } from "@/components/previews/sidebar-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add sidebar
+```
+
+Sidebar is a composite that ships a `SidebarProvider`, a `useMobile` hook, and many
+sub-parts (`SidebarHeader`, `SidebarContent`, `SidebarFooter`, `SidebarMenu`, ...).
+It builds on `Sheet`, `Tooltip`, `Input`, `Separator`, `Skeleton`, and `Button`.
+
+It needs several `--sidebar-*` CSS tokens; the docs app defines them in
+`app/global.css` mapped to the Platform neutral/blue primitives. Because it relies
+on `useMobile` (a browser API) and provider state, the preview opts into client
+rendering with `"use client"`.
+
+## Usage
+
+```tsx
+"use client"
+
+import { Frame, LifeBuoy, Map as MapIcon, Send } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarSeparator,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+
+const items = [
+  { title: "Overview", icon: Frame },
+  { title: "Components", icon: MapIcon },
+  { title: "Support", icon: LifeBuoy },
+]
+
+export function SidebarDemo() {
+  return (
+    <SidebarProvider className="overflow-hidden rounded-md border">
+      <Sidebar collapsible="icon" className="hidden md:flex">
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="flex size-6 items-center justify-center rounded bg-primary text-primary-foreground">
+              <span className="text-xs font-bold">P</span>
+            </div>
+            <span className="text-sm font-semibold">Platform</span>
+          </div>
+        </SidebarHeader>
+        <SidebarSeparator />
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton isActive={item.title === "Overview"}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <Send />
+                <span>Feedback</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-12 items-center gap-2 border-b px-3">
+          <SidebarTrigger />
+          <span className="text-sm font-medium">Showcase layout</span>
+        </header>
+        <div className="flex h-40 items-center justify-center p-6 text-sm text-muted-foreground">
+          Main content area
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <SidebarDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/sidebar](https://ui.shadcn.com/docs/components/sidebar)

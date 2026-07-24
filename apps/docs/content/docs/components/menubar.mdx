@@ -1,0 +1,69 @@
+---
+title: "Menubar"
+description: "A menu displayed in a horizontal bar, for application-style menus."
+---
+
+import { MenubarDemo } from "@/components/previews/menubar-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add menubar
+```
+
+## Usage
+
+```tsx
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
+
+export function MenubarDemo() {
+  return (
+    <Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>
+            New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+          </MenubarItem>
+          <MenubarItem>
+            New Window <MenubarShortcut>⌘N</MenubarShortcut>
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem variant="destructive">
+            Close <MenubarShortcut>⌘W</MenubarShortcut>
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>Edit</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>
+            Copy <MenubarShortcut>⌘C</MenubarShortcut>
+          </MenubarItem>
+          <MenubarItem>
+            Paste <MenubarShortcut>⌘V</MenubarShortcut>
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <MenubarDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/menubar](https://ui.shadcn.com/docs/components/menubar)

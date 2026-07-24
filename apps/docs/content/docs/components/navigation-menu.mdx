@@ -1,0 +1,70 @@
+---
+title: "Navigation Menu"
+description: "A horizontal menu of links with dropdown content panels."
+---
+
+import { NavigationMenuDemo } from "@/components/previews/navigation-menu-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add navigation-menu
+```
+
+## Usage
+
+```tsx
+import { Link } from "lucide-react"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
+
+export function NavigationMenuDemo() {
+  return (
+    <NavigationMenu viewport={false}>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Overview</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[260px] gap-1 p-1">
+              <li>
+                <NavigationMenuLink href="/docs" className="w-full">
+                  <div className="font-medium">Getting started</div>
+                  <p className="text-muted-foreground">Install the theme package.</p>
+                </NavigationMenuLink>
+              </li>
+              <li>
+                <NavigationMenuLink href="/docs/components" className="w-full">
+                  <div className="font-medium">Components</div>
+                  <p className="text-muted-foreground">Browse the shadcn catalog.</p>
+                </NavigationMenuLink>
+              </li>
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <a href="/docs" className={navigationMenuTriggerStyle()}>
+            <Link className="mr-1 size-4" /> Docs
+          </a>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <NavigationMenuDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/navigation-menu](https://ui.shadcn.com/docs/components/navigation-menu)

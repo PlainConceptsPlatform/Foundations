@@ -1,0 +1,41 @@
+---
+title: "Aspect Ratio"
+description: "Maintains a fixed aspect ratio around its children."
+---
+
+import { AspectRatioDemo } from "@/components/previews/aspect-ratio-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add aspect-ratio
+```
+
+## Usage
+
+```tsx
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+
+export function AspectRatioDemo() {
+  return (
+    <AspectRatio
+      ratio={16 / 9}
+      className="w-full max-w-sm overflow-hidden rounded-md bg-muted"
+    >
+      <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 to-accent text-sm text-muted-foreground">
+        16 : 9
+      </div>
+    </AspectRatio>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <AspectRatioDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/aspect-ratio](https://ui.shadcn.com/docs/components/aspect-ratio)
