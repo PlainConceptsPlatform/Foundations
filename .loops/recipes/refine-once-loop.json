@@ -52,7 +52,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "labels=$(gh issue view {{number}} --json labels --jq '.labels[].name'); echo \"$labels\" | grep -qE '^refine:done$' && exit 0 || exit 1"
+        "labels=$(gh issue view {{number}} --json labels --jq '.labels[].name'); echo \"$labels\" | grep -qE '^refine:done$' && git checkout -- . && git clean -fd && exit 0 || exit 1"
       ],
       "onSuccessTaskId": null,
       "onFailureTaskId": "refine-once-fail",
