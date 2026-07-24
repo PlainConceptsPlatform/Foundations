@@ -26,7 +26,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "issue=$(gh issue list --label \"code:pick\" --state open --limit 1000 --json number,title,body --jq \"sort_by(.number) | .[0] // empty | {number,title,body}\"); test -n \"$issue\" || exit 75; number=$(printf \"%s\" \"$issue\" | jq -r .number); gh issue edit \"$number\" --add-label code:doing --remove-label code:pick >/dev/null; printf \"%s\\n\" \"$issue\""
+        "number=$(gh issue list --label \"code:pick\" --state open --limit 1 --json number --jq \".[0].number\"); test -n \"$number\" || exit 75; body=$(gh issue view \"$number\" --json number,title,body --jq \"{number,title,body}\"); gh issue edit \"$number\" --add-label code:doing --remove-label code:pick >/dev/null; printf \"%s\\n\" \"$body\""
       ],
       "onSuccessTaskId": "dev-auto-implement",
       "onFailureTaskId": "dev-auto-nothing",
