@@ -15,7 +15,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "test -z \"$(git status --porcelain)\" && git switch main && git pull --ff-only"
+        "test -z \"$(git status --porcelain)\" && git switch main && git fetch origin && git rebase origin/main"
       ],
       "onSuccessTaskId": "refine-once-pick",
       "onFailureTaskId": null,
