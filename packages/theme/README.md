@@ -21,10 +21,13 @@ Add an `.npmrc` in your app root mapping the scope to GitHub Packages:
 
 ```text
 @plainconceptsplatform:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+//npm.pkg.github.com/:_authToken=ghp_your_token
 ```
 
-Set `GITHUB_TOKEN` to a token with `read:packages`, then:
+Create a GitHub **classic personal access token** at [Settings > Developer settings > Personal access
+tokens](https://github.com/settings/tokens) with the `read:packages` permission. If your organization
+uses SAML SSO, authorize the token for the organization. Replace `ghp_your_token` in `.npmrc` with the
+token value, then:
 
 ```bash
 pnpm add @plainconceptsplatform/ui-theme tailwindcss
