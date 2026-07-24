@@ -3,8 +3,8 @@
   "loops": [
     {
       "taskId": "refine-once-preflight",
-      "interval": 1800,
-      "intervalHuman": "30 min",
+      "interval": 1200,
+      "intervalHuman": "20m",
       "description": "Single-pass refinement loop: sync main -> pick one issue -> write one grounded user story -> mark done"
     }
   ],

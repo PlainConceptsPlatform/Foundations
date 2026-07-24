@@ -3,8 +3,8 @@
   "loops": [
     {
       "taskId": "dev-auto-preflight",
-      "interval": 1800,
-      "intervalHuman": "30 min",
+      "interval": 1200,
+      "intervalHuman": "20m",
       "description": "Unattended development loop: sync main -> plan and complete the oldest issue -> verify -> create and approve a PR -> auto-merge -> close the issue"
     }
   ],
