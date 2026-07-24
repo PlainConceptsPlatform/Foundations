@@ -54,7 +54,7 @@
         "-c",
         "labels=$(gh issue view {{number}} --json labels --jq '.labels[].name'); echo \"$labels\" | grep -qE '^refine:done$' && exit 0 || exit 1"
       ],
-      "onSuccessTaskId": "refine-once-nothing",
+      "onSuccessTaskId": null,
       "onFailureTaskId": "refine-once-fail",
       "maxRuns": 5
     },
