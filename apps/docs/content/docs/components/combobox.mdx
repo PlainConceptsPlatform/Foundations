@@ -1,0 +1,113 @@
+---
+title: "Combobox"
+description: "A searchable select built on the Command and Popover primitives."
+---
+
+import { ComboboxDemo } from "@/components/previews/combobox-demo"
+
+## Installation
+
+Combobox is a composite pattern, not a standalone shadcn registry item. It
+assembles two primitives whose dependencies are already present
+(`cmdk` and `radix-ui`):
+
+```bash
+npx shadcn@latest add command popover
+```
+
+`Command` provides the searchable list (powered by `cmdk`) and `Popover` hosts
+it in a floating panel. The preview tracks open state and the selected value
+with `useState`, so it opts into client rendering.
+
+## Usage
+
+```tsx
+"use client"
+
+import { useState } from "react"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+
+const frameworks = [
+  { value: "next.js", label: "Next.js" },
+  { value: "react", label: "React" },
+  { value: "tailwind", label: "Tailwind CSS" },
+  { value: "shadcn", label: "shadcn/ui" },
+  { value: "radix", label: "Radix UI" },
+]
+
+export function ComboboxDemo() {
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState("")
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-[220px] justify-between"
+        >
+          {value
+            ? frameworks.find((f) => f.value === value)?.label
+            : "Select framework..."}
+          <ChevronsUpDown className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[220px] p-0">
+        <Command>
+          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandGroup>
+              {frameworks.map((framework) => (
+                <CommandItem
+                  key={framework.value}
+                  value={framework.value}
+                  onSelect={(current) => {
+                    setValue(current === value ? "" : current)
+                    setOpen(false)
+                  }}
+                >
+                  {framework.label}
+                  <Check
+                    className={cn(
+                      "ml-auto",
+                      value === framework.value ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ComboboxDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/combobox](https://ui.shadcn.com/docs/components/combobox)
