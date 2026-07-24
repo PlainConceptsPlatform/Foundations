@@ -1,0 +1,53 @@
+---
+title: "Button Group"
+description: "Group multiple buttons together with separators and text slots."
+---
+
+import { ButtonGroupDemo } from "@/components/previews/button-group-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add button-group
+```
+
+## Usage
+
+```tsx
+import { ChevronRight, Check, Copy } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@/components/ui/button-group"
+
+export function ButtonGroupDemo() {
+  return (
+    <div className="flex flex-col gap-4">
+      <ButtonGroup>
+        <Button variant="outline" size="sm">
+          <Copy /> Copy
+        </Button>
+        <Button variant="outline" size="icon-sm">
+          <Check />
+        </Button>
+      </ButtonGroup>
+
+      <ButtonGroup>
+        <ButtonGroupText>$ 99</ButtonGroupText>
+        <ButtonGroupSeparator />
+        <Button variant="outline" size="sm">
+          <ChevronRight /> Expand
+        </Button>
+      </ButtonGroup>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ButtonGroupDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/button-group](https://ui.shadcn.com/docs/components/button-group)

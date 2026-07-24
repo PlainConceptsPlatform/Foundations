@@ -57,9 +57,12 @@
     },
     {
       "id": "dev-auto-commit",
-      "name": "Prepare: stage the verified changes",
-      "command": "git",
-      "commandArgs": ["add", "."],
+      "name": "Stage and commit all changes",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "git add -A && git commit -m \"fix: resolve #{{number}} {{title}}\" || true"
+      ],
       "onSuccessTaskId": "dev-auto-pr",
       "onFailureTaskId": null,
       "maxRuns": 5
@@ -70,7 +73,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "BRANCH=$(git branch --show-current) && git push -u origin \"$BRANCH\" >/dev/null && gh pr create --fill --label code:done >/dev/null && PR_URL=$(gh pr view \"$BRANCH\" --json url --jq .url) && printf '{\"branch\":\"%s\",\"prUrl\":\"%s\"}\\n' \"$BRANCH\" \"$PR_URL\""
+        "BRANCH=$(git branch --show-current) && git push -u origin \"$BRANCH\" >/dev/null && gh pr create --title \"Resolve #{{number}}: {{title}}\" --body \"Closes #{{number}}\" --label code:done >/dev/null && PR_URL=$(gh pr view \"$BRANCH\" --json url --jq .url) && printf '{\"branch\":\"%s\",\"prUrl\":\"%s\"}\\n' \"$BRANCH\" \"$PR_URL\""
       ],
       "onSuccessTaskId": "dev-auto-approve",
       "onFailureTaskId": "dev-auto-fail",
@@ -131,7 +134,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "git reset --hard && git switch main && gh issue edit {{number}} --add-label code:pick --remove-label code:doing"
+        "git reset --hard && git clean -fd && git switch main && gh issue edit {{number}} --add-label code:pick --remove-label code:doing"
       ],
       "onSuccessTaskId": null,
       "onFailureTaskId": null,
@@ -140,15 +143,10 @@
     {
       "id": "dev-auto-merge-fail",
       "name": "Recovery: leave the PR for review without marking the issue complete",
-      "command": "gh",
+      "command": "sh",
       "commandArgs": [
-        "issue",
-        "edit",
-        "{{number}}",
-        "--add-label",
-        "code:review",
-        "--remove-label",
-        "code:doing"
+        "-c",
+        "gh issue edit {{number}} --add-label code:review --remove-label code:doing && git checkout -- . && git clean -fd && git switch main"
       ],
       "onSuccessTaskId": null,
       "onFailureTaskId": null,

@@ -1,0 +1,44 @@
+---
+title: "Direction"
+description: "A text direction provider for RTL/LTR language support."
+---
+
+import { DirectionDemo } from "@/components/previews/direction-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add direction
+```
+
+## Usage
+
+```tsx
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { DirectionProvider } from "@/components/ui/direction"
+
+export function DirectionDemo() {
+  return (
+    <DirectionProvider direction="rtl" className="flex flex-col gap-2">
+      <Button>Select to toggle text direction</Button>
+      <p className="text-sm text-muted-foreground">
+        This content is wrapped in a <code>DirectionProvider</code> with
+        <code> dir="rtl"</code>. Text flows right-to-left, which is useful for
+        Arabic, Hebrew, and other RTL languages.
+      </p>
+    </DirectionProvider>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <DirectionDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/direction](https://ui.shadcn.com/docs/components/direction)

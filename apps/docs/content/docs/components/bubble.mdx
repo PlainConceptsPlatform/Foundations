@@ -1,0 +1,58 @@
+---
+title: "Bubble"
+description: "A chat bubble component for messaging UIs."
+---
+
+import { BubbleDemo } from "@/components/previews/bubble-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add bubble
+```
+
+## Usage
+
+```tsx
+import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from "@/components/ui/bubble"
+import { ThumbsUp, SmilePlus, Frown } from "lucide-react"
+
+export function BubbleDemo() {
+  return (
+    <BubbleGroup className="max-w-md">
+      <Bubble>
+        <BubbleContent>
+          Hey! How's the new theme working out?
+        </BubbleContent>
+        <BubbleReactions side="bottom" align="end">
+          <button className="rounded-full p-1 hover:bg-muted"><ThumbsUp className="size-3.5" /></button>
+          <button className="rounded-full p-1 hover:bg-muted"><SmilePlus className="size-3.5" /></button>
+        </BubbleReactions>
+      </Bubble>
+      <Bubble variant="secondary" align="end">
+        <BubbleContent>
+          Looking great so far! The tokens map nicely to Recharts.
+        </BubbleContent>
+      </Bubble>
+      <Bubble variant="outline">
+        <BubbleContent>
+          One small issue with the sidebar tokens though.
+        </BubbleContent>
+        <BubbleReactions side="bottom" align="start">
+          <button className="rounded-full p-1 hover:bg-muted"><Frown className="size-3.5" /></button>
+        </BubbleReactions>
+      </Bubble>
+    </BubbleGroup>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <BubbleDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/bubble](https://ui.shadcn.com/docs/components/bubble)

@@ -1,0 +1,59 @@
+---
+title: "Input Group"
+description: "An input component with prefix and suffix addons."
+---
+
+import { InputGroupDemo } from "@/components/previews/input-group-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add input-group
+```
+
+## Usage
+
+```tsx
+import { Search } from "lucide-react"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group"
+
+export function InputGroupDemo() {
+  return (
+    <div className="flex flex-col gap-4 max-w-sm">
+      <InputGroup>
+        <InputGroupAddon align="inline-start">
+          <InputGroupText>
+            <Search />
+          </InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput placeholder="Search components..." />
+      </InputGroup>
+
+      <InputGroup>
+        <InputGroupAddon align="inline-start">
+          <InputGroupText>https://</InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput placeholder="plainconcepts.com" />
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>.com</InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <InputGroupDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/input-group](https://ui.shadcn.com/docs/components/input-group)

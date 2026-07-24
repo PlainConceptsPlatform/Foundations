@@ -1,0 +1,43 @@
+---
+title: "Spinner"
+description: "A loading spinner component."
+---
+
+import { SpinnerDemo } from "@/components/previews/spinner-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add spinner
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+
+export function SpinnerDemo() {
+  return (
+    <div className="flex items-center gap-6">
+      <Spinner className="size-4" />
+      <Spinner className="size-6" />
+      <Spinner className="size-8" />
+      <Button disabled>
+        <Spinner className="size-4" />
+        Loading
+      </Button>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <SpinnerDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/spinner](https://ui.shadcn.com/docs/components/spinner)

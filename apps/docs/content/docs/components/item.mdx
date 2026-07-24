@@ -1,0 +1,71 @@
+---
+title: "Item"
+description: "A generic item component for lists and menus."
+---
+
+import { ItemDemo } from "@/components/previews/item-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add item
+```
+
+## Usage
+
+```tsx
+import { Bell, Check, MoreHorizontal } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from "@/components/ui/item"
+
+export function ItemDemo() {
+  return (
+    <ItemGroup className="max-w-sm rounded-lg border">
+      <Item variant="outline" size="sm">
+        <ItemMedia variant="icon">
+          <Bell />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>New release available</ItemTitle>
+          <ItemDescription>
+            shadcn/ui v4 is out with Base UI support and new components.
+          </ItemDescription>
+        </ItemContent>
+        <Button variant="ghost" size="icon-sm">
+          <MoreHorizontal />
+        </Button>
+      </Item>
+      <ItemSeparator />
+      <Item variant="outline" size="sm">
+        <ItemMedia variant="icon">
+          <Check />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>Components synced</ItemTitle>
+          <ItemDescription>
+            All 50 components are now in the docs sidebar.
+          </ItemDescription>
+        </ItemContent>
+      </Item>
+    </ItemGroup>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ItemDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/item](https://ui.shadcn.com/docs/components/item)

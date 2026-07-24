@@ -1,0 +1,59 @@
+---
+title: "Field"
+description: "A form field component with labels, descriptions, and error messages."
+---
+
+import { FieldDemo } from "@/components/previews/field-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add field
+```
+
+## Usage
+
+```tsx
+"use client"
+
+import { Input } from "@/components/ui/input"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSet,
+  FieldLegend,
+} from "@/components/ui/field"
+
+export function FieldDemo() {
+  return (
+    <FieldGroup className="max-w-sm">
+      <FieldSet>
+        <FieldLegend variant="label">Account details</FieldLegend>
+        <Field>
+          <FieldLabel>Email</FieldLabel>
+          <Input type="email" placeholder="you@example.com" />
+          <FieldDescription>
+            We'll never share your email with anyone.
+          </FieldDescription>
+        </Field>
+        <Field orientation="horizontal">
+          <FieldLabel>Remember me</FieldLabel>
+          <Input type="checkbox" className="size-4" />
+        </Field>
+      </FieldSet>
+    </FieldGroup>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <FieldDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/field](https://ui.shadcn.com/docs/components/field)

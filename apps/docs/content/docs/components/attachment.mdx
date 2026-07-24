@@ -1,0 +1,74 @@
+---
+title: "Attachment"
+description: "A file attachment component with upload states and media preview."
+---
+
+import { AttachmentDemo } from "@/components/previews/attachment-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add attachment
+```
+
+## Usage
+
+```tsx
+import { FileText } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from "@/components/ui/attachment"
+
+export function AttachmentDemo() {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Attachment state="done">
+        <AttachmentMedia variant="icon">
+          <FileText />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>proposal.pdf</AttachmentTitle>
+          <AttachmentDescription>1.2 MB</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+
+      <Attachment state="uploading">
+        <AttachmentMedia variant="icon">
+          <Spinner />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>uploading-design.png</AttachmentTitle>
+          <AttachmentDescription>Uploading 64%</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+
+      <Attachment state="error" size="sm">
+        <AttachmentMedia variant="icon">
+          <FileText />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>failed.txt</AttachmentTitle>
+          <AttachmentDescription>Upload failed</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <AttachmentDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/attachment](https://ui.shadcn.com/docs/components/attachment)

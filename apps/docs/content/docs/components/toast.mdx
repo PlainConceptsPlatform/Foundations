@@ -1,0 +1,89 @@
+---
+title: "Toast"
+description: "A succinct message that is displayed temporarily."
+---
+
+import { ToastDemo } from "@/components/previews/toast-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add toast
+```
+
+Add the `Toaster` component to your root layout:
+
+```tsx
+import { Toaster } from "@/components/ui/toaster"
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <main>{children}</main>
+        <Toaster />
+      </body>
+    </html>
+  )
+}
+```
+
+## Usage
+
+```tsx
+"use client"
+
+import { Button } from "@/components/ui/button"
+import {
+  Toast,
+  ToastAction,
+  ToastDescription,
+  ToastTitle,
+} from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast"
+
+export function ToastDemo() {
+  const { toast } = useToast()
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Button
+        variant="outline"
+        onClick={() => {
+          toast({
+            title: "Theme updated",
+            description: "The Platform theme was applied successfully.",
+          })
+        }}
+      >
+        Show toast
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => {
+          toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: "Failed to sync components. Please try again.",
+            action: (
+              <ToastAction altText="Try again">Try again</ToastAction>
+            ),
+          })
+        }}
+      >
+        Show error
+      </Button>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <ToastDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/toast](https://ui.shadcn.com/docs/components/toast)

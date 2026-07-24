@@ -1,0 +1,46 @@
+---
+title: "Marker"
+description: "A marker component for timestamps, separators, and section breaks."
+---
+
+import { MarkerDemo } from "@/components/previews/marker-demo"
+
+## Installation
+
+```bash
+npx shadcn@latest add marker
+```
+
+## Usage
+
+```tsx
+import { Calendar } from "lucide-react"
+import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker"
+
+export function MarkerDemo() {
+  return (
+    <div className="flex flex-col gap-6 max-w-md">
+      <Marker variant="default">
+        <MarkerIcon><Calendar /></MarkerIcon>
+        <MarkerContent>January 24, 2026</MarkerContent>
+      </Marker>
+      <Marker variant="separator">
+        <MarkerContent>Or continue with</MarkerContent>
+      </Marker>
+      <Marker variant="border">
+        <MarkerContent>Section break</MarkerContent>
+      </Marker>
+    </div>
+  )
+}
+```
+
+## Preview
+
+<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
+  <MarkerDemo />
+</div>
+
+## Full API
+
+[ui.shadcn.com/docs/components/marker](https://ui.shadcn.com/docs/components/marker)
