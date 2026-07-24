@@ -1,0 +1,168 @@
+{
+  "version": 2,
+  "loops": [
+    {
+      "taskId": "dev-auto-preflight",
+      "interval": 1800,
+      "intervalHuman": "30 min",
+      "description": "Unattended development loop: sync main -> plan and complete the oldest issue -> verify -> create and approve a PR -> auto-merge -> close the issue"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "dev-auto-preflight",
+      "name": "Preflight: require a clean tree and sync main",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "test -z \"$(git status --porcelain)\" && git switch main && git pull --ff-only"
+      ],
+      "onSuccessTaskId": "dev-auto-pick",
+      "onFailureTaskId": null,
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-pick",
+      "name": "Select and reserve the oldest code:pick issue",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "issue=$(gh issue list --label \"code:pick\" --state open --limit 1000 --json number,title,body --jq \"sort_by(.number) | .[0] // empty | {number,title,body}\"); test -n \"$issue\" || exit 75; number=$(printf \"%s\" \"$issue\" | jq -r .number); gh issue edit \"$number\" --add-label code:doing --remove-label code:pick >/dev/null; printf \"%s\\n\" \"$issue\""
+      ],
+      "onSuccessTaskId": "dev-auto-implement",
+      "onFailureTaskId": "dev-auto-nothing",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-implement",
+      "name": "Implement: complete the issue directly with OpenCode",
+      "command": "opencode",
+      "commandArgs": [
+        "run",
+        "Take complete ownership of this GitHub issue. First inspect the current repository state and determine whether the work is untouched, partially implemented, or already present but incomplete. If work is missing, do it. If work already exists, identify and complete all remaining work rather than starting over. Plan the remaining work internally before coding, then implement it. Verify that the issue is actually complete before finishing: run the relevant checks, inspect the resulting behavior, and fix any failures. Do not stop after planning, do not stop after a summary, and do not claim completion without verification. Preserve correct existing work and make the smallest correct change. Work on a feature branch. Do not push or perform any GitHub actions. Never ask for confirmation. Generate visual evidence where the change affects the UI. Issue title: {{title}} Issue body: {{body}} Issue id: {{number}}",
+        "--model",
+        "plainconcepts/glm-5-2"
+      ],
+      "onSuccessTaskId": "dev-auto-verify",
+      "onFailureTaskId": "dev-auto-fail",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-verify",
+      "name": "Verify: lint, typecheck, tests, and build",
+      "command": "sh",
+      "commandArgs": ["-c", "pnpm lint && pnpm typecheck && pnpm test && pnpm build"],
+      "onSuccessTaskId": "dev-auto-commit",
+      "onFailureTaskId": "dev-auto-implement",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-commit",
+      "name": "Prepare: stage the verified changes",
+      "command": "git",
+      "commandArgs": ["add", "."],
+      "onSuccessTaskId": "dev-auto-pr",
+      "onFailureTaskId": null,
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-pr",
+      "name": "Create PR and pass its URL to the merge step",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "BRANCH=$(git branch --show-current) && git push -u origin \"$BRANCH\" >/dev/null && gh pr create --fill --label code:done >/dev/null && PR_URL=$(gh pr view \"$BRANCH\" --json url --jq .url) && printf '{\"branch\":\"%s\",\"prUrl\":\"%s\"}\\n' \"$BRANCH\" \"$PR_URL\""
+      ],
+      "onSuccessTaskId": "dev-auto-approve",
+      "onFailureTaskId": "dev-auto-fail",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-approve",
+      "name": "Review: automatically approve the verified PR",
+      "command": "gh",
+      "commandArgs": [
+        "pr",
+        "review",
+        "{{prUrl}}",
+        "--approve",
+        "--body",
+        "Automated approval after implementation and repository verification"
+      ],
+      "onSuccessTaskId": "dev-auto-merge",
+      "onFailureTaskId": "dev-auto-merge-fail",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-merge",
+      "name": "Merge: enable unattended squash merge after required checks",
+      "command": "gh",
+      "commandArgs": ["pr", "merge", "{{prUrl}}", "--auto", "--squash", "--delete-branch"],
+      "onSuccessTaskId": "dev-auto-merge-verify",
+      "onFailureTaskId": "dev-auto-merge-fail",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-merge-verify",
+      "name": "Verify: wait for the PR to reach MERGED state",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "for attempt in $(seq 1 180); do state=$(gh pr view \"{{prUrl}}\" --json state --jq .state) || exit 1; test \"$state\" = MERGED && exit 0; test \"$state\" = OPEN || exit 1; sleep 10; done; exit 1"
+      ],
+      "onSuccessTaskId": "dev-auto-complete",
+      "onFailureTaskId": "dev-auto-merge-fail",
+      "maxRuns": 3
+    },
+    {
+      "id": "dev-auto-complete",
+      "name": "Complete: mark the issue done, close it, and return to main",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "gh issue edit {{number}} --add-label code:done --remove-label code:doing --remove-label code:review && gh issue close {{number}} && git switch main"
+      ],
+      "onSuccessTaskId": null,
+      "onFailureTaskId": "dev-auto-merge-fail",
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-fail",
+      "name": "Recovery: reset implementation and return the issue to code:pick",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "git reset --hard && git switch main && gh issue edit {{number}} --add-label code:pick --remove-label code:doing"
+      ],
+      "onSuccessTaskId": null,
+      "onFailureTaskId": null,
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-merge-fail",
+      "name": "Recovery: leave the PR for review without marking the issue complete",
+      "command": "gh",
+      "commandArgs": [
+        "issue",
+        "edit",
+        "{{number}}",
+        "--add-label",
+        "code:review",
+        "--remove-label",
+        "code:doing"
+      ],
+      "onSuccessTaskId": null,
+      "onFailureTaskId": null,
+      "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-nothing",
+      "name": "Idle: no code:pick issues are available",
+      "command": "echo",
+      "commandArgs": ["Nothing to do, no issues with code:pick label"],
+      "onSuccessTaskId": null,
+      "onFailureTaskId": null,
+      "maxRuns": 5
+    }
+  ]
+}

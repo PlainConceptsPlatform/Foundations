@@ -56,10 +56,15 @@ Add an `.npmrc` to your app root:
 //npm.pkg.github.com/:_authToken=ghp_your_token
 ```
 
-Create a GitHub **classic personal access token** at [Settings > Developer settings > Personal access
-tokens](https://github.com/settings/tokens) with the `read:packages` permission. If your organization
-uses SAML SSO, authorize the token for the organization. Replace `ghp_your_token` in `.npmrc` with the
-token value before installing. Keep `.npmrc` private and never commit the token.
+Create and authorize the token as follows:
+
+1. Open [GitHub token settings](https://github.com/settings/tokens) and select **Generate new token
+   (classic)**.
+2. Give the token the `read:packages` permission and generate it.
+3. On the token list, select **Configure SSO** next to the new token and authorize
+   **PlainConceptsPlatform**. This step is required by the organization’s SAML SSO policy.
+4. Replace `ghp_your_token` in `.npmrc` with the token value before installing. Keep `.npmrc` private and
+   never commit the token.
 
 ### 2. Install everything
 
