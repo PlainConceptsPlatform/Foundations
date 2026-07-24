@@ -1,4 +1,19 @@
 {
   "title": "Platform Foundations",
-  "pages": ["index", "reference", "tokens", "components", "examples"]
+  "pages": [
+    "index",
+    "---Start---",
+    "getting-started",
+    "---Domains---",
+    "frontend",
+    "backend",
+    "ai",
+    "---Frontend detail---",
+    "tokens",
+    "components",
+    "examples",
+    "---More---",
+    "contributing",
+    "reference"
+  ]
 }

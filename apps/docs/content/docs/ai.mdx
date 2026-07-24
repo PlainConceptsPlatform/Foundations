@@ -1,0 +1,82 @@
+---
+title: AI & agents
+description: How coding agents work in the Platform, the skills to install, and why it is set up this way.
+---
+
+Most work here happens with a coding agent in the loop, so the foundation is written to be read by
+agents as much as by people. The docs are plain markdown with a stable structure, the conventions
+are explicit, and the deep rules are packaged as skills. Point an agent at the docs, install the
+skills for the stack, and it produces on-convention code without hand-holding.
+
+## Start here
+
+[AGENTS](/docs/reference/agents) is the entry point for any agent. It carries the stack summary, the
+hard rules (prefer shadcn, use tokens not hardcoded values, app-specific components stay local,
+respect the dependency direction), and links to the deeper docs. Copy it into each app as its root
+`AGENTS.md` and adjust the app-specific parts. Keep it short; it points to detail rather than
+repeating it.
+
+## Agent roles
+
+Three role definitions live in `ai/agents`, each scoped to a kind of work with the right skills
+attached:
+
+- **frontend-engineer**: React, Next.js, the theme, and the component conventions.
+- **backend-engineer**: .NET, Clean Architecture, EF Core, and the Plain guardrails.
+- **docs-engineer**: writing and maintaining these docs, including the humanizer voice.
+
+Hand a task to the role that matches it so the agent starts with the right context.
+
+## Recommended skills
+
+Skills give an agent accurate, current guidance for one part of the stack, which keeps it from
+guessing an API or inventing a pattern. Install with the [skills CLI](https://www.skills.sh):
+
+```bash
+npx skills add <owner/repo>
+```
+
+**Frontend**
+
+- `vercel-react-best-practices`: React and Next.js performance and correctness rules.
+- `feature-sliced-design`: the layer and import rules this foundation uses.
+- `shadcn`: the component add/customize workflow and the registry model.
+- `tailwind-design-system`: token-driven Tailwind work.
+- `tanstack-query-best-practices`: client cache, keys, mutations, prefetching.
+- `typescript-advanced-types`: generics and utility types for strict TypeScript.
+- `vitest-testing`: unit and component testing patterns.
+- `accessibility` and `web-design-guidelines`: WCAG and general design guardrails.
+
+**Backend**
+
+- `plain-engineering-conventions` and `plain-dotnet-guardrails`: the two anchors.
+- `clean-ddd-hexagonal`: layering, DDD tactical and strategic patterns.
+- `dotnet-backend-patterns` and `optimizing-ef-core-queries`: EF Core and data access.
+- `modern-csharp-coding-standards`: current C# style.
+- `csharp-xunit`: the testing approach.
+
+**Docs and workflow**
+
+- `documentation-writer`: Diataxis-style technical writing.
+- `humanizer`: strips AI writing patterns from prose.
+- `find-skills` and `user-story`: discovery and story shaping.
+- the `openspec` skills: propose, explore, apply, and archive spec changes.
+
+## Tooling and workflow
+
+Use pnpm for every command. For iterative, self-checking work, the loop-engineering setup pairs
+[`CKGrafico/loop-task`](https://github.com/CKGrafico/loop-task) with
+[`CKGrafico/opencode-onboard`](https://github.com/CKGrafico/opencode-onboard). The onboard repo also
+ships the `ob-make-architecture` and `ob-make-design` skills that generate the architecture and
+design docs from the codebase, which is why those docs stay honest as the code changes.
+
+The team also recommends a few optimizations: RTK for token savings on shell work, the opencode-quota
+plugin, caveman concise mode, the codegraph semantic index, the agentmemory local memory server, and
+the humanizer skill for anything user-facing.
+
+## Why it is set up this way
+
+An agent is only as good as the context it can find. Keeping the docs plain, the conventions
+explicit, and the deep knowledge in installable skills means a fresh agent in any Platform app reads
+the same source of truth a person would, and reaches the same answer. That is the whole point of the
+foundation, applied to the tools as well as the teams.

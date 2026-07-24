@@ -1,0 +1,70 @@
+---
+title: Quickstart (new app)
+description: Spin up a new Platform frontend app on the shared foundation.
+---
+
+A new frontend app is **Next.js (App Router) + React + TypeScript**, themed by the shared token
+package and using shadcn/ui components. This gets you from empty folder to a themed, agent-ready app.
+
+## 1. Create the app
+
+```bash
+pnpm create next-app@latest my-app --ts --app --tailwind --eslint --src-dir
+cd my-app
+```
+
+## 2. Install the theme
+
+The theme is a private package on GitHub Packages. Add an `.npmrc` in the app root:
+
+```text
+@plainconceptsplatform:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Set `GITHUB_TOKEN` to a token with `read:packages`, then install and import it once in your global
+stylesheet:
+
+```bash
+pnpm add @plainconceptsplatform/ui-theme
+```
+
+```css
+@import "@plainconceptsplatform/ui-theme";
+```
+
+## 3. Load the Outfit font
+
+In your root layout, load Outfit and expose it as `--font-sans`:
+
+```tsx
+import { Outfit } from "next/font/google";
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
+```
+
+## 4. Add components
+
+Copy the theme package's `components.json` into your app root, then add what you need:
+
+```bash
+npx shadcn@latest add button card dialog
+```
+
+Browse the [Components](/docs/components) catalog to see each one themed, with usage code.
+
+## 5. Structure and wiring
+
+- Follow the [Frontend architecture](/docs/frontend) (pragmatic Feature-Sliced Design on Next.js).
+- Set up dependency injection with `inversify-hooks` (mandatory). See
+  [Architecture](/docs/reference/architecture).
+
+## 6. Point your agent at the docs
+
+Add an `AGENTS.md` that references this foundation and install the recommended skills. See
+[Set up AI agents](/docs/getting-started/ai-agents).
+
+## Next steps
+
+- [Frontend overview](/docs/frontend)
+- [Tokens](/docs/tokens) and [Design guidelines](/docs/reference/design)
+- [Adopt in an existing app](/docs/getting-started/existing-app)

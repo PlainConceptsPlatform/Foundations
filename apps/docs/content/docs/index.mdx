@@ -6,6 +6,32 @@ description: The shared theme, conventions, and showcase for PlainConcepts Platf
 Platform Foundations keeps many independent Platform apps consistent without a heavy in-house
 framework. It ships **tokens and conventions**, not a component library.
 
+## How it works
+
+PlainConcepts is a consultancy, so every app has its own team, domain, and lifecycle. The foundation
+shares the two things that benefit from being shared, and stays out of the way on everything else:
+
+- **The look**, through one small token package every app installs.
+- **The conventions**, through docs, a reference architecture, and installable agent skills.
+
+A few decisions shape the whole thing, and it helps to know why:
+
+- **shadcn/ui with shared tokens, not a component library.** Apps copy component source into their
+  own repo, so they can read and edit it and are never locked into our versioning. What keeps them
+  consistent is that they all import the same tokens. You get local control and a shared look at the
+  same time.
+- **Tokens are the shared artifact, not components.** One small package is cheap to maintain and
+  hard to diverge from. To roll out a change everywhere, edit the tokens and bump the version.
+- **Pragmatic Feature-Sliced Design.** Enough structure to scale, without forcing every layer on a
+  small app. Start with three folders and earn the rest.
+- **The same stack we recommend.** The foundation itself is Next.js, React, and TypeScript, so it
+  dogfoods its own advice rather than shipping something it does not use.
+- **Backend is in scope too.** The .NET conventions live here as well, sourced from the Plain
+  engineering skills.
+
+The result is meant to be a foundation teams actually adopt, not a platform that is impressive but
+expensive to live with.
+
 ## What this showcase is for
 
 - See the **Platform theme** applied to real components and screens.
@@ -15,11 +41,12 @@ framework. It ships **tokens and conventions**, not a component library.
 
 ## Start here
 
-- [Tokens](/docs/tokens): colors, typography, radius.
-- [Components](/docs/components): themed buttons, states, and feedback.
-- [Plain logo](/docs/components/plain-logo): responsive brand logo with copy instructions.
-- [Examples](/docs/examples): realistic screens.
-- [Reference](/docs/reference): architecture, design, and agent docs.
+- [Getting started](/docs/getting-started): scaffold a new app, or adopt the foundation in one you
+  already have.
+- [Frontend](/docs/frontend): the React stack, architecture, theming, and components.
+- [Backend](/docs/backend): the .NET conventions and architecture.
+- [AI and agents](/docs/ai): how coding agents work here, with the skills and tooling to install.
+- [Components](/docs/components) and [Tokens](/docs/tokens): the themed catalog and the token gallery.
 
 ## What you get from the foundation
 
