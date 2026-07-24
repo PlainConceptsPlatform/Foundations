@@ -76,6 +76,7 @@
       "name": "Idle: no refine:pick issues are available",
       "command": "echo",
       "commandArgs": ["Nothing to refine, no issues with refine:pick label"],
+      "silentChain": true,
       "onSuccessTaskId": null,
       "onFailureTaskId": null,
       "maxRuns": 5

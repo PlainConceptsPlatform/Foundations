@@ -160,6 +160,7 @@
       "name": "Idle: no code:pick issues are available",
       "command": "echo",
       "commandArgs": ["Nothing to do, no issues with code:pick label"],
+      "silentChain": true,
       "onSuccessTaskId": null,
       "onFailureTaskId": null,
       "maxRuns": 5
