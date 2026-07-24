@@ -26,7 +26,7 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "number=$(gh issue list --label \"refine:pick\" --state open --limit 1 --json number --jq '.[0].number'); test -n \"$number\" || exit 75; body=$(gh issue view \"$number\" --json number,title,body --jq '{number,title,body}'); gh issue edit \"$number\" --add-label refine:doing --remove-label refine:pick >/dev/null; printf \"%s\\n\" \"$body\""
+        "number=$(gh issue list --label \"refine:pick\" --state open --limit 1000 --json number --jq 'sort_by(.number) | .[0].number'); test -n \"$number\" || exit 75; body=$(gh issue view \"$number\" --json number,title,body --jq '{number,title,body}'); gh issue edit \"$number\" --add-label refine:doing --remove-label refine:pick >/dev/null; printf \"%s\\n\" \"$body\""
       ],
       "onSuccessTaskId": "refine-once-write",
       "onFailureTaskId": "refine-once-nothing",
