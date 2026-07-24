@@ -1,70 +1,52 @@
 ---
-title: Quickstart (new app)
-description: Spin up a new Platform frontend app on the shared foundation.
+title: Quickstart
+description: Install the theme and components and get a themed app running in four steps.
 ---
 
-A new frontend app is **Next.js (App Router) + React + TypeScript**, themed by the shared token
-package and using shadcn/ui components. This gets you from empty folder to a themed, agent-ready app.
+This is the fastest path onto the foundation for a new or existing Next.js app. It matches the
+[theme package README](https://github.com/PlainConceptsPlatform/Platform-Foundations/blob/main/packages/theme/README.md),
+which stays the source of truth for the install steps.
 
-## 1. Create the app
+## 1. Authenticate to GitHub Packages
 
-```bash
-pnpm create next-app@latest my-app --ts --app --tailwind --eslint --src-dir
-cd my-app
-```
-
-## 2. Install the theme
-
-The theme is a private package on GitHub Packages. Add an `.npmrc` in the app root:
+The theme and components are private packages. Add an `.npmrc` to your app root:
 
 ```text
 @plainconceptsplatform:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-Set `GITHUB_TOKEN` to a token with `read:packages`, then install and import it once in your global
-stylesheet:
+Set `GITHUB_TOKEN` to a GitHub token with `read:packages`.
+
+## 2. Install everything
 
 ```bash
-pnpm add @plainconceptsplatform/ui-theme
+pnpm add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
 ```
 
-```css
-@import "@plainconceptsplatform/ui-theme";
+## 3. Initialize
+
+```bash
+npx @plainconceptsplatform/ui-theme@latest init
 ```
 
-## 3. Load the Outfit font
+This copies `components.json`, adds the theme import to your global stylesheet, and shows you how to
+wire the Outfit font in your root layout.
 
-In your root layout, load Outfit and expose it as `--font-sans`:
-
-```tsx
-import { Outfit } from "next/font/google";
-const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
-```
-
-## 4. Add components
-
-Copy the theme package's `components.json` into your app root, then add what you need:
+## 4. Add shadcn components
 
 ```bash
 npx shadcn@latest add button card dialog
 ```
 
-Browse the [Components](/docs/components) catalog to see each one themed, with usage code.
-
-## 5. Structure and wiring
-
-- Follow the [Frontend architecture](/docs/frontend) (pragmatic Feature-Sliced Design on Next.js).
-- Set up dependency injection with `inversify-hooks` (mandatory). See
-  [Architecture](/docs/reference/architecture).
-
-## 6. Point your agent at the docs
-
-Add an `AGENTS.md` that references this foundation and install the recommended skills. See
-[Set up AI agents](/docs/getting-started/ai-agents).
+They inherit the theme with no extra work. Browse the [Components](/docs/components) catalog to see
+each one, with usage code.
 
 ## Next steps
 
-- [Frontend overview](/docs/frontend)
-- [Tokens](/docs/tokens) and [Design guidelines](/docs/reference/design)
-- [Adopt in an existing app](/docs/getting-started/existing-app)
+- [Frontend](/docs/frontend): architecture, theming, dependency injection, and the everyday patterns.
+- [Adopt in an existing app](/docs/getting-started/existing-app): the incremental path.
+- [Set up AI agents](/docs/getting-started/ai-agents): install the skills and point agents at the docs.
+
+Full package details are in the
+[theme README](https://github.com/PlainConceptsPlatform/Platform-Foundations/blob/main/packages/theme/README.md).

@@ -5,4 +5,5 @@ export const baseOptions: BaseLayoutProps = {
   nav: {
     title: "Platform Foundations",
   },
+  githubUrl: "https://github.com/PlainConceptsPlatform/Platform-Foundations",
 };
