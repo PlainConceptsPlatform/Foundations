@@ -8,15 +8,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
     },
     "./plain-logo": {
       "types": "./dist/plain-logo/plain-logo.d.ts",
-      "import": "./dist/plain-logo/plain-logo.js"
+      "import": "./dist/plain-logo/plain-logo.js",
+      "default": "./src/plain-logo/plain-logo.tsx"
     },
     "./data-table": {
       "types": "./dist/data-table/data-table.d.ts",
-      "import": "./dist/data-table/data-table.js"
+      "import": "./dist/data-table/data-table.js",
+      "default": "./src/data-table/data-table.tsx"
     }
   },
   "sideEffects": ["**/*.css", "**/*.ts", "**/*.tsx"],
