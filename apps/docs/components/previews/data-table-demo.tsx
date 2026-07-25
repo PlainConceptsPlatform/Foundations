@@ -1,48 +1,68 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { ColumnDef } from "@tanstack/react-table";
-
-import { DataTable, DataTableSortHeader } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@plainconceptsplatform/ui-components/data-table";
 
 type App = {
+  id: string;
   name: string;
   stack: string;
   status: "Active" | "Deprecated";
+  team: string;
 };
 
 const apps: App[] = [
-  { name: "Numa", stack: "React", status: "Active" },
-  { name: "Docs", stack: "Next.js", status: "Active" },
-  { name: "Legacy", stack: ".NET", status: "Deprecated" },
-  { name: "Insights", stack: "Next.js", status: "Active" },
+  { id: "1", name: "Numa", stack: "React", status: "Active", team: "Platform" },
+  { id: "2", name: "Docs", stack: "Next.js", status: "Active", team: "Platform" },
+  { id: "3", name: "Legacy", stack: ".NET", status: "Deprecated", team: "Enterprise" },
+  { id: "4", name: "Insights", stack: "Next.js", status: "Active", team: "Data" },
+  { id: "5", name: "Atlas", stack: "React", status: "Active", team: "Platform" },
+  { id: "6", name: "Pulse", stack: "Next.js", status: "Active", team: "Data" },
+  { id: "7", name: "Hub", stack: ".NET", status: "Deprecated", team: "Enterprise" },
+  { id: "8", name: "Flow", stack: "React", status: "Active", team: "Platform" },
 ];
 
-const columns: ColumnDef<App>[] = [
+const columns: DataTableColumn<App>[] = [
   {
-    accessorKey: "name",
-    header: ({ column }) => <DataTableSortHeader column={column} label="App" />,
-    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    key: "name",
+    label: "App",
+    render: (r) => <span className="font-medium">{r.name}</span>,
+    sortValue: (r) => r.name,
+    groupValue: (r) => r.stack,
   },
   {
-    accessorKey: "stack",
-    header: ({ column }) => <DataTableSortHeader column={column} label="Stack" />,
+    key: "stack",
+    label: "Stack",
+    render: (r) => r.stack,
+    sortValue: (r) => r.stack,
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant={row.original.status === "Active" ? "default" : "secondary"}>
-        {row.original.status}
-      </Badge>
+    key: "team",
+    label: "Team",
+    render: (r) => r.team,
+    sortValue: (r) => r.team,
+  },
+  {
+    key: "status",
+    label: "Status",
+    render: (r) => (
+      <Badge variant={r.status === "Active" ? "default" : "secondary"}>{r.status}</Badge>
     ),
+    sortValue: (r) => r.status,
   },
 ];
 
 export function DataTableDemo() {
   return (
-    <div className="w-full max-w-lg">
-      <DataTable columns={columns} data={apps} />
+    <div className="w-full">
+      <DataTable
+        tableId="docs-data-table-demo"
+        rows={apps}
+        rowKey={(r) => r.id}
+        columns={columns}
+        defaultGroupBy={["stack"]}
+      />
     </div>
   );
 }

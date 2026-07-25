@@ -1,6 +1,6 @@
 {
   "name": "@plainconceptsplatform/ui-components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared React components for Platform frontend apps (Plain logo and more).",
   "type": "module",
   "license": "UNLICENSED",
@@ -13,6 +13,10 @@
     "./plain-logo": {
       "types": "./dist/plain-logo/plain-logo.d.ts",
       "import": "./dist/plain-logo/plain-logo.js"
+    },
+    "./data-table": {
+      "types": "./dist/data-table/data-table.d.ts",
+      "import": "./dist/data-table/data-table.js"
     }
   },
   "sideEffects": ["**/*.css", "**/*.ts", "**/*.tsx"],

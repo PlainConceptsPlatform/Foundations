@@ -1,18 +1,31 @@
 "use client";
 
 import {
-  type Column,
-  type ColumnDef,
-  type ColumnSort,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useState } from "react";
+  type DataTableColumn,
+  type DataTableIcons,
+  type DataTableSlots,
+  type DataTableTexts,
+  DataTable as PackageDataTable,
+} from "@plainconceptsplatform/ui-components/data-table";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+  Columns3,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -22,82 +35,65 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-}
+// Pre-wired slots for the Foundations docs app.
+// Cast is safe: shadcn components accept a superset of the minimal prop types.
+const slots = {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  Button,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+} as DataTableSlots;
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<ColumnSort[]>([]);
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    state: { sorting },
-  });
-
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-type SortHeaderProps<TData> = {
-  column: Column<TData>;
-  label: string;
+// English texts (the docs site is English-only).
+const texts: DataTableTexts = {
+  dragToGroup: "Drag a column header here to group by that column",
+  groupedBy: "Grouped by",
+  stopGrouping: (label) => `Stop grouping ${label}`,
+  clear: "Clear",
+  columnsCount: (v, t) => `Columns (${v}/${t})`,
+  toggleColumns: "Toggle columns",
+  noRecords: "No records",
+  dragReorderOrGroup: "Drag to reorder or group",
+  dragReorder: "Drag to reorder",
+  columnGrouping: "Column grouping",
 };
 
-export function DataTableSortHeader<TData>({ column, label }: SortHeaderProps<TData>) {
-  const sorted = column.getIsSorted();
+// Lucide icon adapters.
+const icons: DataTableIcons = {
+  IconSortAscending: ({ className }) => <ArrowUp className={className} />,
+  IconSortDescending: ({ className }) => <ArrowDown className={className} />,
+  IconArrowsSort: ({ className }) => <ArrowUpDown className={className} />,
+  IconChevronRight: ({ size }) => <ChevronRight size={size} />,
+  IconChevronDown: ({ size }) => <ChevronDown size={size} />,
+  IconColumns: ({ className }) => <Columns3 className={className} />,
+  IconX: ({ className }) => <X className={className} />,
+};
 
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="-ml-3 h-8 data-[state=open]:bg-accent"
-      onClick={() => column.toggleSorting(sorted === "asc")}
-    >
-      {label}
-      {sorted === "asc" ? <ArrowUp /> : sorted === "desc" ? <ArrowDown /> : <ArrowUpDown />}
-    </Button>
-  );
+// Re-export the types so consuming code can import from here.
+export type {
+  DataTableColumn,
+  SortOrder,
+  SortState,
+} from "@plainconceptsplatform/ui-components/data-table";
+
+type DataTableWrapperProps<T> = Omit<
+  Parameters<typeof PackageDataTable<T>>[0],
+  "slots" | "texts" | "icons"
+>;
+
+/**
+ * Foundations DataTable - a thin wrapper around the package component
+ * with all shadcn/lucide/i18n slots pre-wired.
+ */
+export function DataTable<T>(props: DataTableWrapperProps<T>) {
+  return <PackageDataTable<T> {...props} slots={slots} texts={texts} icons={icons} />;
 }
