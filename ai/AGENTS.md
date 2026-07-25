@@ -21,7 +21,7 @@ ai/
 **Next.js (App Router) + React + TypeScript (strict)**, **shadcn/ui** on **Radix** + **Tailwind v4**,
 themed by **`@plainconceptsplatform/ui-theme`**, shared components from
 **`@plainconceptsplatform/ui-components`** (Plain logo, ...), icons from **Lucide**. DI via
-**inversify-hooks** (mandatory). Package manager: **pnpm**. Lint/format **Biome**; tests
+**inversify-hooks** (mandatory). Translations: **react-i18next + i18next** (mandatory, the only translation library — zero magic strings). Package manager: **pnpm**. Lint/format **Biome**; tests
 **Vitest + Playwright**. Full list: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Read these first
@@ -87,6 +87,7 @@ All skills live in [`.agents/skills/`](.agents/skills/). Load them with the `ski
 - `accessibility`: WCAG 2.2 audits, keyboard navigation, screen readers
 
 **Workflow**
+- `platform-onboard`: onboard a brownfield project onto the Platform stack (pnpm, Next.js, shadcn, FSD, inversify-hooks, react-i18next, Biome, loop-task, OpenSpec)
 - `openspec-propose`: propose a change with design, specs, tasks
 - `openspec-explore`: thinking partner for ideas and investigation
 - `openspec-apply-change`: implement tasks from an OpenSpec change

@@ -34,6 +34,7 @@ predictable. Prefer these; deviate only with a good reason recorded in the app.
 | Theme | **@plainconceptsplatform/ui-theme** | the Platform styleguide; tokens only |
 | Icons | **Lucide** (`lucide-react`) | shadcn default |
 | Dependency injection | **inversify + inversify-hooks** | mandatory; see Dependency injection below |
+| Internationalization | **react-i18next + i18next** | mandatory; the only translation library. Zero magic strings; every user-facing text is a translation message |
 
 ### Feature libraries (shadcn delegates to these, use them directly)
 
