@@ -2,24 +2,12 @@
   "version": 2,
   "loops": [
     {
-      "taskId": "refine-once-preflight",
+      "taskId": "refine-once-pick",
       "intervalHuman": "20m",
-      "description": "Single-pass refinement loop: sync main -> pick one issue -> write one grounded user story -> mark done"
+      "description": "Single-pass refinement loop: pick one issue, write one grounded user story, mark done"
     }
   ],
   "tasks": [
-    {
-      "id": "refine-once-preflight",
-      "name": "Preflight: require a clean tree and sync main",
-      "command": "sh",
-      "commandArgs": [
-        "-c",
-        "test -z \"$(git status --porcelain)\" && git switch main && git fetch origin && git rebase origin/main"
-      ],
-      "onSuccessTaskId": "refine-once-pick",
-      "onFailureTaskId": null,
-      "maxRuns": 5
-    },
     {
       "id": "refine-once-pick",
       "name": "Select and reserve the oldest refine:pick issue",

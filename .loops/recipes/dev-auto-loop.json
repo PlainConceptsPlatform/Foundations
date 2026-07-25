@@ -69,52 +69,15 @@
     },
     {
       "id": "dev-auto-pr",
-      "name": "Create PR and pass its URL to the merge step",
+      "name": "Create PR and squash merge",
       "command": "sh",
       "commandArgs": [
         "-c",
-        "BRANCH=$(git branch --show-current) && git push -u origin \"$BRANCH\" >/dev/null && gh pr create --title \"Resolve #{{number}}: {{title}}\" --body \"Closes #{{number}}\" --label code:done >/dev/null && PR_URL=$(gh pr view \"$BRANCH\" --json url --jq .url) && printf '{\"branch\":\"%s\",\"prUrl\":\"%s\"}\\n' \"$BRANCH\" \"$PR_URL\""
-      ],
-      "onSuccessTaskId": "dev-auto-approve",
-      "onFailureTaskId": "dev-auto-fail",
-      "maxRuns": 5
-    },
-    {
-      "id": "dev-auto-approve",
-      "name": "Review: automatically approve the verified PR",
-      "command": "gh",
-      "commandArgs": [
-        "pr",
-        "review",
-        "{{prUrl}}",
-        "--approve",
-        "--body",
-        "Automated approval after implementation and repository verification"
-      ],
-      "onSuccessTaskId": "dev-auto-merge",
-      "onFailureTaskId": "dev-auto-merge-fail",
-      "maxRuns": 5
-    },
-    {
-      "id": "dev-auto-merge",
-      "name": "Merge: enable unattended squash merge after required checks",
-      "command": "gh",
-      "commandArgs": ["pr", "merge", "{{prUrl}}", "--auto", "--squash", "--delete-branch"],
-      "onSuccessTaskId": "dev-auto-merge-verify",
-      "onFailureTaskId": "dev-auto-merge-fail",
-      "maxRuns": 5
-    },
-    {
-      "id": "dev-auto-merge-verify",
-      "name": "Verify: wait for the PR to reach MERGED state",
-      "command": "sh",
-      "commandArgs": [
-        "-c",
-        "for attempt in $(seq 1 180); do state=$(gh pr view \"{{prUrl}}\" --json state --jq .state) || exit 1; test \"$state\" = MERGED && exit 0; test \"$state\" = OPEN || exit 1; sleep 10; done; exit 1"
+        "BRANCH=$(git branch --show-current) && git push -u origin \"$BRANCH\" >/dev/null && PR_URL=$(gh pr create --title \"Resolve #{{number}}: {{title}}\" --body \"Closes #{{number}}\" --label code:done --json url --jq .url) && gh pr merge \"$PR_URL\" --squash --delete-branch && printf '{\"prUrl\":\"%s\"}\\n' \"$PR_URL\""
       ],
       "onSuccessTaskId": "dev-auto-complete",
       "onFailureTaskId": "dev-auto-merge-fail",
-      "maxRuns": 3
+      "maxRuns": 5
     },
     {
       "id": "dev-auto-complete",
@@ -122,10 +85,10 @@
       "command": "sh",
       "commandArgs": [
         "-c",
-        "gh issue edit {{number}} --add-label code:done --remove-label code:doing --remove-label code:review && gh issue close {{number}} && git switch main"
+        "gh issue edit {{number}} --add-label code:done --remove-label code:doing --remove-label code:review && gh issue close {{number}} && git checkout -- . && git clean -fd && git switch main"
       ],
       "onSuccessTaskId": null,
-      "onFailureTaskId": "dev-auto-merge-fail",
+      "onFailureTaskId": null,
       "maxRuns": 5
     },
     {
