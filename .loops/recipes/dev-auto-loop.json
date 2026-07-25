@@ -17,8 +17,20 @@
         "test -z \"$(git status --porcelain)\" && git switch main && git fetch origin && git rebase origin/main"
       ],
       "onSuccessTaskId": "dev-auto-pick",
-      "onFailureTaskId": null,
+      "onFailureTaskId": "dev-auto-clean-dirty",
       "maxRuns": 5
+    },
+    {
+      "id": "dev-auto-clean-dirty",
+      "name": "Recovery: dirty tree, reset and return to main",
+      "command": "sh",
+      "commandArgs": [
+        "-c",
+        "git reset --hard && git clean -fd && git switch main && git fetch origin && git rebase origin/main"
+      ],
+      "onSuccessTaskId": "dev-auto-pick",
+      "onFailureTaskId": null,
+      "maxRuns": 1
     },
     {
       "id": "dev-auto-pick",
