@@ -23,7 +23,6 @@ tasks:
         printf "%s\n" "$body"
     onSuccessTaskId: refine-once-write
     onFailureTaskId: refine-once-nothing
-    maxRuns: 5
 
   - id: refine-once-write
     name: "AI: write one grounded user story without clarification questions"
@@ -48,7 +47,6 @@ tasks:
         body as valid Markdown. Do not ask me anything during the session.
     onSuccessTaskId: refine-once-verify
     onFailureTaskId: refine-once-fail
-    maxRuns: 5
 
   - id: refine-once-verify
     name: "Verify: the single refinement is marked refine:done"
@@ -62,7 +60,6 @@ tasks:
         && git checkout -- . && git clean -fd && exit 0 || exit 1
     onSuccessTaskId: null
     onFailureTaskId: refine-once-fail
-    maxRuns: 5
 
   - id: refine-once-fail
     name: "Recovery: return an incomplete refinement to refine:pick"
@@ -74,7 +71,6 @@ tasks:
         --remove-label refine:doing
     onSuccessTaskId: null
     onFailureTaskId: null
-    maxRuns: 5
 
   - id: refine-once-nothing
     name: "Idle: no refine:pick issues are available"
@@ -84,18 +80,28 @@ tasks:
     silentChain: true
     onSuccessTaskId: null
     onFailureTaskId: null
-    maxRuns: 5
 
 diagram: |
   flowchart TD
+      refineOnceStart("Start<br/>Begin refinement cycle") --> refineOncePick
       refineOncePick["Select<br/>Reserve the oldest refine:pick issue"] -->|✓| refineOnceWrite
       refineOncePick -.->|✗| refineOnceNothing
-      refineOnceWrite["Write<br/>AI: write one grounded user story"] -->|✓| refineOnceVerify
+      refineOnceWrite("Write<br/>AI: write one grounded user story") -->|✓| refineOnceVerify
       refineOnceWrite -.->|✗| refineOnceFail
-      refineOnceVerify["Verify<br/>Check issue has refine:done label"] -->|✓| finalNode(("End"))
+      refineOnceVerify["Verify<br/>Check issue has refine:done label"] -->|✓| refineOnceComplete
       refineOnceVerify -.->|✗| refineOnceFail
-      refineOnceFail["Fail<br/>Return an incomplete refinement to refine:pick"] -->|✓| finalNode(("End"))
-      refineOnceNothing["Idle<br/>No refine:pick issues are available"] -->|✓| finalNode(("End"))
-      style refineOncePick fill:#e1f5fe
-      class refineOnceNothing silent
-      classDef silent strokeDasharray:5 5,fill:#fef9e7
+      refineOnceComplete(("Complete<br/>Issue refined successfully"))
+      refineOnceFail(("Fail<br/>Return an incomplete refinement to refine:pick"))
+      refineOnceNothing(("Idle<br/>No refine:pick issues are available"))
+      classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
+      classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
+      classDef decision fill:#fff8e8,stroke:#c75b00,stroke-width:2px,color:#172033
+      classDef idle fill:#202c40,stroke:#738198,stroke-width:2px,color:#ffffff
+      classDef failure fill:#fff0f0,stroke:#ef2929,stroke-width:2px,color:#8b1a1a
+      classDef success fill:#e8f8ec,stroke:#18883c,stroke-width:2px,color:#145a32
+      class refineOnceStart start
+      class refineOnceWrite action
+      class refineOncePick,refineOnceVerify decision
+      class refineOnceNothing idle
+      class refineOnceFail failure
+      class refineOnceComplete success
