@@ -1,0 +1,101 @@
+version: 2
+
+loops:
+  - taskId: refine-once-pick
+    intervalHuman: 20m
+    description: "Single-pass refinement loop: pick one issue, write one grounded user story, mark done"
+
+tasks:
+  - id: refine-once-pick
+    name: "Select and reserve the oldest refine:pick issue"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        number=$(gh issue list --label "refine:pick" --state open
+        --limit 1000 --json number
+        --jq 'sort_by(.number) | .[0].number');
+        test -n "$number" || exit 75;
+        body=$(gh issue view "$number" --json number,title,body
+        --jq '{number,title,body}');
+        gh issue edit "$number" --add-label refine:doing
+        --remove-label refine:pick >/dev/null;
+        printf "%s\n" "$body"
+    onSuccessTaskId: refine-once-write
+    onFailureTaskId: refine-once-nothing
+    maxRuns: 5
+
+  - id: refine-once-write
+    name: "AI: write one grounded user story without clarification questions"
+    command: opencode
+    commandArgs:
+      - run
+      - >
+        First, load all skills available for your current agent. Then
+        rewrite GitHub issue {{number}} as a single autonomous refinement
+        pass. Load and follow the @user-story skill to structure the issue
+        as a development-ready user story, then apply @humanizer to the
+        final prose. The feature to capture is: {{title}}. Context from
+        the issue body: {{body}}. Ground the story in the actual codebase
+        by reading relevant files. Never explore or read files outside the
+        current repository root. Update the GitHub issue body yourself with
+        the final user story in Mike Cohn As a/I want to/so that format,
+        Gherkin Given/When/Then acceptance criteria, edge cases, and a
+        Mermaid diagram if appropriate. Make reasonable assumptions from
+        the issue and codebase; do not ask clarification questions, append
+        questions, or create a question branch. Always apply the
+        'refine:done' label, remove 'refine:doing', and keep the final
+        body as valid Markdown. Do not ask me anything during the session.
+    onSuccessTaskId: refine-once-verify
+    onFailureTaskId: refine-once-fail
+    maxRuns: 5
+
+  - id: refine-once-verify
+    name: "Verify: the single refinement is marked refine:done"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        labels=$(gh issue view {{number}} --json labels
+        --jq '.labels[].name');
+        echo "$labels" | grep -qE '^refine:done$'
+        && git checkout -- . && git clean -fd && exit 0 || exit 1
+    onSuccessTaskId: null
+    onFailureTaskId: refine-once-fail
+    maxRuns: 5
+
+  - id: refine-once-fail
+    name: "Recovery: return an incomplete refinement to refine:pick"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        gh issue edit {{number}} --add-label refine:pick
+        --remove-label refine:doing
+    onSuccessTaskId: null
+    onFailureTaskId: null
+    maxRuns: 5
+
+  - id: refine-once-nothing
+    name: "Idle: no refine:pick issues are available"
+    command: echo
+    commandArgs:
+      - "Nothing to refine, no issues with refine:pick label"
+    silentChain: true
+    onSuccessTaskId: null
+    onFailureTaskId: null
+    maxRuns: 5
+
+diagram: |
+  flowchart TD
+      refineOncePick["Select<br/>Reserve the oldest refine:pick issue"] -->|✓| refineOnceWrite
+      refineOncePick -.->|✗| refineOnceNothing
+      refineOnceWrite["Write<br/>AI: write one grounded user story"] -->|✓| refineOnceVerify
+      refineOnceWrite -.->|✗| refineOnceFail
+      refineOnceVerify["Verify<br/>Check issue has refine:done label"] -->|✓| finalNode(("End"))
+      refineOnceVerify -.->|✗| refineOnceFail
+      refineOnceFail["Fail<br/>Return an incomplete refinement to refine:pick"] -->|✓| finalNode(("End"))
+      refineOnceNothing["Idle<br/>No refine:pick issues are available"] -->|✓| finalNode(("End"))
+      style refineOncePick fill:#e1f5fe
+      class refineOnceNothing silent
+      classDef silent strokeDasharray:5 5,fill:#fef9e7
