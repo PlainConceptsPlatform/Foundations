@@ -17,35 +17,9 @@ foundation: it ships **tokens, not components**.
 
 ### 1. Install the package
 
-Create a user-level `.npmrc` that maps the scope to GitHub Packages. Do not add credentials to an app repository:
-
-```text
-# Windows: %USERPROFILE%\.npmrc
-# macOS/Linux: ~/.npmrc
-@plainconceptsplatform:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_REGISTRY_TOKEN}
-```
-
-Create and authorize a personal access token as follows:
-
-1. Open [GitHub token settings](https://github.com/settings/tokens) and select **Generate new token
-   (classic)**.
-2. Give the token the `read:packages` permission and generate it.
-3. On the token list, select **Configure SSO** next to the new token and authorize
-   **PlainConceptsPlatform**. This step is required by the organization’s SAML SSO policy.
-4. Store the token in the `NPM_REGISTRY_TOKEN` user environment variable. For PowerShell on Windows:
-
-```powershell
-[Environment]::SetEnvironmentVariable('NPM_REGISTRY_TOKEN', 'YOUR_TOKEN', 'User')
-```
-
-Open a new terminal, then:
-
 ```bash
 pnpm add @plainconceptsplatform/ui-theme tailwindcss
 ```
-
-CI must inject `NPM_REGISTRY_TOKEN` from its secret store. Never commit a token in `.npmrc` or any other file.
 
 ### 2. Import the theme
 

@@ -1,46 +1,21 @@
 ---
 title: Quickstart
-description: Install the theme and components and get a themed app running in four steps.
+description: Install the theme and components and get a themed app running in three steps.
 ---
 
 This is the fastest path onto the foundation for a new or existing Next.js app. It matches the
 [theme package README](https://github.com/PlainConceptsPlatform/Platform-Foundations/blob/main/packages/theme/README.md),
 which stays the source of truth for the install steps.
 
-## 1. Authenticate to GitHub Packages
+## 1. Install everything
 
-The theme and components are private packages. Create a user-level `.npmrc`, not one in your app repository:
-
-```text
-# Windows: %USERPROFILE%\.npmrc
-# macOS/Linux: ~/.npmrc
-@plainconceptsplatform:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_REGISTRY_TOKEN}
-```
-
-Create and authorize a personal access token as follows:
-
-1. Open [GitHub token settings](https://github.com/settings/tokens) and select **Generate new token
-   (classic)**.
-2. Give the token the `read:packages` permission and generate it.
-3. On the token list, select **Configure SSO** next to the new token and authorize
-   **PlainConceptsPlatform**. This step is required by the organization’s SAML SSO policy.
-4. Store the token in the `NPM_REGISTRY_TOKEN` user environment variable. For PowerShell on Windows:
-
-   ```powershell
-   [Environment]::SetEnvironmentVariable('NPM_REGISTRY_TOKEN', 'YOUR_TOKEN', 'User')
-   ```
-
-   Open a new terminal before installing packages. Never add the token to a repository file. CI must inject
-   `NPM_REGISTRY_TOKEN` from its secret store.
-
-## 2. Install everything
+The theme and components are public npm packages:
 
 ```bash
 pnpm add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
 ```
 
-## 3. Initialize
+## 2. Initialize
 
 ```bash
 npx @plainconceptsplatform/ui-theme@latest init
@@ -49,7 +24,7 @@ npx @plainconceptsplatform/ui-theme@latest init
 This copies `components.json`, adds the theme import to your global stylesheet, and shows you how to
 wire the Outfit font in your root layout.
 
-## 4. Add shadcn components
+## 3. Add shadcn components
 
 ```bash
 npx shadcn@latest add button card dialog
@@ -62,7 +37,6 @@ each one, with usage code.
 
 - [Frontend](/docs/frontend): architecture, theming, dependency injection, and the everyday patterns.
 - [Adopt in an existing app](/docs/getting-started/existing-app): the incremental path.
-- [Set up AI agents](/docs/getting-started/ai-agents): install the skills and point agents at the docs.
 
 Full package details are in the
 [theme README](https://github.com/PlainConceptsPlatform/Platform-Foundations/blob/main/packages/theme/README.md).

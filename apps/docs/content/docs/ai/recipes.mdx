@@ -27,8 +27,7 @@ The production recipes below use GitHub issue labels as a state machine. A label
 
 The two refinement loops share a label state machine. An issue moves through it as the product owner and the AI agent trade turns:
 
-```mermaid
-stateDiagram-v2
+<Mermaid chart={String.raw`stateDiagram-v2
     [*] --> refine_pick
     refine_pick --> refine_doing: loop picks
     refine_doing --> refine_done: story complete
@@ -37,20 +36,17 @@ stateDiagram-v2
     refine_answers --> refine_redoing: re-refine loop picks
     refine_redoing --> refine_done: story complete
     refine_redoing --> refine_questions: more questions
-    refine_done --> [*]
-```
+    refine_done --> [*]`} />
 
 The dev loop is a simpler linear flow:
 
-```mermaid
-stateDiagram-v2
+<Mermaid chart={String.raw`stateDiagram-v2
     [*] --> code_pick
     code_pick --> code_doing: loop picks
     code_doing --> code_done: merged + closed
     code_doing --> code_review: blocked or failed
     code_review --> code_pick: human re-queues
-    code_done --> [*]
-```
+    code_done --> [*]`} />
 
 ## Built-in recipes
 
@@ -60,8 +56,7 @@ These ship with the [loop-task repo](https://github.com/PlainConceptsPlatform/lo
 
 Fetch issue count every 10 seconds. On failure (e.g. `gh` not authenticated), fall through to a silent idle task instead of crashing the loop.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     fetchStart("Start<br/>Fetch issue count") --> fetchIssues
     fetchIssues["Fetch issues<br/>gh issue list + count"] -->|✓| report
     fetchIssues -.->|✗| logSilentError
@@ -75,8 +70,7 @@ flowchart TD
     class fetchStart start
     class fetchIssues decision
     class report success
-    class logSilentError idle
-```
+    class logSilentError idle`} />
 
 Key pattern: `silentChain: true` on the fallback task so the board does not show a noisy failure every 10 seconds when the CLI is unavailable.
 
@@ -84,8 +78,7 @@ Key pattern: `silentChain: true` on the fallback task so the board does not show
 
 List all repo issues, print the oldest one using `{{key}}` template interpolation.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     listStart("Start<br/>List all repo issues") --> listIssues
     listIssues["List issues<br/>Fetch open+closed via gh"] -->|✓| printOldest
     listIssues -.->|✗| listFail
@@ -99,8 +92,7 @@ flowchart TD
     class listStart start
     class printOldest action
     class listIssues decision
-    class listFail failure
-```
+    class listFail failure`} />
 
 Key pattern: `gh issue list --jq '{oldestNumber: ...}'` emits a JSON object, and the next task interpolates `{{oldestNumber}}`, `{{oldestTitle}}`, `{{oldestCreatedAt}}`, `{{total}}` from it.
 
@@ -108,8 +100,7 @@ Key pattern: `gh issue list --jq '{oldestNumber: ...}'` emits a JSON object, and
 
 The fundamental verify → fix → verify retry loop. Runs lint, typecheck, and tests; on failure an AI agent receives `{{output}}` and attempts a fix; retries 3 times before giving up.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     verifyStart("Start<br/>Run verify") --> verifyTask
     verifyTask["Verify<br/>lint + typecheck + test<br/>↻3"] -->|✓| completeTask
     verifyTask -.->|✗| fixTask
@@ -126,8 +117,7 @@ flowchart TD
     class fixTask action
     class verifyTask decision
     class failTask failure
-    class completeTask success
-```
+    class completeTask success`} />
 
 Key pattern: `maxRuns: 3` on the verify task caps retries. The fix task receives `{{output}}` (the full lint/test errors) and loops back to verify.
 
@@ -139,8 +129,7 @@ These power the [Numa](https://github.com/PlainConceptsPlatform/Numa) project. T
 
 The flagship. Every 20 minutes, picks the oldest `code:pick` issue, implements it end-to-end with an AI agent, verifies (lint + typecheck + tests + build for both frontend and backend), opens a PR, waits for CI, fixes CI failures, merges, and closes the issue. 15 tasks covering the full delivery lifecycle.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     devStart("Start<br/>Begin development cycle") --> devPreflight
     devPreflight["Preflight<br/>Clean tree + sync main"] -->|✓| devPick
     devPreflight -.->|✗| devCleanDirty
@@ -178,8 +167,7 @@ flowchart TD
     class devPreflight,devPick,devVerify,devPr,devAwaitCi,devCiReady decision
     class devNothing idle
     class devFail,devFailMerge,devCiBlocked failure
-    class devComplete success
-```
+    class devComplete success`} />
 
 Key patterns:
 - **`{{title}}`, `{{body}}`, `{{number}}`** flow from `dev-pick` into the AI implement task and the commit message (`fix: resolve #{{number}} {{title}}`).
@@ -193,8 +181,7 @@ Key patterns:
 
 Every 20 minutes, picks a `refine:pick` issue and rewrites it as a grounded user story (Mike Cohn format + Gherkin acceptance criteria + Mermaid diagram), running `@humanizer` on the prose. Ends with `refine:done` or `refine:questions`.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     refStart("Start<br/>Begin refinement cycle") --> refPick
     refPick["Select<br/>Oldest refine:pick issue"] -->|✓| refRefine
     refPick -.->|✗| refNothing
@@ -216,8 +203,7 @@ flowchart TD
     class refPick,refVerify decision
     class refNothing idle
     class refFail failure
-    class refComplete success
-```
+    class refComplete success`} />
 
 Key pattern: verify checks for `refine:questions` **or** `refine:done` labels, looping back to refine on failure (the AI agent is expected to have set one of them). The agent grounds the story in the actual codebase and appends clarifying questions for the product owner if needed.
 
@@ -225,8 +211,7 @@ Key pattern: verify checks for `refine:questions` **or** `refine:done` labels, l
 
 Companion to the refine loop. When a product owner answers clarifying questions (`refine:answers`), this loop picks the issue, reads **only the issue owner's comments** (ignoring others as a security measure), and re-refines the story with the answers.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     rerefStart("Start<br/>Begin re-refinement cycle") --> rerefPick
     rerefPick["Select<br/>Oldest refine:answers issue"] -->|✓| rerefProcess
     rerefPick -.->|✗| rerefNothing
@@ -248,8 +233,7 @@ flowchart TD
     class rerefPick,rerefVerify decision
     class rerefNothing idle
     class rerefFail failure
-    class rerefComplete success
-```
+    class rerefComplete success`} />
 
 Key pattern: this forms a two-loop cycle with `refine-loop`. An issue can bounce between `refine:questions` and `refine:answers` multiple times as the agent and owner converge on the story.
 
@@ -257,8 +241,7 @@ Key pattern: this forms a two-loop cycle with `refine-loop`. An issue can bounce
 
 Every 12 hours, runs a read-only `/repo-audit`, publishes the top-3 highest-severity findings as `bug` + `code:pick` issues (via `/plan-story`), and creates an `audit:report` summary with sub-issue linkage. Verifies at least one new bug issue was created.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     auditStart("Start<br/>Begin guardrails audit cycle") --> auditPreflight
     auditPreflight["Preflight<br/>Clean tree + sync main"] -->|✓| auditLock
     auditPreflight -.->|✗| auditFail
@@ -284,8 +267,7 @@ flowchart TD
     class auditPreflight,auditLock,auditVerify decision
     class auditNothing idle
     class auditFail failure
-    class auditComplete success
-```
+    class auditComplete success`} />
 
 Key pattern: the `audit-lock` task prevents overlapping audits by checking for an existing `audit:doing` issue. If verify fails (no bugs were created), the loop retries the audit itself (back to `audit-audit`).
 
@@ -293,8 +275,7 @@ Key pattern: the `audit-lock` task prevents overlapping audits by checking for a
 
 Every day, closes every `audit:report` issue whose all referenced `#NNN` bug issues are resolved. Uses an AI agent to extract issue references from report bodies, check their state, and close completed reports.
 
-```mermaid
-flowchart TD
+<Mermaid chart={String.raw`flowchart TD
     cleanupStart("Start<br/>Begin audit cleanup cycle") --> cleanupPreflight
     cleanupPreflight("Preflight<br/>Clean tree + sync main") -->|✓| cleanupSelect
     cleanupSelect["Select reports<br/>All open audit:report issues"] -->|✓| cleanupAi
@@ -311,8 +292,7 @@ flowchart TD
     class cleanupPreflight action
     class cleanupSelect decision
     class cleanupAi success
-    class cleanupNothing idle
-```
+    class cleanupNothing idle`} />
 
 Key pattern: `{{output}}` carries a JSON array of open audit reports. The AI agent processes each report, extracts `#NNN` references, checks their state with `gh issue view`, and closes reports where all referenced issues are resolved.
 
