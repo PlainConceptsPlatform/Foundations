@@ -66,7 +66,9 @@ tasks:
         untouched, partially implemented, or already present but
         incomplete. If work is missing, do it. If work already exists,
         identify and complete all remaining work rather than starting
-        over. Plan the remaining work internally before coding, then
+        over.
+        Previous verification output: {{output}}.
+        Plan the remaining work internally before coding, then
         implement it. Verify that the issue is actually complete before
         finishing: run the relevant checks, inspect the resulting
         behavior, and fix any failures. Do not stop after planning, do
