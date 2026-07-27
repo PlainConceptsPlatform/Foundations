@@ -67,7 +67,7 @@ tasks:
         incomplete. If work is missing, do it. If work already exists,
         identify and complete all remaining work rather than starting
         over.
-        Previous verification output: {{output}}.
+        Previous task output: {{output}}.
         Plan the remaining work internally before coding, then
         implement it. Verify that the issue is actually complete before
         finishing: run the relevant checks, inspect the resulting
