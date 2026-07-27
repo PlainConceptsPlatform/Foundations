@@ -14,10 +14,13 @@ Capture Playwright characterization tests for every existing route. Take desktop
 
 1. Add `packageManager: "pnpm@10.x"` to root `package.json`.
 2. Create `pnpm-workspace.yaml` with package globs (e.g. `apps/*`, `packages/*`).
-3. Create `.npmrc` with the GitHub Packages registry for Platform packages:
+3. Configure the user-level `.npmrc` with the GitHub Packages registry for Platform packages:
    ```
    @plainconceptsplatform:registry=https://npm.pkg.github.com
+   //npm.pkg.github.com/:_authToken=${NPM_REGISTRY_TOKEN}
    ```
+   Supply `NPM_REGISTRY_TOKEN` through the user environment or CI secret store. Do not commit a token
+   or a repository `.npmrc` containing one.
 4. Delete `package-lock.json` and `yarn.lock`.
 5. Run `pnpm install` to generate `pnpm-lock.yaml`.
 6. Update all CI workflows to use `pnpm/action-setup` before `setup-node`.
@@ -179,7 +182,7 @@ Capture Playwright characterization tests for every existing route. Take desktop
 3. Create translation JSON files in `src/shared/config/locales/`. Start with `en.json`. Organize by namespace: `common`, `nav`, `quotes`, `auth`, `settings`, `errors`.
 4. Wrap the app root with the i18n provider. Initialize i18next before the first render.
 5. Replace every hard-coded user-facing string with `<Trans>` or `useTranslation().t()` calls. Every label, title, tooltip, placeholder, error message, button text, `aria-label`, toast, and heading.
-6. Add an ESLint rule or CI check that flags hard-coded strings in JSX. No magic strings after migration.
+6. Add a Biome-compatible or CI check that flags hard-coded strings in JSX. No magic strings after migration.
 7. Run `@humanizer` on all translation text to remove AI writing patterns.
 
 **Completion criterion:** Zero hard-coded English strings in JSX, i18n initialized, translation JSON complete, build passes, no lint errors.
@@ -190,16 +193,21 @@ Capture Playwright characterization tests for every existing route. Take desktop
 
 **Actions:**
 
-1. Ensure `.npmrc` has the GitHub Packages registry configured.
-2. Install `@plainconceptsplatform/ui-theme` and `@plainconceptsplatform/ui-components`.
-3. In the main CSS file, replace the manual `@import "tailwindcss"` with the Platform theme import. The theme package provides Tailwind v4 tokens, the Outfit font, and shadcn-compatible CSS variables prefixed with `--pc-*`.
-4. Derive app-specific tokens from `--pc-*` primitives. Create a `tokens.css` that maps `--color-*` tokens to `--pc-*` values.
-5. Load the Outfit font via `next/font/google` (or the platform's font loader).
-6. Bridge the `.dark` class for shadcn dark mode if the theme package uses a different class.
+1. Configure the user-level `.npmrc` for GitHub Packages and provide `NPM_REGISTRY_TOKEN` through the
+   user environment or CI secret store.
+2. Install `@plainconceptsplatform/ui-theme`; install `@plainconceptsplatform/ui-components` when the
+   app uses shared components such as `PlainLogo`.
+3. In the global stylesheet, import `@plainconceptsplatform/ui-theme`. The package supplies Tailwind
+   v4, semantic tokens, base styles, and the dark-mode variant.
+4. Use the semantic utility tokens directly. Do not create a parallel token layer or hardcode design
+   values.
+5. Load the Outfit font via `next/font/google` and expose it as `--font-sans` in the root layout.
+6. Toggle the `dark` class on `<html>` for dark mode.
 7. Replace custom `BrandMark` / logo components with `PlainLogo` from `@plainconceptsplatform/ui-components`.
 8. Remove now-redundant custom CSS that the Platform theme replaces.
 
-**Completion criterion:** Platform theme installed, tokens derived from `--pc-*`, Outfit font loads, dark mode works, Playwright visual tests pass with updated baselines.
+**Completion criterion:** Platform theme installed, semantic tokens are used, Outfit font loads, dark
+mode works, Playwright visual tests pass with updated baselines.
 
 ## After migration
 
