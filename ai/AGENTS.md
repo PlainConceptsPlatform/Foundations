@@ -45,8 +45,8 @@ themed by **`@plainconceptsplatform/ui-theme`**, shared components from
 
 ## Theme & components setup (consuming apps)
 
-When building a Platform app, read [`/README.md`](../README.md) for the full setup: `.npmrc` +
-`GITHUB_TOKEN`, then install:
+When building a Platform app, read [`/README.md`](../README.md) for the full setup: user-level `.npmrc` +
+`NPM_REGISTRY_TOKEN`, then install:
 
 - `@plainconceptsplatform/ui-theme` for design tokens (CSS import, Outfit font, shadcn config)
 - `@plainconceptsplatform/ui-components` for shared React components (Plain logo, ...)

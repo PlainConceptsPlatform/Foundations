@@ -143,7 +143,7 @@ Each rule below comes from a real migration. Skipping one causes rework.
 
 1. Capture characterization tests before migrating. Playwright screenshots catch regressions that manual review misses.
 2. Every domain is a separate OpenSpec change. Batching domains into one change makes review impossible.
-3. Platform theme packages come from GitHub Packages. The project needs `.npmrc` with `GITHUB_TOKEN`. Never commit the token.
+3. Platform theme packages come from GitHub Packages. Configure the registry in the user's `.npmrc` and provide `NPM_REGISTRY_TOKEN` through a user environment variable. Never commit the token.
 4. FSD layers use canonical names: `app/`, `pages/`, `widgets/`, `features/`, `entities/`, `shared/`. Do not use underscore-prefixed names like `_app/` or `_pages/`.
 5. inversify-hooks registration uses `cid` as the second argument to `addSingleton` for minification safety: `container.addSingleton<IContract>(HttpContract, cid.IContract)`.
 6. react-i18next from the first day of migration. Zero magic strings. Every user-facing text element must be a translation message.
