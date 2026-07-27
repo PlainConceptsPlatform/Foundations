@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "Shared React components for Platform frontend apps (Plain logo and more).",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "files": ["src", "dist"],
   "exports": {
     ".": {
@@ -49,7 +49,7 @@
     "directory": "packages/ui-components"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   }
 }

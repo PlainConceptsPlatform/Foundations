@@ -17,6 +17,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "publish:theme": "pnpm --filter @plainconceptsplatform/ui-theme publish --access public",
+    "publish:ui-components": "pnpm --filter @plainconceptsplatform/ui-components build && pnpm --filter @plainconceptsplatform/ui-components publish --access public",
+    "publish": "pnpm --filter @plainconceptsplatform/ui-components build && pnpm publish:theme && pnpm publish:ui-components",
     "prepare": "husky"
   },
   "lint-staged": {

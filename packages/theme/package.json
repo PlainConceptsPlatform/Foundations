@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Shared design tokens and theme (Platform styleguide) for Platform frontend apps. For shadcn/ui + Tailwind v4.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "files": ["src", "components.json", "bin"],
   "exports": {
     ".": "./src/index.css",
@@ -26,7 +26,7 @@
     "directory": "packages/theme"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   }
 }
