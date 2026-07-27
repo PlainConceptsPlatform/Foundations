@@ -61,5 +61,5 @@ Pass `className` to constrain size.
 
 ## Publishing
 
-Published to GitHub Packages under the `@plainconceptsplatform` scope, same registry as the theme
-package. Both packages share the same `.npmrc` configuration.
+Published publicly to npm under the `@plainconceptsplatform` scope. No custom registry configuration
+is required.

@@ -14,13 +14,7 @@ Capture Playwright characterization tests for every existing route. Take desktop
 
 1. Add `packageManager: "pnpm@10.x"` to root `package.json`.
 2. Create `pnpm-workspace.yaml` with package globs (e.g. `apps/*`, `packages/*`).
-3. Configure the user-level `.npmrc` with the GitHub Packages registry for Platform packages:
-   ```
-   @plainconceptsplatform:registry=https://npm.pkg.github.com
-   //npm.pkg.github.com/:_authToken=${NPM_REGISTRY_TOKEN}
-   ```
-   Supply `NPM_REGISTRY_TOKEN` through the user environment or CI secret store. Do not commit a token
-   or a repository `.npmrc` containing one.
+3. Platform packages are public npm packages. No custom registry or package token is required.
 4. Delete `package-lock.json` and `yarn.lock`.
 5. Run `pnpm install` to generate `pnpm-lock.yaml`.
 6. Update all CI workflows to use `pnpm/action-setup` before `setup-node`.
@@ -193,18 +187,16 @@ Capture Playwright characterization tests for every existing route. Take desktop
 
 **Actions:**
 
-1. Configure the user-level `.npmrc` for GitHub Packages and provide `NPM_REGISTRY_TOKEN` through the
-   user environment or CI secret store.
-2. Install `@plainconceptsplatform/ui-theme`; install `@plainconceptsplatform/ui-components` when the
+1. Install `@plainconceptsplatform/ui-theme`; install `@plainconceptsplatform/ui-components` when the
    app uses shared components such as `PlainLogo`.
-3. In the global stylesheet, import `@plainconceptsplatform/ui-theme`. The package supplies Tailwind
+2. In the global stylesheet, import `@plainconceptsplatform/ui-theme`. The package supplies Tailwind
    v4, semantic tokens, base styles, and the dark-mode variant.
-4. Use the semantic utility tokens directly. Do not create a parallel token layer or hardcode design
+3. Use the semantic utility tokens directly. Do not create a parallel token layer or hardcode design
    values.
-5. Load the Outfit font via `next/font/google` and expose it as `--font-sans` in the root layout.
-6. Toggle the `dark` class on `<html>` for dark mode.
-7. Replace custom `BrandMark` / logo components with `PlainLogo` from `@plainconceptsplatform/ui-components`.
-8. Remove now-redundant custom CSS that the Platform theme replaces.
+4. Load the Outfit font via `next/font/google` and expose it as `--font-sans` in the root layout.
+5. Toggle the `dark` class on `<html>` for dark mode.
+6. Replace custom `BrandMark` / logo components with `PlainLogo` from `@plainconceptsplatform/ui-components`.
+7. Remove now-redundant custom CSS that the Platform theme replaces.
 
 **Completion criterion:** Platform theme installed, semantic tokens are used, Outfit font loads, dark
 mode works, Playwright visual tests pass with updated baselines.

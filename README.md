@@ -46,42 +46,16 @@ pnpm test         # Vitest
 
 ## Using Platform packages in your app
 
-The Platform theme and shared components are private packages on GitHub Packages.
+The Platform theme and shared components are public npm packages. No registry configuration or token
+is required.
 
-### 1. Configure registry access
-
-Create a user-level `.npmrc`, not one in your app repository:
-
-```text
-# Windows: %USERPROFILE%\.npmrc
-# macOS/Linux: ~/.npmrc
-@plainconceptsplatform:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_REGISTRY_TOKEN}
-```
-
-Create and authorize a personal access token as follows:
-
-1. Open [GitHub token settings](https://github.com/settings/tokens) and select **Generate new token
-   (classic)**.
-2. Give the token the `read:packages` permission and generate it.
-3. On the token list, select **Configure SSO** next to the new token and authorize
-   **PlainConceptsPlatform**. This step is required by the organization’s SAML SSO policy.
-4. Store the token in the `NPM_REGISTRY_TOKEN` user environment variable. For PowerShell on Windows:
-
-   ```powershell
-   [Environment]::SetEnvironmentVariable('NPM_REGISTRY_TOKEN', 'YOUR_TOKEN', 'User')
-   ```
-
-   Open a new terminal before installing packages. Never add the token to a repository file. CI must inject
-   `NPM_REGISTRY_TOKEN` from its secret store.
-
-### 2. Install everything
+### 1. Install everything
 
 ```bash
 pnpm add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
 ```
 
-### 3. Initialize
+### 2. Initialize
 
 ```bash
 npx @plainconceptsplatform/ui-theme@latest init
@@ -90,7 +64,7 @@ npx @plainconceptsplatform/ui-theme@latest init
 This copies `components.json`, adds the theme import to your global stylesheet, and shows you how
 to wire the Outfit font in your root layout.
 
-### 4. Add shadcn components
+### 3. Add shadcn components
 
 ```bash
 npx shadcn@latest add button card dialog ...
