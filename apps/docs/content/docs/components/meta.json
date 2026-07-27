@@ -3,7 +3,7 @@
   "pages": [
     "---Plain---",
     "plain-logo",
-    "typography",
+    "data-table",
     "---Shadcn---",
     "accordion",
     "alert",
@@ -25,7 +25,6 @@
     "combobox",
     "command",
     "context-menu",
-    "data-table",
     "date-picker",
     "dialog",
     "direction",
