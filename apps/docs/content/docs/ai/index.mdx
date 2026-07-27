@@ -1,0 +1,191 @@
+---
+title: AI
+description: "Three open-source tools for AI-augmented engineering: opencode-onboard, loop-task, and orbion. Use them separately or together."
+---
+
+The Plain Concepts Platform uses three open-source tools for AI-augmented engineering. Each stands on its own; together they form a complete loop-engineering pipeline that prepares a codebase for AI, runs agents on a cadence, and manages all the loops from a single desktop app.
+
+| Tool | What it does | Repo |
+|---|---|---|
+| **opencode-onboard** | Prepare any codebase for AI agents | [PlainConceptsPlatform/opencode-onboard](https://github.com/PlainConceptsPlatform/opencode-onboard) |
+| **loop-task** | Run any command on a cadence (the heartbeat) | [PlainConceptsPlatform/loop-task](https://github.com/PlainConceptsPlatform/loop-task) |
+| **orbion** | Desktop control plane for loop-task instances | [PlainConceptsPlatform/orbion](https://github.com/PlainConceptsPlatform/orbion) |
+
+## opencode-onboard
+
+Prepare any codebase for AI. A single interactive wizard wires [OpenCode](https://opencode.ai), [OpenSpec](https://github.com/fission-ai/openspec), [codegraph](https://github.com/colbymchenry/codegraph), and [agentmemory](https://github.com/rohitg00/agentmemory) into a multi-agent development workflow powered by native parallel subagents.
+
+### Quick start
+
+```bash
+npx opencode-onboard@latest
+```
+
+Requires **Node.js 18 or higher**. You can also run individual steps directly:
+
+```bash
+npx opencode-onboard clean        # reset old AI files
+npx opencode-onboard platform     # reconfigure backlog/repository
+npx opencode-onboard optimization # RTK, quota, caveman, codegraph, agentmemory, humanizer
+npx opencode-onboard --help
+```
+
+### What the wizard does
+
+The CLI runs a 10-step onboarding wizard:
+
+1. **Source scope** — current repo or sibling source roots
+2. **Clean AI files** — removes stale `AGENTS.md`, `.cursorrules`, `CLAUDE.md`, `.agents/`
+3. **Choose platform** — backlog (GitHub, Azure DevOps, Jira, browser, or None) plus repository (GitHub, Azure DevOps, GitLab, or None). Supports mixed platforms.
+4. **Check platform CLI** — verifies `gh`, `az`, `acli`, or `glab` as needed
+5. **Copy scaffolding** — agents, built-in skills, bootstrap docs, `skills-lock.json`
+6. **Initialize OpenSpec** — `npx @fission-ai/openspec init` for structured change management
+7. **Choose models** — plan, build, and fast tiers from [models.dev](https://models.dev)
+8. **Token optimization** — optional RTK, quota, caveman, codegraph, agentmemory, humanizer
+9. **Install browser plugin** — `@different-ai/opencode-browser` for agent browser automation
+10. **Write onboarding metadata** — `.opencode/opencode-onboard.json`
+
+### Bootstrap sequence
+
+After onboarding, open OpenCode in your project and type:
+
+```
+/repo-initialize
+```
+
+For **brownfield** projects, it generates `ARCHITECTURE.md` and `DESIGN.md` from your actual codebase, archives project history into OpenSpec, and activates the agent team. For **greenfield** projects, it skips documentation generation and leaves placeholder files you can populate later with `/make-architecture` and `/make-design`.
+
+### Key commands
+
+Installed as slash commands in `.opencode/commands/`:
+
+| Command | Purpose |
+|---|---|
+| `/repo-initialize` | Initialize project (greenfield vs brownfield), activate agent team |
+| `/plan-propose` | Parse a work item URL into proposal, specs, and tasks |
+| `/plan-apply` | Implement tasks in parallel subagent waves |
+| `/plan-goal` | Autonomous full-lifecycle pipeline (explore → propose → apply → archive) |
+| `/ops-ship` | Create a pull request with screenshots |
+| `/make-architecture` | Generate or regenerate `ARCHITECTURE.md` |
+| `/make-design` | Generate or regenerate `DESIGN.md` |
+| `/repo-audit` | Read-only health audit across source roots |
+| `/repo-help` | Show all commands and when to use each |
+
+### Multi-platform
+
+Mix backlog and repository platforms. Examples: Jira backlog plus GitHub repository, browser backlog plus GitLab repository. The matching `ob-userstory-*` skill is installed based on your backlog choice; PR operations are injected into `/ops-*` commands based on your repo choice.
+
+## loop-task
+
+Loop engineering for your terminal. A cross-platform CLI that runs shell commands at human-readable intervals. Create loops in the background, manage them from an interactive TUI board, or run them in the foreground.
+
+### Quick start
+
+```bash
+npm install -g loop-task
+loop-task                          # open the board
+loop-task start                    # start the daemon, restore persisted loops
+loop-task new 30m -- npm test      # create a background loop
+loop-task new 30m --now -- opencode run "find missing translations and translate them, 3 max"
+```
+
+Requires **Node.js 20 or higher**. Or run directly with `npx loop-task`.
+
+### Concepts
+
+- **Loop** — a schedule (defines *when*). Triggers tasks. Fields: interval, task, description, max runs.
+- **Task** — an executable unit (defines *what*). Fields: name, command, on-success chain, on-failure chain. Reusable across loops.
+- **Project** — organizational scope for loops. Every loop belongs to one project; the board shows only the active project.
+
+### The board
+
+Interactive TUI for managing loops, tasks, and projects. Loops persist to disk and survive reboots. Closing the board or terminal does not stop loops — the daemon keeps running.
+
+Key controls: `↑/↓` move, `Enter` edit, `p` pause/play, `s` stop, `n` new loop, `c` copy command, `/` search, `Esc` quit.
+
+### Chain context sharing
+
+Tasks chain on success or failure. Context flows between them automatically via `{{key}}` template interpolation. A later task references output from an earlier one without re-querying:
+
+```bash
+# Task 1: find an issue
+gh issue list --label "to implement" --json number,title,body --jq '{number: .[0].number, title: .[0].title, body: .[0].body}'
+
+# Task 2 (on-success): mark in-progress
+gh issue edit {{number}} --add-label "implementing" --remove-label "to implement"
+
+# Task 3 (on-success): AI implements it
+opencode run "Implement this GitHub issue... Issue number: {{number}} Title: {{title}} Body: {{body}}" --model "opencode/big-pickle"
+
+# Task 4 (on-success): close the issue
+gh issue edit {{number}} --remove-label "implementing" && gh issue close {{number}}
+```
+
+### Driving AI agents
+
+The core loop-engineering pattern: schedule an AI agent to chip away at a backlog on a cadence, unattended:
+
+```bash
+loop-task new 30m --now -- opencode run "find and implement the next issue, one max"
+```
+
+The daemon runs the `opencode` command every 30 minutes. Use `--max-runs` to bound unattended sessions, and watch the run history on the board.
+
+### HTTP API
+
+The daemon exposes a REST + SSE API on `localhost:8845`:
+
+```bash
+curl http://127.0.0.1:8845/api/loops
+curl -N http://127.0.0.1:8845/api/loops/abc123/logs/stream   # live log following
+```
+
+Swagger UI at `/api/docs`, OpenAPI spec at `/api/openapi.json`. Bind host configurable via `loop-task http-host` (default `0.0.0.0`; set to `local` for loopback only).
+
+## orbion
+
+The open-source control plane for loop engineering. A desktop app (Electron + React 19) that manages multiple [loop-task](https://github.com/PlainConceptsPlatform/loop-task) instances from a single interface.
+
+### What it does
+
+- **Instances** — register any number of loop-task daemons by HTTP API URL (e.g. `http://127.0.0.1:8845`), with connection health dots. Persisted locally.
+- **Loops** — live list per instance (status, interval, runs, last exit, next run), filterable from the bottom bar.
+- **Logs** — per-loop log viewer with live follow via SSE streams.
+- **Projects** — view projects and their loops across all instances.
+
+Read-only in v1: no pause, trigger, or edit actions yet. Binary releases are planned; currently run from source.
+
+### Run from source
+
+```bash
+git clone https://github.com/PlainConceptsPlatform/orbion.git
+cd orbion
+pnpm install
+pnpm dev        # Electron app (hot reload)
+pnpm dev:web    # renderer only, with mocked data (no Electron/daemon)
+```
+
+Requires **Node.js 20 or higher** and [pnpm](https://pnpm.io). A running loop-task daemon with the HTTP API (loop-task >= 2.1) is needed for real data.
+
+### Remote instances (VMs)
+
+The loop-task daemon binds its HTTP API to `0.0.0.0` by default, so a daemon on a VM is reachable from Orbion out of the box. Secure access at the network layer (VPN, SSH tunnel, or firewall), since the API is unauthenticated.
+
+## Using them together
+
+The three tools compose into a pipeline. Use any one alone, or chain them:
+
+```text
+opencode-onboard            loop-task                orbion
+(prepare codebase for AI)   (schedule AI runs)       (manage all loops)
+        │                          │                       │
+        ▼                          ▼                       ▼
+  npx opencode-onboard@latest  loop-task new 30m --    register instance
+  /repo-initialize             opencode run "..."      watch loops + logs
+```
+
+1. **Onboard once** — run opencode-onboard in your repo to wire agents, OpenSpec, and the full command set.
+2. **Schedule recurring work** — create a loop-task loop that invokes `opencode run` on a cadence, so an AI agent chips away at a backlog or sync job unattended.
+3. **Manage from one place** — register the loop-task daemon(s) in orbion and watch every loop across every machine, with live logs.
+
+Each tool holds its own: opencode-onboard is the entry point for any one-off agent session, loop-task works with any shell command (not just AI), and orbion is the observability layer.
