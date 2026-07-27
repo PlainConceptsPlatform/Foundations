@@ -11,9 +11,8 @@ ai/
 ├── ARCHITECTURE.md     # stack, repo layout, FSD, DI, backend architecture
 ├── DESIGN.md           # design tokens, visual intent, working rules
 ├── AGENTS.md           # this file: index/hub
-└── .agents/
-    ├── skills/         # 31 bundled skills (load via @skill-name, no install)
-    └── agents/         # frontend-engineer, backend-engineer, docs-engineer
+skills/
+└── platform-onboard/   # brownfield Platform migration skill
 ```
 
 ## Stack (summary)
@@ -51,13 +50,16 @@ When building a Platform app, read [`/README.md`](../README.md) for the full set
 - `@plainconceptsplatform/ui-theme` for design tokens (CSS import, Outfit font, shadcn config)
 - `@plainconceptsplatform/ui-components` for shared React components (Plain logo, ...)
 
-## Bundled skills
+## Migration skill
 
-All skills live in [`.agents/skills/`](.agents/skills/). Load them with the `skill` tool by name
-(e.g. `@shadcn`, `@vitest-testing`). No installation needed.
+[`platform-onboard`](../skills/platform-onboard/SKILL.md) brings a brownfield project onto the
+Platform stack. Use it when adopting Platform standards or migrating to Platform Foundations. It
+scans the project before changing it, then progresses through agentic infrastructure, architecture
+docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependency order.
 
 **Workflow**
-- `platform-onboard`: onboard a brownfield project onto the Platform stack (pnpm, Next.js, shadcn, FSD, inversify-hooks, react-i18next, Biome, loop-task, OpenSpec)
+- `platform-onboard`: onboard a brownfield project onto the Platform stack (pnpm, Next.js, shadcn,
+  FSD, inversify-hooks, react-i18next, Biome, loop-task, OpenSpec)
 - `openspec-propose`: propose a change with design, specs, tasks
 - `openspec-explore`: thinking partner for ideas and investigation
 - `openspec-apply-change`: implement tasks from an OpenSpec change

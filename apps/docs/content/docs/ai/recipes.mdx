@@ -13,15 +13,41 @@ Recipes live in `.loops/recipes/` inside a repo. Drop a YAML file there and `loo
 
 ## The label system
 
-The production recipes below use GitHub issue labels as a state machine. A label marks **where an issue is in the loop's lifecycle**, and each loop only picks issues with its entry label. This keeps multiple loops running on the same repo without colliding.
+The production recipes below use GitHub issue labels as a state machine. Lifecycle labels mark **where an issue is in a loop**, while routing labels determine what the loop picks next. This keeps multiple loops running on the same repo without colliding.
 
 ### Labels by workflow
 
-| Workflow | Labels | Entry | In-progress | Exit |
+| Workflow | Lifecycle labels | Entry | In-progress | Exit |
 |---|---|---|---|---|
 | **Dev** | `code:pick`, `code:doing`, `code:done`, `code:review` | `code:pick` | `code:doing` | `code:done` or `code:review` |
 | **Refine** | `refine:pick`, `refine:doing`, `refine:questions`, `refine:answers`, `refine:redoing`, `refine:done` | `refine:pick` | `refine:doing` | `refine:done` or `refine:questions` |
-| **Audit** | `audit:report`, `audit:doing`, `audit:closed`, `bug` | (auto-generated) | `audit:doing` | `audit:closed` |
+| **Audit** | `audit:report`, `audit:doing`, `audit:closed` | (auto-generated) | `audit:doing` | `audit:closed` |
+| **Routing** | `priority`, `bug` | Added to an entry label | N/A | Changes pick order, not lifecycle |
+
+### Priority cascade
+
+The Dev, Refine, and Re-refine loops all select the **lowest-numbered** eligible issue from the
+first non-empty tier below. `priority` is an explicit escalation; `bug` raises defects ahead of
+normal planned work.
+
+1. `priority` + `bug` + the loop entry label
+2. `priority` + the loop entry label
+3. `bug` + the loop entry label
+4. The loop entry label only
+
+Each loop uses its own entry label: `code:pick`, `refine:pick`, or `refine:answers`.
+
+```bash
+pick_number() {
+  gh issue list --label "$1" --state open --limit 1000 --json number \
+    --jq 'sort_by(.number) | .[0].number'
+}
+
+number=$(pick_number "priority,bug,$entry")
+test -n "$number" || number=$(pick_number "priority,$entry")
+test -n "$number" || number=$(pick_number "bug,$entry")
+test -n "$number" || number=$(pick_number "$entry")
+```
 
 ### Label lifecycle
 
@@ -43,8 +69,8 @@ The dev loop is a simpler linear flow:
 <Mermaid chart={String.raw`stateDiagram-v2
     [*] --> code_pick
     code_pick --> code_doing: loop picks
-    code_doing --> code_done: merged + closed
-    code_doing --> code_review: blocked or failed
+    code_doing --> code_done: implementation complete
+    code_doing --> code_review: needs human review
     code_review --> code_pick: human re-queues
     code_done --> [*]`} />
 
@@ -127,14 +153,14 @@ These power the [Numa](https://github.com/PlainConceptsPlatform/Numa) project. T
 
 ### Dev loop
 
-The flagship. Every 20 minutes, picks the oldest `code:pick` issue, implements it end-to-end with an AI agent, verifies (lint + typecheck + tests + build for both frontend and backend), opens a PR, waits for CI, fixes CI failures, merges, and closes the issue. 15 tasks covering the full delivery lifecycle.
+The flagship. Every 20 minutes, picks a `code:pick` issue through the priority cascade, implements it end-to-end with an AI agent, verifies (lint + typecheck + tests + build for both frontend and backend), opens a PR, waits for CI, fixes CI failures, merges, and closes the issue. 16 tasks cover the full delivery lifecycle.
 
 <Mermaid chart={String.raw`flowchart TD
     devStart("Start<br/>Begin development cycle") --> devPreflight
     devPreflight["Preflight<br/>Clean tree + sync main"] -->|✓| devPick
     devPreflight -.->|✗| devCleanDirty
     devCleanDirty("Recovery<br/>Reset dirty tree + resync (maxRuns=1)") -->|✓| devPick
-    devPick["Select<br/>Oldest code:pick issue"] -->|✓| devImplement
+    devPick["Select<br/>Priority cascade pick"] -->|✓| devImplement
     devPick -.->|✗| devNothing
     devImplement("Implement<br/>AI: opencode /plan-goal") -->|✓| devVerify
     devImplement -.->|✗| devFail
@@ -170,6 +196,7 @@ The flagship. Every 20 minutes, picks the oldest `code:pick` issue, implements i
     class devComplete success`} />
 
 Key patterns:
+- **Priority cascade** selects `priority` + `bug` work first, then `priority`, then `bug`, then normal `code:pick` work. Each tier picks its lowest-numbered issue.
 - **`{{title}}`, `{{body}}`, `{{number}}`** flow from `dev-pick` into the AI implement task and the commit message (`fix: resolve #{{number}} {{title}}`).
 - **`{{prUrl}}`** is emitted by `dev-pr` as JSON and threaded through CI wait, CI fix, merge, and failure recovery tasks.
 - **`maxRuns: 5`** on verify, **`maxRuns: 3`** on CI wait — bounded retries before the issue is relabeled `code:review` for a human.
@@ -179,11 +206,11 @@ Key patterns:
 
 ### Refine loop
 
-Every 20 minutes, picks a `refine:pick` issue and rewrites it as a grounded user story (Mike Cohn format + Gherkin acceptance criteria + Mermaid diagram), running `@humanizer` on the prose. Ends with `refine:done` or `refine:questions`.
+Every 20 minutes, selects a `refine:pick` issue through the priority cascade and rewrites it as a grounded user story (Mike Cohn format + Gherkin acceptance criteria + Mermaid diagram), running `@humanizer` on the prose. Ends with `refine:done` or `refine:questions`.
 
 <Mermaid chart={String.raw`flowchart TD
     refStart("Start<br/>Begin refinement cycle") --> refPick
-    refPick["Select<br/>Oldest refine:pick issue"] -->|✓| refRefine
+    refPick["Select<br/>Priority cascade pick"] -->|✓| refRefine
     refPick -.->|✗| refNothing
     refRefine("Refine<br/>AI: /planStory to rewrite as user story<br/>↻5") -->|✓| refVerify
     refRefine -.->|✗| refFail
@@ -209,11 +236,11 @@ Key pattern: verify checks for `refine:questions` **or** `refine:done` labels, l
 
 ### Re-refine loop
 
-Companion to the refine loop. When a product owner answers clarifying questions (`refine:answers`), this loop picks the issue, reads **only the issue owner's comments** (ignoring others as a security measure), and re-refines the story with the answers.
+Companion to the refine loop. When a product owner answers clarifying questions (`refine:answers`), this loop selects an issue through the priority cascade, reads **only the issue owner's comments** (ignoring others as a security measure), and re-refines the story with the answers.
 
 <Mermaid chart={String.raw`flowchart TD
     rerefStart("Start<br/>Begin re-refinement cycle") --> rerefPick
-    rerefPick["Select<br/>Oldest refine:answers issue"] -->|✓| rerefProcess
+    rerefPick["Select<br/>Priority cascade pick"] -->|✓| rerefProcess
     rerefPick -.->|✗| rerefNothing
     rerefProcess("Process<br/>AI: /planStory with owner comments<br/>↻5") -->|✓| rerefVerify
     rerefProcess -.->|✗| rerefFail

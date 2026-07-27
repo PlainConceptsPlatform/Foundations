@@ -35,7 +35,17 @@ convention while old code migrates gradually.
 ## 4. Add the agent setup
 
 Point your coding agent at the foundation and install the recommended skills so new work matches the
-conventions by default. See [Set up AI agents](/docs/getting-started/ai-agents).
+conventions by default. See [AI](/docs/ai).
+
+## 5. Migrate the full Platform stack
+
+For a brownfield application that needs more than incremental adoption, use the
+[`platform-onboard` skill](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-onboard).
+It runs a preflight scan, then migrates one domain at a time: agent setup, architecture docs,
+OpenSpec, frontend tooling and structure, loop automation, and .NET guardrails when applicable.
+
+The skill preserves behavior by requiring Playwright characterization tests before frontend changes.
+Treat every domain as a separate OpenSpec change so each migration step is reviewable and reversible.
 
 ## What not to do
 

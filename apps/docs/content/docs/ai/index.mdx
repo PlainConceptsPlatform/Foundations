@@ -55,6 +55,18 @@ After onboarding, open OpenCode in your project and type:
 
 For **brownfield** projects, it generates `ARCHITECTURE.md` and `DESIGN.md` from your actual codebase, archives project history into OpenSpec, and activates the agent team. For **greenfield** projects, it skips documentation generation and leaves placeholder files you can populate later with `/make-architecture` and `/make-design`.
 
+### Platform migration skill
+
+[`platform-onboard`](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-onboard)
+is the Platform Foundations skill for migrating a brownfield repository to the recommended stack.
+Use it after the agent setup is in place when the repository needs a deliberate, end-to-end adoption
+rather than a theme-only upgrade.
+
+It starts with a binary preflight across six domains, then creates and completes one OpenSpec change
+per failing domain: agentic infrastructure, architecture documentation, OpenSpec, the frontend
+stack, loop automation, and .NET guardrails where relevant. Frontend work begins with Playwright
+characterization tests to protect existing behavior and visual parity.
+
 ### Key commands
 
 Installed as slash commands in `.opencode/commands/`:

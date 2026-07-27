@@ -13,7 +13,8 @@ It is **not** a component library, an app framework, or a design system to be ma
 ## What's here
 
 ```text
-ai/               ARCHITECTURE (incl. Stack) + DESIGN + AGENTS + .agents/ (skills, agents)
+ai/               ARCHITECTURE (incl. Stack) + DESIGN + AGENTS
+skills/           reusable agent skills, including platform-onboard for brownfield migrations
 apps/docs         Fumadocs (Next.js), docs + live themed component previews
 packages/theme    @plainconceptsplatform/ui-theme, design tokens (CSS only)
 packages/ui-components  @plainconceptsplatform/ui-components, shared React components (Plain logo, ...)
@@ -100,12 +101,17 @@ Full details in [`packages/theme/README.md`](packages/theme/README.md).
 ## For AI agents
 
 Start with [`AGENTS.md`](AGENTS.md). It points to the [`ai/`](ai/) folder, which has conventions,
-architecture, design rules, bundled skills, and agent definitions.
+architecture, design rules, and agent definitions. For an existing application that needs the full
+Platform stack, use [`platform-onboard`](skills/platform-onboard/SKILL.md). It assesses six domains
+in dependency order: agentic infrastructure, architecture docs, OpenSpec, frontend stack, loop
+automation, and .NET guardrails.
 
 ## Documentation
 
 - [`ai/ARCHITECTURE.md`](ai/ARCHITECTURE.md): reference architecture + stack (frontend and backend/.NET)
 - [`ai/DESIGN.md`](ai/DESIGN.md): design tokens & UI rules
+- [`skills/platform-onboard/SKILL.md`](skills/platform-onboard/SKILL.md): brownfield migration to
+  Platform practices
 - [`packages/theme/README.md`](packages/theme/README.md): theme package setup and conventions
 - [`packages/ui-components/README.md`](packages/ui-components/README.md): shared components (Plain logo)
 - [`apps/docs/README.md`](apps/docs/README.md): docs/showcase site structure
