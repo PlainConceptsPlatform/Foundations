@@ -114,6 +114,64 @@ describe("navigation reaches every page", () => {
   });
 });
 
+describe("the docs site is themed by the package it documents", () => {
+  it("maps the Fumadocs chrome onto the Platform tokens", () => {
+    // Without these, the navbar/sidebar/TOC render in stock Fumadocs neutral and
+    // the site never shows the brand blue it exists to document.
+    const css = read("apps/docs/app/global.css");
+
+    for (const token of [
+      "--color-fd-background",
+      "--color-fd-foreground",
+      "--color-fd-primary",
+      "--color-fd-accent",
+      "--color-fd-muted",
+      "--color-fd-border",
+      "--color-fd-ring",
+    ]) {
+      // Match the declaration, not the bare name: "--color-fd-primary" is a
+      // prefix of "--color-fd-primary-foreground" and would pass either way.
+      expect(css, `${token} must be aliased to a Platform token`).toContain(`${token}:`);
+    }
+  });
+
+  it("loads the Radix overlay animations", () => {
+    // tw-animate-css supplies animate-in/fade-in/zoom-in. It was a declared
+    // dependency that nothing imported, so every overlay opened with no motion.
+    expect(read("apps/docs/app/global.css")).toMatch(/@import\s+"tw-animate-css"/);
+  });
+
+  it("defines the token groups the shadcn Sidebar and charts consume, in both modes", () => {
+    const theme = read("packages/theme/src/theme.css");
+
+    for (const token of [
+      "--sidebar",
+      "--sidebar-foreground",
+      "--sidebar-accent",
+      "--sidebar-accent-foreground",
+      "--sidebar-border",
+      "--sidebar-ring",
+      "--chart-1",
+      "--chart-5",
+    ]) {
+      // Declared twice: once under :root and once under .dark. A token present in
+      // only one mode renders the component unstyled in the other.
+      const declarations = theme.split(`${token}:`).length - 1;
+      expect(
+        declarations,
+        `${token} should be declared for light and dark, found ${declarations}`,
+      ).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("exposes those groups as Tailwind utilities", () => {
+    // bg-sidebar / text-chart-1 only exist if declared inside @theme inline.
+    const theme = read("packages/theme/src/theme.css");
+    expect(theme).toContain("--color-sidebar:");
+    expect(theme).toContain("--color-chart-1:");
+  });
+});
+
 describe("the public repo does not leak infrastructure identifiers", () => {
   it("keeps Azure subscription and tenant ids out of workflows", () => {
     const workflows = walk(resolve(repoRoot, ".github/workflows"), [".yml", ".yaml"]);
