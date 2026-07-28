@@ -5,6 +5,9 @@ export type Swatch = { step: string; hex: string };
 export type SemanticSlot = { token: string; hex: string; ref: string | null };
 export type TypeStep = { name: string; weight: number; size: number; lineHeight: number };
 
+/** Published version of @plainconceptsplatform/ui-theme, shown in the site nav. */
+export const themeVersion = "0.1.0";
+
 export const tokens = {
   ramps: {
     blue: [

@@ -83,6 +83,10 @@ if (typeScale.length === 0)
 const fontFamily = designMd.match(/^ {2}family:\s*(.+)$/m)?.[1]?.trim() ?? "Outfit";
 const radius = rootBlock.match(/--radius:\s*([^;]+);/)?.[1]?.trim() ?? null;
 
+const themeVersion = JSON.parse(
+  readFileSync(resolve(repoRoot, "packages/theme/package.json"), "utf8"),
+).version;
+
 const payload = {
   ramps: Object.fromEntries(
     [...ramps.entries()].map(([family, steps]) => [
@@ -103,6 +107,9 @@ writeFileSync(
 export type Swatch = { step: string; hex: string };
 export type SemanticSlot = { token: string; hex: string; ref: string | null };
 export type TypeStep = { name: string; weight: number; size: number; lineHeight: number };
+
+/** Published version of @plainconceptsplatform/ui-theme, shown in the site nav. */
+export const themeVersion = ${JSON.stringify(themeVersion)};
 
 export const tokens = ${JSON.stringify(payload, null, 2)} as {
   ramps: Record<string, Swatch[]>;

@@ -12,3 +12,14 @@ export const siteName = "Platform Foundations";
 /** Kept in sync with content/docs/index.mdx frontmatter. */
 export const siteDescription =
   "The shared theme, conventions, and showcase for PlainConcepts Platform apps.";
+
+/**
+ * The published theme version, generated from packages/theme/package.json.
+ *
+ * Surfaced in the nav because "is this alive, and what version am I on" is the
+ * actual adoption question for a team deciding whether to depend on the theme,
+ * and the site never answered it. Comes through the token generator rather than a
+ * direct import: the theme package does not export its manifest, and adding that
+ * export just to read a version would change a published package's contract.
+ */
+export { themeVersion } from "@/lib/tokens.generated";

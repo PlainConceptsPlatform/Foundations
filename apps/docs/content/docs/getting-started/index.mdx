@@ -7,15 +7,41 @@ This is the fastest path onto the foundation for a new or existing Next.js app. 
 [theme package README](https://github.com/PlainConceptsPlatform/Foundations/blob/main/packages/theme/README.md),
 which stays the source of truth for the install steps.
 
-## 1. Install everything
+<Callout type="info">
+  Both packages are public on npm. There is no registry configuration and no access token to set up.
+</Callout>
 
-The theme and components are public npm packages:
+<Steps>
 
-```bash
+<Step>
+
+### Install
+
+<Tabs groupId="package-manager" persist items={["pnpm", "npm", "yarn", "bun"]}>
+
+```bash tab="pnpm"
 pnpm add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
 ```
 
-## 2. Initialize
+```bash tab="npm"
+npm install @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+```bash tab="yarn"
+yarn add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+```bash tab="bun"
+bun add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+</Tabs>
+
+</Step>
+
+<Step>
+
+### Initialize
 
 ```bash
 npx @plainconceptsplatform/ui-theme@latest init
@@ -24,19 +50,32 @@ npx @plainconceptsplatform/ui-theme@latest init
 This copies `components.json`, adds the theme import to your global stylesheet, and shows you how to
 wire the Outfit font in your root layout.
 
-## 3. Add shadcn components
+</Step>
+
+<Step>
+
+### Add shadcn components
 
 ```bash
 npx shadcn@latest add button card dialog
 ```
 
-They inherit the theme with no extra work. Browse the [Components](/docs/components) catalog to see
-each one, with usage code.
+They inherit the theme with no extra work, and you do not need to edit the generated source: the
+theme neutralises the `shadow-*` utilities shadcn ships with, so upstream components already look
+like a Platform app.
+
+</Step>
+
+</Steps>
 
 ## Next steps
 
-- [Frontend](/docs/frontend): architecture, theming, dependency injection, and the everyday patterns.
-- [Adopt in an existing app](/docs/getting-started/existing-app): the incremental path.
+<Cards>
+  <Card title="Frontend" href="/docs/frontend" description="Architecture, theming, dependency injection, i18n, and the everyday patterns." />
+  <Card title="Adopt in an existing app" href="/docs/getting-started/existing-app" description="The incremental path for a codebase that already exists." />
+  <Card title="Components" href="/docs/components" description="The themed catalog, with when-to-use guidance per component." />
+  <Card title="Principles" href="/docs/principles" description="What belongs in the foundation, and what deliberately does not." />
+</Cards>
 
 Full package details are in the
 [theme README](https://github.com/PlainConceptsPlatform/Foundations/blob/main/packages/theme/README.md).
