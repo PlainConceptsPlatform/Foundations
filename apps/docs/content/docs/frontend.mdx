@@ -4,7 +4,7 @@ description: The frontend stack, the reasoning behind it, and the patterns for e
 ---
 
 The frontend stack is Next.js (App Router), React, and TypeScript. Styling is Tailwind v4 with
-shadcn/ui components, themed by `@plainconceptsplatform/ui-theme`. Icons come from Tabler.
+shadcn/ui components, themed by `@plainconceptsplatform/ui-theme`. Icons come from Lucide.
 Dependency injection uses `inversify-hooks`.
 
 The idea behind the foundation: share the **look** and the **conventions**, not a component library.
@@ -18,7 +18,7 @@ between apps already knows where things live. Apps still own their own component
 | Components | shadcn/ui on Radix |
 | Styling | Tailwind CSS v4 |
 | Theme | `@plainconceptsplatform/ui-theme` |
-| Icons | Tabler |
+| Icons | Lucide (`lucide-react`) |
 | Dependency injection | inversify-hooks |
 | Data fetching | TanStack Query (or RSC / Server Actions) |
 | Forms | react-hook-form + zod |

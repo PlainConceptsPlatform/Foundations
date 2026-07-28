@@ -68,8 +68,8 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
 ## Recommended tooling & workflow
 
 - **pnpm** for all package/script commands.
-- **Loop-engineering:** [`CKGrafico/loop-task`](https://github.com/CKGrafico/loop-task) for
-  iterative task loops; [`CKGrafico/opencode-onboard`](https://github.com/CKGrafico/opencode-onboard)
+- **Loop-engineering:** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task) for
+  iterative task loops; [`PlainConceptsPlatform/opencode-onboard`](https://github.com/PlainConceptsPlatform/opencode-onboard)
   for the `make-architecture` / `make-design` onboarding skills.
 - **Optimizations (recommended to enable):** RTK check, opencode-quota plugin, caveman concise
   mode, codegraph semantic index, agentmemory local memory server, humanizer skill.

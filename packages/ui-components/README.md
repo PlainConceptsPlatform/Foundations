@@ -8,12 +8,14 @@ Shared React components for Platform frontend apps. These are **custom** foundat
 - `PlainLogo`: responsive brand logo that uses CSS container queries (no JavaScript) to show the
   biggest mark that fits its parent. Text follows `currentColor` (adapts to light/dark); the brand
   mark stays blue.
+- `DataTable`: generic table with click-to-sort, drag-to-group, and column reorder/show-hide. It
+  owns the logic and DOM structure and takes *slots* for every piece of UI that varies between apps
+  (your Button, Table, icons, and translated strings), so it carries no shadcn, i18n, or icon
+  dependency of its own.
 
 ## Quick start (consume in your Next.js app)
 
 ### 1. Install the package
-
-If you already have the `.npmrc` for `@plainconceptsplatform` (from the theme setup):
 
 ```bash
 pnpm add @plainconceptsplatform/ui-components
@@ -52,6 +54,10 @@ Pass `className` to constrain size.
 | Component | Import | Description |
 |---|---|---|
 | `PlainLogo` | `@plainconceptsplatform/ui-components` or `@plainconceptsplatform/ui-components/plain-logo` | Responsive brand logo with CSS container queries |
+| `DataTable` | `@plainconceptsplatform/ui-components/data-table` | Sortable, groupable table with column reorder/show-hide |
+
+`DataTable` is a client component with hooks, so it is available only from its sub-path — importing
+it from the package root would break Next.js server components.
 
 ## Peer dependencies
 

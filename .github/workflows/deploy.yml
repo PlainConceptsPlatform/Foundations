@@ -6,22 +6,14 @@ on:
   workflow_dispatch:
 
 # The docs site is a Next.js Node server deployed to Azure App Service (a Web App,
-# not Static Web Apps). Put login in front with App Service Authentication
-# (Easy Auth) configured for Entra ID in the Azure portal or via infra as code.
+# not Static Web Apps).
 #
-# Target resource:
-#   App Service : platformfoundations-pro-app-01
-#   Resource gp : chapterapps-pro-rg-01
-#   Subscription: b3c60938-eafe-4862-8f84-54c16ee8cd1c  (tenant plain.onmicrosoft.com)
-#
-# Azure-side setup required once (portal or az; not done by this workflow):
-#   1. App Service runtime = Node 20 (Linux).
-#   2. Startup command:  node apps/docs/server.js
-#   3. Authentication: add the Microsoft (Entra ID) provider, "require authentication".
-#   4. Download the publish profile and add it as the repo secret AZURE_WEBAPP_PUBLISH_PROFILE.
+# Target resource names and the one-time Azure setup runbook are kept out of this
+# public repo. The App Service name comes from the AZURE_WEBAPP_NAME repository
+# variable; see the internal Platform runbook for provisioning and auth config.
 
 env:
-  AZURE_WEBAPP_NAME: platformfoundations-pro-app-01
+  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
   NODE_VERSION: "20"
 
 jobs:
