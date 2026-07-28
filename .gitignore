@@ -17,3 +17,6 @@ test-results/
 
 # generated: docs site reference pages synced from repo markdown
 apps/docs/content/docs/reference/
+
+# superseded by the Playwright suite in e2e/
+.evidence/

@@ -109,8 +109,11 @@ describe("install instructions match how the packages actually ship", () => {
 
 describe("navigation reaches every page", () => {
   it("lists the generated reference group in the docs sidebar", () => {
+    // Spread as "...reference" rather than listed as "reference": the folder's own
+    // meta title is also "Reference", so listing it under a ---Reference--- separator
+    // rendered the heading twice.
     const meta = JSON.parse(read("apps/docs/content/docs/meta.json"));
-    expect(meta.pages).toContain("reference");
+    expect(meta.pages).toContain("...reference");
   });
 
   it("lists every top-level content page or group in the sidebar", () => {

@@ -81,6 +81,72 @@ Foundations/
 └── .github/workflows/         # CI (Biome + Vitest) and deploy (Fumadocs → Azure App Service)
 ```
 
+## Foundation repo internals
+
+How this repo produces what it publishes. Worth knowing before changing anything here, because
+several artifacts are generated and editing the output instead of the input is the usual mistake.
+
+### Package graph
+
+```mermaid
+flowchart TD
+  theme["@plainconceptsplatform/ui-theme<br/>tokens, CSS only"]
+  components["@plainconceptsplatform/ui-components<br/>PlainLogo, DataTable"]
+  docs["apps/docs<br/>Fumadocs site, private"]
+  app["a Platform app<br/>separate repo"]
+
+  components --> theme
+  docs --> theme
+  docs --> components
+  app --> theme
+  app --> components
+```
+
+`ui-theme` has no dependencies of its own beyond a Tailwind peer, which is what keeps it cheap to
+adopt. `apps/docs` is private and never published; it consumes both packages through the workspace so
+the site always documents the code in the same commit.
+
+### Content pipeline
+
+Three generators run before the site builds. All of their output is committed so it is reviewable in a
+diff, and CI fails if regenerating produces a change.
+
+```mermaid
+flowchart TD
+  aiDocs["ai/ARCHITECTURE.md<br/>ai/DESIGN.md · ai/AGENTS.md"]
+  themeCss["packages/theme/src/theme.css"]
+  demos["apps/docs/components/previews/*.tsx"]
+  data["scripts/components-data.mjs<br/>titles and Platform prose"]
+
+  sync["scripts/sync-docs.mjs"]
+  genTokens["scripts/gen-tokens.mjs"]
+  genPages["scripts/gen-component-pages.mjs"]
+
+  reference["content/docs/reference/*.md"]
+  tokensTs["lib/tokens.generated.ts"]
+  pages["content/docs/components/*.mdx"]
+
+  aiDocs --> sync --> reference
+  themeCss --> genTokens --> tokensTs
+  demos --> genPages
+  data --> genPages --> pages
+```
+
+The rule this encodes: **`ai/*.md` and `theme.css` own facts, and the site renders them.** A fact
+stated in two places drifts, so narrative pages link to the reference rather than restating a table.
+
+### Release flow
+
+Edit `theme.css`, add a changeset, merge. Merging to `main` opens a "Version Packages" pull request;
+merging that publishes both packages to npm with provenance. Apps pick up the change when they bump
+the dependency. Nobody publishes from a laptop.
+
+### Deploy topology
+
+`apps/docs` builds with `output: "standalone"` and runs as a Node server on Azure App Service. The
+deploy workflow is gated on CI: it triggers on `workflow_run` completion and only proceeds when the
+CI conclusion was a success.
+
 ## Reference app structure (pragmatic FSD on Next.js)
 
 ```text

@@ -62,6 +62,27 @@ test.describe("docs", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Architecture");
   });
 
+  test("the sidebar groups read cleanly, with no duplicated headings", async ({ page }) => {
+    await page.goto("/docs");
+
+    // Scoped to the sidebar: "Architecture" also appears in body Cards and prose.
+    const sidebar = page.locator("aside").first();
+
+    // The Reference group used to render as "Reference > Reference": a separator and
+    // a folder that both carried the same title. Its pages are spread instead now.
+    for (const group of ["Information", "Domains", "Library", "Reference"]) {
+      await expect(
+        sidebar.getByText(group, { exact: true }),
+        `${group} should appear exactly once as a sidebar heading`,
+      ).toHaveCount(1);
+    }
+
+    // The synced reference pages sit directly under that heading.
+    for (const label of ["Architecture", "Design guidelines", "AI agents"]) {
+      await expect(sidebar.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+  });
+
   test("the token gallery renders generated swatches", async ({ page }) => {
     await page.goto("/docs/tokens");
     await expect(page.getByRole("heading", { name: "Semantic tokens" })).toBeVisible();
