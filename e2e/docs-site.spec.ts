@@ -68,9 +68,10 @@ test.describe("docs", () => {
     // Scoped to the sidebar: "Architecture" also appears in body Cards and prose.
     const sidebar = page.locator("aside").first();
 
+    // Order is deliberate: orient, learn your domain, look things up, then contribute.
     // The Reference group used to render as "Reference > Reference": a separator and
     // a folder that both carried the same title. Its pages are spread instead now.
-    for (const group of ["Information", "Domains", "Library", "Reference"]) {
+    for (const group of ["Start here", "Domains", "Library", "Reference", "Project"]) {
       await expect(
         sidebar.getByText(group, { exact: true }),
         `${group} should appear exactly once as a sidebar heading`,

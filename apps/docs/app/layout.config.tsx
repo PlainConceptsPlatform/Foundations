@@ -20,11 +20,9 @@ export const baseOptions: BaseLayoutProps = {
     ),
     url: "/",
   },
-  links: [
-    { text: "Getting started", url: "/docs/getting-started" },
-    { text: "Frontend", url: "/docs/frontend" },
-    { text: "Components", url: "/docs/components" },
-    { text: "Tokens", url: "/docs/tokens" },
-  ],
+  // Deliberately no `links`. They duplicated four sidebar entries, and on a narrow
+  // viewport Fumadocs folds the navbar into the sidebar, so the same items appeared
+  // twice in one list. The sidebar is the navigation; the navbar keeps search,
+  // the theme toggle and the repo link.
   githubUrl: "https://github.com/PlainConceptsPlatform/Foundations",
 };

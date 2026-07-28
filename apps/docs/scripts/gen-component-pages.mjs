@@ -104,7 +104,10 @@ writeFileSync(
   `${JSON.stringify(
     {
       title: "Components",
-      root: true,
+      // Not a Fumadocs `root`. As a root it opened its own sidebar tree, so it
+      // behaved unlike every sibling folder and dropped the reader out of the main
+      // navigation. A plain collapsible folder keeps the 63 pages out of the way
+      // while staying consistent with AI and Getting started.
       pages: [
         "---Platform---",
         "plain-logo",

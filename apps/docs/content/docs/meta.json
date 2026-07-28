@@ -1,12 +1,9 @@
 {
   "title": "Platform Foundations",
   "pages": [
-    "---Information---",
+    "---Start here---",
     "index",
-    "getting-started",
-    "principles",
-    "contributing",
-    "releases",
+    "...getting-started",
     "---Domains---",
     "frontend",
     "backend",
@@ -15,6 +12,10 @@
     "tokens",
     "components",
     "---Reference---",
-    "...reference"
+    "...reference",
+    "---Project---",
+    "principles",
+    "contributing",
+    "releases"
   ]
 }

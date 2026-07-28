@@ -119,13 +119,25 @@ describe("navigation reaches every page", () => {
   it("lists every top-level content page or group in the sidebar", () => {
     const contentDir = resolve(repoRoot, "apps/docs/content/docs");
     const meta = JSON.parse(read("apps/docs/content/docs/meta.json"));
-    const listed = new Set<string>(meta.pages);
+
+    // A folder can be listed by name ("frontend") or spread ("...reference", which
+    // inlines its pages under the preceding separator). Both count as reachable.
+    const listed = new Set<string>(
+      (meta.pages as string[]).map((entry) => entry.replace(/^\.\.\./, "")),
+    );
 
     const onDisk = readdirSync(contentDir)
       .filter((entry) => !SKIP_DIRS.has(entry) && entry !== "meta.json")
       .map((entry) => entry.replace(/\.mdx?$/, ""));
 
     expect(onDisk.filter((slug) => !listed.has(slug))).toEqual([]);
+  });
+
+  it("does not duplicate sidebar entries in the navbar", () => {
+    // The navbar `links` array used to repeat four sidebar entries. On a narrow
+    // viewport Fumadocs folds the navbar into the sidebar, so each appeared twice.
+    const config = read("apps/docs/app/layout.config.tsx");
+    expect(config).not.toMatch(/^\s*links:\s*\[/m);
   });
 });
 
