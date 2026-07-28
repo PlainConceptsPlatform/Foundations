@@ -1,7 +1,11 @@
 name: Deploy showcase (Azure App Service)
 
+# Gated on CI rather than racing it. Both used to trigger on push to main with no
+# dependency between them, so a red build could still ship.
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -12,30 +16,46 @@ on:
 # public repo. The App Service name comes from the AZURE_WEBAPP_NAME repository
 # variable; see the internal Platform runbook for provisioning and auth config.
 
+permissions:
+  contents: read
+
+# Never run two deploys at once, and never cancel one midway: a half-finished
+# deploy is worse than a queued one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 env:
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
-  NODE_VERSION: "20"
 
 jobs:
   build-and-deploy:
+    # workflow_run fires for failed runs too, so check the conclusion.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+
       - name: Build shared components
         run: pnpm --filter @plainconceptsplatform/ui-components build
+
       - name: Build (standalone)
         run: pnpm --filter @plainconceptsplatform/docs build
+
       - name: Assemble standalone bundle
         working-directory: apps/docs
         run: |
           cp -r .next/static .next/standalone/apps/docs/.next/static
           if [ -d public ]; then cp -r public .next/standalone/apps/docs/public; fi
+
       - uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}

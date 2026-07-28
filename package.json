@@ -16,10 +16,9 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "publish:theme": "pnpm --filter @plainconceptsplatform/ui-theme publish --access public",
-    "publish:ui-components": "pnpm --filter @plainconceptsplatform/ui-components build && pnpm --filter @plainconceptsplatform/ui-components publish --access public",
-    "publish": "pnpm --filter @plainconceptsplatform/ui-components build && pnpm publish:theme && pnpm publish:ui-components",
+    "changeset": "changeset",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -27,6 +26,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.31.1",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@playwright/test": "^1.48.0",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",

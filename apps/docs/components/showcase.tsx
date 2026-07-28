@@ -70,6 +70,9 @@ function Swatch({
     <button
       type="button"
       onClick={() => onCopy(copyValue)}
+      // aria-label, not title: the visible step and hex would otherwise be the
+      // accessible name, which says nothing about what activating this does.
+      aria-label={`Copy ${copyValue}`}
       title={`Copy ${copyValue}`}
       className="group flex w-[5.5rem] flex-col gap-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
@@ -149,6 +152,7 @@ export function SemanticTokens() {
                   <button
                     type="button"
                     onClick={() => copy(slot.token)}
+                    aria-label={`Copy ${slot.token}`}
                     title={`Copy ${slot.token}`}
                     className="rounded font-mono text-xs transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
