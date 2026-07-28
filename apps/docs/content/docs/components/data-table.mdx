@@ -1,99 +1,56 @@
 ---
 title: "Data Table"
-description: "A sortable, groupable data table with drag-to-group, column reordering, and show/hide. Published in @plainconceptsplatform/ui-components."
+description: "A slot-based table with sorting, drag-to-group, and column reorder or show/hide."
 ---
 
 import { DataTableDemo } from "@/components/previews/data-table-demo"
 
-## Installation
+<ComponentPreview block>
+  <DataTableDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for this when a Platform screen needs a working grid: click-to-sort, drag-to-group with collapsible sections and aggregates, column reorder, show/hide columns, and that arrangement remembered per user. If none of those apply, the plain `Table` is the right answer. If you need row virtualisation, server-driven pagination or row selection, build on TanStack Table directly instead of stretching this component.
+
+## Platform notes
+
+The package carries no shadcn, i18n or icon dependency: you supply `slots` (Table, Button, DropdownMenu), `icons` and `texts`, so the wired wrapper lives in `shared/ui` and `texts` is fed from `useTranslation`, including the function entries (`stopGrouping`, `columnsCount`). Sorting and grouping are computed client-side over the `rows` array you pass, so under server-side paging it only orders the current page: sort on the server and hand it `defaultSort` to match. Column order, visibility and grouping persist in `localStorage` under `dt:<tableId>:*`, which makes `tableId` a stable contract (reusing one across two grids crosses their state, and renaming a column key orphans the saved entry). On keyboard, header sorting is a real button, but column reorder and adding a group are HTML5 drag only and group rows toggle on row click, so give keyboard users another route to those if the grid is a primary workflow.
+
+## Install
 
 ```bash
 pnpm add @plainconceptsplatform/ui-components
 ```
 
-You also need the shadcn primitives the component delegates to (Table, Button,
-DropdownMenu) plus an icon library. The package itself is headless - it accepts
-*slots* for every piece of UI, so you control the look and feel.
+Import from the sub-path: `@plainconceptsplatform/ui-components/data-table`.
 
-```bash
-npx shadcn@latest add table button dropdown-menu
-pnpm add lucide-react          # or @tabler/icons-react, heroicons, etc.
-```
-
-## Usage
-
-The package component is render-delegate: instead of importing icon libraries,
-i18n, or shadcn directly, it accepts **slots** (Button, Table, DropdownMenu),
-**texts** (localised strings), and **icons** (your icon library).
-
-Each app creates a thin wrapper that wires up its own primitives once:
+## Code
 
 ```tsx
 "use client";
 
-import {
-  DataTable as PackageDataTable,
-  type DataTableSlots,
-  type DataTableTexts,
-  type DataTableIcons,
-} from "@plainconceptsplatform/ui-components";
-import { ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronRight, Columns3, X } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-
-const slots: DataTableSlots = {
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-  Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem,
-};
-
-const texts: DataTableTexts = {
-  dragToGroup: "Drag a column header here to group",
-  groupedBy: "Grouped by",
-  stopGrouping: (label) => `Stop grouping ${label}`,
-  clear: "Clear",
-  columnsCount: (v, t) => `Columns (${v}/${t})`,
-  toggleColumns: "Toggle columns",
-  noRecords: "No records",
-  dragReorderOrGroup: "Drag to reorder or group",
-  dragReorder: "Drag to reorder",
-  columnGrouping: "Column grouping",
-};
-
-const icons: DataTableIcons = {
-  IconSortAscending: ({ className }) => <ArrowUp className={className} />,
-  IconSortDescending: ({ className }) => <ArrowDown className={className} />,
-  IconArrowsSort: ({ className }) => <ArrowUpDown className={className} />,
-  IconChevronRight: ({ size }) => <ChevronRight size={size} />,
-  IconChevronDown: ({ size }) => <ChevronDown size={size} />,
-  IconColumns: ({ className }) => <Columns3 className={className} />,
-  IconX: ({ className }) => <X className={className} />,
-};
-
-export function DataTable<T>(props: Omit<Parameters<typeof PackageDataTable<T>>[0], "slots" | "texts" | "icons">) {
-  return <PackageDataTable<T> {...props} slots={slots} texts={texts} icons={icons} />;
-}
-```
-
-Then use the wrapper just like any other component:
-
-```tsx
+import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
-import type { DataTableColumn } from "@plainconceptsplatform/ui-components";
+import type { DataTableColumn } from "@plainconceptsplatform/ui-components/data-table";
 
-type App = { id: string; name: string; stack: string; status: "Active" | "Deprecated" };
+type App = {
+  id: string;
+  name: string;
+  stack: string;
+  status: "Active" | "Deprecated";
+  team: string;
+};
 
 const apps: App[] = [
-  { id: "1", name: "Numa", stack: "React", status: "Active" },
-  { id: "2", name: "Docs", stack: "Next.js", status: "Active" },
-  { id: "3", name: "Legacy", stack: ".NET", status: "Deprecated" },
+  { id: "1", name: "Numa", stack: "React", status: "Active", team: "Platform" },
+  { id: "2", name: "Docs", stack: "Next.js", status: "Active", team: "Platform" },
+  { id: "3", name: "Legacy", stack: ".NET", status: "Deprecated", team: "Enterprise" },
+  { id: "4", name: "Insights", stack: "Next.js", status: "Active", team: "Data" },
+  { id: "5", name: "Atlas", stack: "React", status: "Active", team: "Platform" },
+  { id: "6", name: "Pulse", stack: "Next.js", status: "Active", team: "Data" },
+  { id: "7", name: "Hub", stack: ".NET", status: "Deprecated", team: "Enterprise" },
+  { id: "8", name: "Flow", stack: "React", status: "Active", team: "Platform" },
 ];
 
 const columns: DataTableColumn<App>[] = [
@@ -111,42 +68,36 @@ const columns: DataTableColumn<App>[] = [
     sortValue: (r) => r.stack,
   },
   {
+    key: "team",
+    label: "Team",
+    render: (r) => r.team,
+    sortValue: (r) => r.team,
+  },
+  {
     key: "status",
     label: "Status",
-    render: (r) => <Badge variant={r.status === "Active" ? "default" : "secondary"}>{r.status}</Badge>,
+    render: (r) => (
+      <Badge variant={r.status === "Active" ? "default" : "secondary"}>{r.status}</Badge>
+    ),
     sortValue: (r) => r.status,
   },
 ];
 
-<DataTable tableId="my-table" rows={apps} rowKey={(r) => r.id} columns={columns} defaultGroupBy={["stack"]} />
+export function DataTableDemo() {
+  return (
+    <div className="w-full">
+      <DataTable
+        tableId="docs-data-table-demo"
+        rows={apps}
+        rowKey={(r) => r.id}
+        columns={columns}
+        defaultGroupBy={["stack"]}
+      />
+    </div>
+  );
+}
 ```
 
-## Preview
+## Full API
 
-<DataTableDemo />
-
-## Features
-
-- **Click-to-sort** - click any sortable column header to cycle asc / desc / off
-- **Drag-to-group** - drag a column header onto the grouping bar to create collapsible groups (multi-level)
-- **Column reorder** - drag column headers left/right to reorder
-- **Show/hide columns** - use the Columns dropdown to toggle visibility; state persists in localStorage
-- **Persistent state** - column order, visibility, and grouping are saved per `tableId` in localStorage
-- **Group aggregates** - pass `groupAgg` on a column to show totals/counts in group header rows
-
-## Props
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `tableId` | `string` | - | Stable id for localStorage persistence |
-| `rows` | `T[]` | - | Data rows (server-paged, sorted/grouped client-side) |
-| `rowKey` | `(row: T) => string` | - | Unique key per row |
-| `columns` | `DataTableColumn<T>[]` | - | Column definitions |
-| `slots` | `DataTableSlots` | - | UI primitives (Button, Table, DropdownMenu) |
-| `texts` | `DataTableTexts` | - | Localised strings |
-| `icons` | `DataTableIcons` | - | Icon components |
-| `defaultSort` | `SortState` | - | Initial sort `{ by, order }` |
-| `defaultGroupBy` | `string[]` | `[]` | Initial grouping column keys |
-| `enableGrouping` | `boolean` | `true` | Show the drag-to-group bar |
-| `onRowClick` | `(row: T) => void` | - | Row click handler |
-| `emptyMessage` | `ReactNode` | `"No records"` | Empty state content |
+[`packages/ui-components` README](https://github.com/PlainConceptsPlatform/Foundations/blob/main/packages/ui-components/README.md)

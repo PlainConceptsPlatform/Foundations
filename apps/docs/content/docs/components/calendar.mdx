@@ -5,33 +5,39 @@ description: "A date field component that allows users to enter and edit date."
 
 import { CalendarDemo } from "@/components/previews/calendar-demo"
 
-## Installation
+<ComponentPreview block>
+  <CalendarDemo />
+</ComponentPreview>
+
+## When to use
+
+Use Calendar when the month itself is the interface: an availability grid, a booking screen, or a filter panel that stays open and shows which days are selectable. When the date is one field among many, put it behind a trigger with the [Date Picker](/docs/components/date-picker) recipe so the grid does not dominate the layout, and for a typed date or a value that carries a time use `Input` with a zod schema instead.
+
+## Platform notes
+
+Selected days and range endpoints paint with `--primary` / `--primary-foreground`, while `today` and the middle of a range use `--accent` / `--accent-foreground`, the same tint the theme uses for hover, so today and a hovered day read alike and a single `--accent` change moves both states: check light and dark after a theme bump. Month, weekday and caption text is formatted by react-day-picker (en-US by default) and the vendored month dropdown formatter calls `toLocaleString("default")`, which follows the browser locale rather than the active i18next language, so pass the matching `date-fns` locale on the `locale` prop and keep legends, hints and captions as translation messages. Focus renders on the day button itself (`--ring`, via `group-data-[focused=true]/day`), so leave that ring intact; the `disabled` day style is `text-muted-foreground` at 50% opacity, too faint to be the only signal that a day is unavailable, so pair it with a legend or helper text and show a `Skeleton` while the unavailable set is still loading. The `shadow-xs` on the caption dropdown compiles to nothing under the theme, so when a standalone month has to read as a raised surface, give it `border bg-card` (the demo settles for `rounded-md border`).
+
+## Install
 
 ```bash
 npx shadcn@latest add calendar
 ```
 
-## Usage
+## Code
 
 ```tsx
-"use client"
+"use client";
 
-import * as React from "react"
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar } from "@/components/ui/calendar";
+import * as React from "react";
 
 export function CalendarDemo() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date())
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
   return (
     <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <CalendarDemo />
-</div>
 
 ## Full API
 

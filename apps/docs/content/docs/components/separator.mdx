@@ -5,16 +5,28 @@ description: "Visually or semantically separates content."
 
 import { SeparatorDemo } from "@/components/previews/separator-demo"
 
-## Installation
+<ComponentPreview>
+  <SeparatorDemo />
+</ComponentPreview>
+
+## When to use
+
+A separator draws the line between groups of content or controls: sections inside a card, entries in a menu, inline metadata in a toolbar. Use it when the boundary is visual only. When the divider needs a label, use `Marker`; when blocks just need air between them, use margin rather than a line.
+
+## Platform notes
+
+It paints `bg-border`, the same `--border` token as card edges and table rules, so a separator inside a bordered surface aligns with the surface exactly. `decorative` defaults to `true`, which hides it from assistive tech: pass `decorative={false}` only when the line truly divides two independent regions, and prefer a heading or a `section` when the split is structural. Vertical orientation is a 1px full-height element, so it collapses to nothing unless the parent resolves a height (the demo wraps it in `flex h-5 items-center`). Do not use a separator as a stand-in for elevation: elevation here is `border-border` plus `bg-card`, and extra rules stacked inside a dense screen only add noise.
+
+## Install
 
 ```bash
 npx shadcn@latest add separator
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Separator } from "@/components/ui/separator"
+import { Separator } from "@/components/ui/separator";
 
 export function SeparatorDemo() {
   return (
@@ -32,15 +44,9 @@ export function SeparatorDemo() {
         <span>Docs</span>
       </div>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <SeparatorDemo />
-</div>
 
 ## Full API
 

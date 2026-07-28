@@ -5,23 +5,39 @@ description: "A marker component for timestamps, separators, and section breaks.
 
 import { MarkerDemo } from "@/components/previews/marker-demo"
 
-## Installation
+<ComponentPreview>
+  <MarkerDemo />
+</ComponentPreview>
+
+## When to use
+
+Marker annotates a point in a flow: a date stamp in an activity feed, an "Or continue with" divider between form sections, a labelled section break. When the boundary needs no label, `Separator` is simpler and cheaper. For state attached to a record, use `Badge`.
+
+## Platform notes
+
+All three variants draw only on `--muted-foreground` and `--border`, and the `separator` variant fakes its rules with `before`/`after` pseudo-elements, so it is decoration: it is not announced as a separator, and a boundary that carries meaning should use `Separator` with `decorative={false}` or a heading. `MarkerIcon` is `aria-hidden`, so the icon can never be the only carrier of information; whatever it signals must also appear in `MarkerContent`. Dates and labels inside a marker are localised: format the date through the active i18n locale rather than shipping the literal string the demo uses for illustration.
+
+## Install
 
 ```bash
 npx shadcn@latest add marker
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Calendar } from "lucide-react"
-import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker"
+"use client";
+
+import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
+import { Calendar } from "lucide-react";
 
 export function MarkerDemo() {
   return (
     <div className="flex flex-col gap-6 max-w-md">
       <Marker variant="default">
-        <MarkerIcon><Calendar /></MarkerIcon>
+        <MarkerIcon>
+          <Calendar />
+        </MarkerIcon>
         <MarkerContent>January 24, 2026</MarkerContent>
       </Marker>
       <Marker variant="separator">
@@ -31,15 +47,9 @@ export function MarkerDemo() {
         <MarkerContent>Section break</MarkerContent>
       </Marker>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <MarkerDemo />
-</div>
 
 ## Full API
 

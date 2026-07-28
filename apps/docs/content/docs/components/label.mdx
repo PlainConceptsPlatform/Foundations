@@ -5,17 +5,29 @@ description: "Renders an accessible label associated with controls."
 
 import { LabelDemo } from "@/components/previews/label-demo"
 
-## Installation
+<ComponentPreview>
+  <LabelDemo />
+</ComponentPreview>
+
+## When to use
+
+Names a single control when you are not inside a `Field`. Within the mandated form stack prefer `FieldLabel`, which is this component plus the `Field` grouping and disabled propagation; use `FieldSet` with `FieldLegend` when the thing being named is a group such as a `RadioGroup`.
+
+## Platform notes
+
+This is the Radix label primitive, so `htmlFor` must match the control `id` for click-to-focus and screen reader association to work, and nothing warns you at runtime if you forget. Its disabled dimming keys off `peer-disabled:` and `group-data-[disabled=true]:`, which only fire when the control is a sibling `peer` or an ancestor carries `data-disabled`, so a label wrapped in its own `div` stays at full opacity next to a disabled input. Label text is user-facing, which makes it a react-i18next message; never inline the string.
+
+## Install
 
 ```bash
 npx shadcn@latest add label
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export function LabelDemo() {
   return (
@@ -23,15 +35,9 @@ export function LabelDemo() {
       <Checkbox id="label-demo" />
       <Label htmlFor="label-demo">Accept terms and conditions</Label>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <LabelDemo />
-</div>
 
 ## Full API
 

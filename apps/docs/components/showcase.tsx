@@ -1,123 +1,239 @@
+"use client";
+
 /**
- * Showcase primitives for the token gallery and component pages.
- * These render the Platform tokens so reviewers see the real values.
- * Kept dependency-free on purpose; shadcn components get added per app via the CLI.
+ * Token gallery. Every value is read from lib/tokens.generated.ts, which is derived
+ * from packages/theme/src/theme.css, so the page cannot drift from the theme it
+ * documents (it used to hardcode all 25 hexes as JS literals).
+ *
+ * Clicking a swatch copies the *token name*, not the hex. That is deliberate: the
+ * rule this page teaches is "never hardcode a value", so handing out hexes would
+ * undercut it.
  */
 
-type Swatch = { name: string; hex: string };
+import { useToast } from "@/hooks/use-toast";
+import { type SemanticSlot, tokens } from "@/lib/tokens.generated";
 
-const NEUTRAL: Swatch[] = [
-  { name: "0", hex: "#ffffff" },
-  { name: "50", hex: "#fafafc" },
-  { name: "100", hex: "#f2f3f7" },
-  { name: "200", hex: "#e9eaf2" },
-  { name: "300", hex: "#dfe1ec" },
-  { name: "400", hex: "#8e8f95" },
-  { name: "500", hex: "#6a6f74" },
-  { name: "600", hex: "#4a4a4a" },
-  { name: "700", hex: "#383838" },
-  { name: "900", hex: "#0d0e0f" },
-];
-
-const BLUE: Swatch[] = [
-  { name: "50", hex: "#f5f8ff" },
-  { name: "100", hex: "#ebf0ff" },
-  { name: "200", hex: "#dce6ff" },
-  { name: "400", hex: "#5282ff" },
-  { name: "500", hex: "#2f69ff" },
-  { name: "600", hex: "#0043f0" },
-  { name: "700", hex: "#0032b2" },
-];
-
-const FUNCTIONAL: Record<string, Swatch[]> = {
-  Error: [
-    { name: "100", hex: "#fde1e6" },
-    { name: "300", hex: "#f99bac" },
-    { name: "500", hex: "#f33859" },
-    { name: "700", hex: "#c72e49" },
-  ],
-  Warning: [
-    { name: "100", hex: "#feeec6" },
-    { name: "300", hex: "#fddd8c" },
-    { name: "500", hex: "#fbc740" },
-    { name: "700", hex: "#a6842a" },
-  ],
-  Success: [
-    { name: "100", hex: "#d8f1ef" },
-    { name: "300", hex: "#9cdcd7" },
-    { name: "500", hex: "#3abaaf" },
-    { name: "700", hex: "#257770" },
-  ],
-  Info: [
-    { name: "100", hex: "#e3f8ff" },
-    { name: "300", hex: "#99e1f9" },
-    { name: "500", hex: "#00b5f1" },
-    { name: "700", hex: "#008ebd" },
-  ],
+const RAMP_LABELS: Record<string, string> = {
+  blue: "Brand blue",
+  neutral: "Neutral",
+  error: "Functional / Error",
+  warning: "Functional / Warning",
+  success: "Functional / Success",
+  info: "Functional / Info",
 };
 
-function Row({ title, colors }: { title: string; colors: Swatch[] }) {
+/** Semantic slots worth showing, in reading order. The rest are -foreground pairs. */
+const FEATURED = [
+  "--background",
+  "--foreground",
+  "--card",
+  "--primary",
+  "--secondary",
+  "--muted",
+  "--muted-foreground",
+  "--accent",
+  "--accent-foreground",
+  "--destructive",
+  "--success",
+  "--warning",
+  "--info",
+  "--border",
+  "--input",
+  "--ring",
+];
+
+function useCopyToken() {
+  const { toast } = useToast();
+
+  return (token: string) => {
+    navigator.clipboard?.writeText(token).then(
+      () => toast({ title: "Copied", description: token }),
+      () => toast({ title: "Could not copy", description: token }),
+    );
+  };
+}
+
+function Swatch({
+  label,
+  sublabel,
+  hex,
+  copyValue,
+  onCopy,
+}: {
+  label: string;
+  sublabel?: string;
+  hex: string;
+  copyValue: string;
+  onCopy: (value: string) => void;
+}) {
   return (
-    <div style={{ marginBottom: "1rem" }}>
-      <p style={{ fontWeight: 600, margin: "0 0 0.5rem" }}>{title}</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-        {colors.map((c) => (
-          <div key={c.name} style={{ textAlign: "center", fontSize: 11 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 8,
-                background: c.hex,
-                border: "1px solid rgb(0 0 0 / 0.1)",
-              }}
-            />
-            <div style={{ marginTop: 4 }}>{c.name}</div>
-            <div style={{ opacity: 0.6 }}>{c.hex}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={() => onCopy(copyValue)}
+      title={`Copy ${copyValue}`}
+      className="group flex w-[5.5rem] flex-col gap-1 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span
+        aria-hidden
+        style={{ backgroundColor: hex }}
+        className="h-14 w-full rounded-md border border-border transition-colors duration-150 group-hover:border-primary/50"
+      />
+      <span className="font-medium text-[11px] text-foreground">{label}</span>
+      {sublabel ? (
+        <span className="font-mono text-[10px] text-muted-foreground">{sublabel}</span>
+      ) : null}
+    </button>
   );
 }
 
+/** Primitive ramps. Copy value is the CSS custom property, e.g. --pc-blue-500. */
 export function Palette() {
+  const copy = useCopyToken();
+
   return (
-    <div style={{ margin: "1rem 0" }}>
-      <Row title="Neutral" colors={NEUTRAL} />
-      <Row title="Brand blue (primary = 500)" colors={BLUE} />
-      {Object.entries(FUNCTIONAL).map(([name, colors]) => (
-        <Row key={name} title={`Functional / ${name}`} colors={colors} />
+    <div className="my-6 flex flex-col gap-6 not-prose">
+      {Object.entries(tokens.ramps).map(([family, steps]) => (
+        <section key={family}>
+          <h4 className="mb-2 font-semibold text-sm">{RAMP_LABELS[family] ?? family}</h4>
+          <div className="flex flex-wrap gap-2">
+            {steps.map((swatch) => (
+              <Swatch
+                key={swatch.step}
+                label={swatch.step}
+                sublabel={swatch.hex}
+                hex={swatch.hex}
+                copyValue={`--pc-${family}-${swatch.step}`}
+                onCopy={copy}
+              />
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
 }
 
-export function TypeScale() {
-  const rows = [
-    { label: "H1", weight: 700, size: 20, lh: 25 },
-    { label: "Paragraph L", weight: 400, size: 16, lh: 16 },
-    { label: "Paragraph M", weight: 400, size: 14, lh: 24 },
-    { label: "Paragraph S", weight: 400, size: 12, lh: 15 },
-  ];
+function slotRows(mode: "light" | "dark"): SemanticSlot[] {
+  const bySlot = new Map(tokens.semantic[mode].map((slot) => [slot.token, slot]));
+  return FEATURED.map((token) => bySlot.get(token)).filter((slot): slot is SemanticSlot =>
+    Boolean(slot),
+  );
+}
+
+/**
+ * Semantic slots side by side in both modes. This is the layer app code consumes,
+ * and seeing light next to dark is what makes the derived dark palette reviewable.
+ */
+export function SemanticTokens() {
+  const copy = useCopyToken();
+  const light = slotRows("light");
+  const dark = new Map(tokens.semantic.dark.map((slot) => [slot.token, slot]));
+
   return (
-    <div style={{ margin: "1rem 0", display: "grid", gap: "1rem" }}>
-      {rows.map((r) => (
-        <div key={r.label}>
-          <div style={{ fontSize: 12, opacity: 0.6 }}>
-            {r.label} · Outfit {r.weight} · {r.size}/{r.lh}
-          </div>
-          <div
+    <div className="my-6 overflow-x-auto not-prose">
+      <table className="w-full border-collapse text-sm">
+        <thead>
+          <tr className="border-border border-b text-left">
+            <th className="py-2 pr-4 font-semibold">Token</th>
+            <th className="py-2 pr-4 font-semibold">Light</th>
+            <th className="py-2 pr-4 font-semibold">Dark</th>
+            <th className="py-2 font-semibold">Resolves to</th>
+          </tr>
+        </thead>
+        <tbody>
+          {light.map((slot) => {
+            const darkSlot = dark.get(slot.token);
+            return (
+              <tr key={slot.token} className="border-border/60 border-b last:border-0">
+                <td className="py-2 pr-4">
+                  <button
+                    type="button"
+                    onClick={() => copy(slot.token)}
+                    title={`Copy ${slot.token}`}
+                    className="rounded font-mono text-xs transition-colors duration-150 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {slot.token}
+                  </button>
+                </td>
+                <td className="py-2 pr-4">
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      style={{ backgroundColor: slot.hex }}
+                      className="size-4 shrink-0 rounded border border-border"
+                    />
+                    <span className="font-mono text-muted-foreground text-xs">{slot.hex}</span>
+                  </span>
+                </td>
+                <td className="py-2 pr-4">
+                  {darkSlot ? (
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        style={{ backgroundColor: darkSlot.hex }}
+                        className="size-4 shrink-0 rounded border border-border"
+                      />
+                      <span className="font-mono text-muted-foreground text-xs">
+                        {darkSlot.hex}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">inherits light</span>
+                  )}
+                </td>
+                <td className="py-2 font-mono text-muted-foreground text-xs">
+                  {slot.ref ?? "literal"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Type scale, rendered at the real sizes from the DESIGN.md scale. */
+export function TypeScale() {
+  return (
+    <div className="my-6 grid gap-4 not-prose">
+      {tokens.typography.scale.map((step) => (
+        <div key={step.name}>
+          <p className="mb-1 font-mono text-muted-foreground text-xs">
+            {step.name} · {tokens.typography.family} {step.weight} · {step.size}/{step.lineHeight}
+          </p>
+          <p
             style={{
-              fontFamily: "var(--font-sans, Outfit, system-ui)",
-              fontWeight: r.weight,
-              fontSize: r.size,
-              lineHeight: `${r.lh}px`,
+              fontWeight: step.weight,
+              fontSize: `${step.size}px`,
+              lineHeight: `${step.lineHeight}px`,
             }}
+            className="text-foreground"
           >
             The quick brown fox jumps over the lazy dog
-          </div>
+          </p>
         </div>
+      ))}
+    </div>
+  );
+}
+
+/** The categorical data-viz ramp, with its contrast rationale visible. */
+export function ChartRamp() {
+  const copy = useCopyToken();
+  const light = tokens.semantic.light.filter((slot) => /^--chart-\d$/.test(slot.token));
+
+  return (
+    <div className="my-6 flex flex-wrap gap-2 not-prose">
+      {light.map((slot) => (
+        <Swatch
+          key={slot.token}
+          label={slot.token.replace("--", "")}
+          sublabel={slot.hex}
+          hex={slot.hex}
+          copyValue={slot.token}
+          onCopy={copy}
+        />
       ))}
     </div>
   );
@@ -126,35 +242,35 @@ export function TypeScale() {
 /** Themed buttons using semantic Tailwind tokens from the theme package. */
 export function ButtonRow() {
   return (
-    <div className="my-4 flex flex-wrap items-center gap-3">
+    <div className="my-4 flex flex-wrap items-center gap-3 not-prose">
       <button
         type="button"
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground text-sm"
       >
         Primary
       </button>
       <button
         type="button"
-        className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground"
+        className="rounded-lg bg-secondary px-4 py-2 font-semibold text-secondary-foreground text-sm"
       >
         Secondary
       </button>
       <button
         type="button"
-        className="rounded-lg border border-input px-4 py-2 text-sm font-semibold text-foreground"
+        className="rounded-lg border border-input px-4 py-2 font-semibold text-foreground text-sm"
       >
         Outline
       </button>
       <button
         type="button"
-        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground"
+        className="rounded-lg bg-destructive px-4 py-2 font-semibold text-destructive-foreground text-sm"
       >
         Destructive
       </button>
       <button
         type="button"
         disabled
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground opacity-50"
+        className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground text-sm opacity-50"
       >
         Disabled
       </button>
@@ -170,11 +286,15 @@ export function StatePreview() {
     { label: "Info", cls: "bg-info text-info-foreground" },
     { label: "Error", cls: "bg-destructive text-destructive-foreground" },
   ];
+
   return (
-    <div className="my-4 flex flex-wrap gap-2">
-      {states.map((s) => (
-        <span key={s.label} className={`rounded-md px-2.5 py-1 text-xs font-medium ${s.cls}`}>
-          {s.label}
+    <div className="my-4 flex flex-wrap gap-2 not-prose">
+      {states.map((state) => (
+        <span
+          key={state.label}
+          className={`rounded-md px-2.5 py-1 font-medium text-xs ${state.cls}`}
+        >
+          {state.label}
         </span>
       ))}
     </div>

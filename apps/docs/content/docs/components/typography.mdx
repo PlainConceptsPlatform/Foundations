@@ -1,30 +1,32 @@
 ---
 title: "Typography"
-description: "Themed text elements — headings, lists, code, quotes — using Platform tokens."
+description: "Themed text elements (headings, lists, code, quotes) using Platform tokens."
 ---
 
 import { TypographyDemo } from "@/components/previews/typography-demo"
 
-## Installation
+<ComponentPreview block>
+  <TypographyDemo />
+</ComponentPreview>
 
-Typography is a documentation pattern rather than a shadcn registry component:
-there is no `npx shadcn@latest add typography`. It demonstrates how plain HTML
-text elements render against the shared tokens (Outfit family, semantic colors,
-radius). No UI source is added; the prose below uses semantic Tailwind utilities.
+## When to use
 
-## Usage
+This page is the reference for prose in a Platform app: headings, paragraphs, lists, blockquotes and inline code, all done with Tailwind utilities rather than an imported component. Apply these classes to long-form content such as release notes, help pages and empty-state copy. On a dense data screen the type comes from the components themselves (`CardTitle`, `ItemTitle`, `Table`), which you should not restyle with heading classes.
+
+## Platform notes
+
+There is no Typography component to install: the look is `--font-sans` (Outfit) with `--foreground` and `--muted-foreground`, and the intended rhythm is the scale in `DESIGN.md` (h1 20/25, body 16/24 and 14/24, small 12/15), which is tighter than Tailwind's default steps, so check a screen against it instead of assuming. Heading level is document structure, not size: pick `h2` because of where it sits in the outline and change the appearance with a class, since skipping from `h1` to `h4` breaks the structure even when it looks right. Prose is the biggest source of untranslated strings in practice, so it lives in i18next resources, with interpolation for values and `Trans` for inline markup rather than concatenation. Sizes come from Tailwind's rem-based utilities so text still grows under browser zoom: avoid px overrides in a `style` prop, which is what breaks the 200% zoom requirement.
+
+## Code
 
 ```tsx
 export function TypographyDemo() {
   return (
     <div className="w-full max-w-2xl space-y-6">
       <article className="space-y-3">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Typography with Platform tokens
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Typography with Platform tokens</h1>
         <p className="text-muted-foreground">
-          Every text element below inherits the Outfit family and the semantic
-          color tokens from{" "}
+          Every text element below inherits the Outfit family and the semantic color tokens from{" "}
           <code className="rounded bg-muted px-1 py-0.5 text-sm">
             @plainconceptsplatform/ui-theme
           </code>
@@ -33,9 +35,7 @@ export function TypographyDemo() {
       </article>
 
       <section className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Heading levels
-        </h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Heading levels</h2>
         <div className="space-y-1">
           <h3 className="text-xl font-semibold">H3 — Section title</h3>
           <h4 className="text-lg font-semibold">H4 — Subsection title</h4>
@@ -54,32 +54,23 @@ export function TypographyDemo() {
       <section className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">Blockquote</h2>
         <blockquote className="border-l-2 border-primary pl-4 text-sm italic text-muted-foreground">
-          Prefer shadcn/ui and the ARCHITECTURE.md libraries. Use components
-          directly; never wrap them without a real reason.
+          Prefer shadcn/ui and the ARCHITECTURE.md libraries. Use components directly; never wrap
+          them without a real reason.
         </blockquote>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">Inline code</h2>
         <p className="text-sm">
-          Run{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-sm">
-            pnpm dev
-          </code>{" "}
-          to start the docs site.
+          Run <code className="rounded bg-muted px-1 py-0.5 text-sm">pnpm dev</code> to start the
+          docs site.
         </p>
       </section>
     </div>
-  )
+  );
 }
 ```
 
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <TypographyDemo />
-</div>
-
 ## Full API
 
-[ui.shadcn.com/docs/components/typography](https://ui.shadcn.com/docs/components/typography)
+[ui.shadcn.com/docs/typography](https://ui.shadcn.com/docs/typography)

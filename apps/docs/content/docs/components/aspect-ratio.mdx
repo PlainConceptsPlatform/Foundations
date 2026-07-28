@@ -1,40 +1,43 @@
 ---
 title: "Aspect Ratio"
-description: "Maintains a fixed aspect ratio around its children."
+description: "Displays content within a desired ratio."
 ---
 
 import { AspectRatioDemo } from "@/components/previews/aspect-ratio-demo"
 
-## Installation
+<ComponentPreview>
+  <AspectRatioDemo />
+</ComponentPreview>
+
+## When to use
+
+Hold a fixed ratio box with `AspectRatio` when the media's intrinsic size is outside your control: a screenshot, a video embed, a map, a chart slot in a grid. If the ratio is static, Tailwind's `aspect-video` or `aspect-square` on a plain `div` does the same with less machinery. For the pending state, put a `Skeleton` inside the ratio box, not in place of it.
+
+## Platform notes
+
+It contributes no colour of its own, so the surface, the radius and the clipping are yours: `bg-muted`, `rounded-md` (from `--radius`) and `overflow-hidden`, as the demo does. Its value in a Platform app is layout stability: reserving the box means a late-arriving image or embed does not shove the rows around it, which matters most in dashboard card grids. Keep the ratio in the component that owns the layout rather than threading it as a prop through several slices, and any `img` inside still needs `alt` text from an i18next message when the image conveys meaning.
+
+## Install
 
 ```bash
 npx shadcn@latest add aspect-ratio
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export function AspectRatioDemo() {
   return (
-    <AspectRatio
-      ratio={16 / 9}
-      className="w-full max-w-sm overflow-hidden rounded-md bg-muted"
-    >
+    <AspectRatio ratio={16 / 9} className="w-full max-w-sm overflow-hidden rounded-md bg-muted">
       <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/15 to-accent text-sm text-muted-foreground">
         16 : 9
       </div>
     </AspectRatio>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <AspectRatioDemo />
-</div>
 
 ## Full API
 

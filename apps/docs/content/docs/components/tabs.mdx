@@ -5,16 +5,28 @@ description: "A set of layered sections of content, shown one at a time."
 
 import { TabsDemo } from "@/components/previews/tabs-demo"
 
-## Installation
+<ComponentPreview block>
+  <TabsDemo />
+</ComponentPreview>
+
+## When to use
+
+`Tabs` switches between panels of content that all belong to the same object, on one screen. Do not use it for steps in a process (use an explicit stepper or a multi-page form) or for sections that should be linkable, which belong to real routes with `NavigationMenu` or a Next.js segment layout.
+
+## Platform notes
+
+`TabsList` sits on `--muted` with the active trigger on `--background`, so a list placed on a muted card surface loses its contrast: put it on `bg-card` or switch the list to the `line` variant. The demo is uncontrolled via `defaultValue`; a controlled version needs `value` and `onValueChange`, and syncing that to a search param is preferred as soon as anyone wants to link a specific tab. Radix unmounts inactive panels, so react-hook-form state inside a tab is lost on switch unless the form lives at the `Tabs` level. Each panel owns its own loading, empty, and error states; a tab that fetches on activation shows a skeleton, not a blank region.
+
+## Install
 
 ```bash
 npx shadcn@latest add tabs
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function TabsDemo() {
   return (
@@ -30,15 +42,9 @@ export function TabsDemo() {
         Change your password here.
       </TabsContent>
     </Tabs>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <TabsDemo />
-</div>
 
 ## Full API
 

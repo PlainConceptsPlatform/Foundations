@@ -5,16 +5,28 @@ description: "An image element with a fallback for representing the user."
 
 import { AvatarDemo } from "@/components/previews/avatar-demo"
 
-## Installation
+<ComponentPreview>
+  <AvatarDemo />
+</ComponentPreview>
+
+## When to use
+
+Avatar carries a person or tenant identity next to a name: table rows, comment headers, the account menu. When several people share one row, use `AvatarGroup` with `AvatarGroupCount` for the overflow. For a non-person entity such as an app, a document or an integration, an `Item` with `ItemMedia variant="icon"` communicates better than a circle of initials.
+
+## Platform notes
+
+The fallback (`bg-muted` with `text-muted-foreground`) is what most Platform screens actually render, because photo URLs from the identity provider often come back empty: always compute initials so the circle is never blank. `AvatarImage` needs a real `alt`, and when the name is printed right beside the avatar the image is decorative, so `alt=""` stops a screen reader announcing the name twice. Initials come from data and are not translated, but everything around them ("Assigned to", the account menu entries) is an i18next message. `AvatarBadge` and the group offsets ring with `ring-background`, so an avatar placed on a tinted surface shows a ring in the page background colour rather than the surface colour: put it on `bg-card` or override the ring.
+
+## Install
 
 ```bash
 npx shadcn@latest add avatar
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function AvatarDemo() {
   return (
@@ -27,15 +39,9 @@ export function AvatarDemo() {
         <AvatarFallback>PF</AvatarFallback>
       </Avatar>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <AvatarDemo />
-</div>
 
 ## Full API
 

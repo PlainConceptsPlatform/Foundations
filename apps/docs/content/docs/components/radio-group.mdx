@@ -5,17 +5,29 @@ description: "A set of checkable buttons where no more than one can be checked a
 
 import { RadioGroupDemo } from "@/components/previews/radio-group-demo"
 
-## Installation
+<ComponentPreview>
+  <RadioGroupDemo />
+</ComponentPreview>
+
+## When to use
+
+Pick this when a user chooses exactly one option from a short, visible set of roughly two to five. Above that, `Select` or `Combobox` scale better; for a plain on/off, use `Switch` or `Checkbox`.
+
+## Platform notes
+
+A per-item `Label` names the option but not the question, so wrap the group in `FieldSet` with `FieldLegend` to give it an accessible name. The unselected dot is `border-input` only and the selected one adds a `fill-primary` centre, so selection is a small colour-only mark: keep item labels clickable and do not shrink the item below `size-4`. The root is a `grid gap-3`, and `Field` already tightens its own gap when it detects a `data-slot="radio-group"` child, so leave that spacing alone rather than overriding it. As a Radix primitive it needs a `Controller` under react-hook-form.
+
+## Install
 
 ```bash
 npx shadcn@latest add radio-group
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export function RadioGroupDemo() {
   return (
@@ -33,15 +45,9 @@ export function RadioGroupDemo() {
         <Label htmlFor="r3">Compact</Label>
       </div>
     </RadioGroup>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <RadioGroupDemo />
-</div>
 
 ## Full API
 

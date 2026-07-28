@@ -5,31 +5,32 @@ description: "A scrollable message container with auto-scroll and jump-to-end bu
 
 import { MessageScrollerDemo } from "@/components/previews/message-scroller-demo"
 
-## Installation
+<ComponentPreview block>
+  <MessageScrollerDemo />
+</ComponentPreview>
+
+## When to use
+
+`MessageScroller` is for a live transcript: it holds the newest message in view while output streams in and reveals a jump-to-latest button once the user scrolls away. A bounded static list is a `ScrollArea` instead, and the turns inside the transcript are still `Message` and `Bubble`.
+
+## Platform notes
+
+It needs the full nesting (`Provider`, `Root`, `Viewport`, `Content`, `Item`) inside a parent with a resolved height, `h-80` in the demo, or autoscroll has nothing to measure and the button never activates. Unlike the rest of the catalog it pulls a runtime dependency, `@shadcn/react`, which is not in the ARCHITECTURE.md stack table, so record the deviation in the app before adopting it. `MessageScrollerItem` sets `content-visibility: auto` with an intrinsic size hint, so give images and embeds explicit dimensions or the transcript jumps as items render. The jump button ships a hardcoded English `sr-only` label that has to become an i18next message, and the viewport asks for a `scroll-fade-b` utility the theme does not define, so do not rely on that fade to signal more content.
+
+## Install
 
 ```bash
 npx shadcn@latest add message-scroller
 ```
 
-This component depends on `@shadcn/react` for the message scroller primitives.
-
-## Usage
+## Code
 
 ```tsx
-"use client"
+"use client";
 
-import { Bot } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  Bubble,
-  BubbleContent,
-} from "@/components/ui/bubble"
-import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-  MessageGroup,
-} from "@/components/ui/message"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
+import { Message, MessageAvatar, MessageContent, MessageGroup } from "@/components/ui/message";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -37,7 +38,8 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
-} from "@/components/ui/message-scroller"
+} from "@/components/ui/message-scroller";
+import { Bot } from "lucide-react";
 
 const messages = [
   { id: 1, text: "Hey, can you check the new chart component?", sender: "user" },
@@ -45,7 +47,7 @@ const messages = [
   { id: 3, text: "Great. Did the data-table typecheck pass?", sender: "user" },
   { id: 4, text: "Yes, TanStack Table is wired up and working.", sender: "bot" },
   { id: 5, text: "Let's ship it then.", sender: "user" },
-]
+];
 
 export function MessageScrollerDemo() {
   return (
@@ -60,13 +62,14 @@ export function MessageScrollerDemo() {
                     <Message align={msg.sender === "user" ? "end" : "start"}>
                       <MessageAvatar>
                         <Avatar>
-                          <AvatarFallback>
-                            {msg.sender === "user" ? "U" : <Bot />}
-                          </AvatarFallback>
+                          <AvatarFallback>{msg.sender === "user" ? "U" : <Bot />}</AvatarFallback>
                         </Avatar>
                       </MessageAvatar>
                       <MessageContent>
-                        <Bubble variant={msg.sender === "user" ? "default" : "tinted"} align={msg.sender === "user" ? "end" : "start"}>
+                        <Bubble
+                          variant={msg.sender === "user" ? "default" : "tinted"}
+                          align={msg.sender === "user" ? "end" : "start"}
+                        >
                           <BubbleContent>{msg.text}</BubbleContent>
                         </Bubble>
                       </MessageContent>
@@ -80,15 +83,9 @@ export function MessageScrollerDemo() {
         </MessageScroller>
       </MessageScrollerProvider>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <MessageScrollerDemo />
-</div>
 
 ## Full API
 

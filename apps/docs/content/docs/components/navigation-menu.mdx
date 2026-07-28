@@ -1,20 +1,33 @@
 ---
 title: "Navigation Menu"
-description: "A horizontal menu of links with dropdown content panels."
+description: "A collection of links for navigating between pages."
 ---
 
 import { NavigationMenuDemo } from "@/components/previews/navigation-menu-demo"
 
-## Installation
+<ComponentPreview block>
+  <NavigationMenuDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `NavigationMenu` for top-level navigation with grouped links, especially when a section needs a short description under its title. For switching panels inside one screen use `Tabs`, and for the shell of an internal Platform tool use `Sidebar`, which is the default there.
+
+## Platform notes
+
+`NavigationMenuLink` renders a plain anchor, so in a Next.js app pass `asChild` with a `next/link` child; the demo uses bare `href` values because the docs routes are static, and copying that pattern into an app costs you client-side navigation. `viewport={false}` (as in the demo) drops the shared animated viewport and positions each panel under its own item, which is what you want when panels differ noticeably in size. Panels use `--popover` for the surface and `--muted-foreground` for descriptions, both already AA against their background. The trigger chevron ships an upstream `transition duration-300`, longer than the 150ms ease-out contract; if you want it in line, change the vendored file rather than layering a second transition over it.
+
+## Install
 
 ```bash
 npx shadcn@latest add navigation-menu
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Link } from "lucide-react"
+import { Link } from "lucide-react";
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -23,7 +36,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+} from "@/components/ui/navigation-menu";
 
 export function NavigationMenuDemo() {
   return (
@@ -55,15 +68,9 @@ export function NavigationMenuDemo() {
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <NavigationMenuDemo />
-</div>
 
 ## Full API
 

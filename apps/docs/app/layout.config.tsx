@@ -22,5 +22,5 @@ export const baseOptions: BaseLayoutProps = {
     { text: "Components", url: "/docs/components" },
     { text: "Tokens", url: "/docs/tokens" },
   ],
-  githubUrl: "https://github.com/PlainConceptsPlatform/Platform-Foundations",
+  githubUrl: "https://github.com/PlainConceptsPlatform/Foundations",
 };

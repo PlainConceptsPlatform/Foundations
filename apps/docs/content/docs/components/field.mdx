@@ -5,26 +5,38 @@ description: "A form field component with labels, descriptions, and error messag
 
 import { FieldDemo } from "@/components/previews/field-demo"
 
-## Installation
+<ComponentPreview block>
+  <FieldDemo />
+</ComponentPreview>
+
+## When to use
+
+The layout and semantics wrapper for every form in a Platform app: label, control, helper text and validation message as one group. Use it instead of hand-rolling a `div` with a `Label` and a `p`, and reach for `FieldSet` with `FieldLegend` when several controls answer one question.
+
+## Platform notes
+
+`FieldError` accepts an `errors` array of `{ message }` objects, the shape react-hook-form's `formState.errors` entries already have; it dedupes by message, renders `role="alert"`, and returns nothing when the array is empty, so it is safe to leave mounted. The invalid tint comes from `data-invalid="true"` on `Field`, which you set from form state: it is not inferred from the child control. `FieldLabel` carries `has-data-[state=checked]:border-primary` with a `bg-primary/5` fill, which is how you build a selectable option card here, since elevation is border plus `bg-card` and never a shadow. One correction to the upstream demo: it drops a bare `<input type="checkbox">` into the horizontal field, so use the `Checkbox` component instead and let it inherit the tokens.
+
+## Install
 
 ```bash
 npx shadcn@latest add field
 ```
 
-## Usage
+## Code
 
 ```tsx
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSet,
   FieldLegend,
-} from "@/components/ui/field"
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 export function FieldDemo() {
   return (
@@ -34,9 +46,7 @@ export function FieldDemo() {
         <Field>
           <FieldLabel>Email</FieldLabel>
           <Input type="email" placeholder="you@example.com" />
-          <FieldDescription>
-            We'll never share your email with anyone.
-          </FieldDescription>
+          <FieldDescription>We'll never share your email with anyone.</FieldDescription>
         </Field>
         <Field orientation="horizontal">
           <FieldLabel>Remember me</FieldLabel>
@@ -44,15 +54,9 @@ export function FieldDemo() {
         </Field>
       </FieldSet>
     </FieldGroup>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <FieldDemo />
-</div>
 
 ## Full API
 

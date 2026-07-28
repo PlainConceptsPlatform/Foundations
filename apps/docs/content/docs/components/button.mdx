@@ -5,16 +5,28 @@ description: "Displays a button or a component that looks like a button."
 
 import { ButtonDemo } from "@/components/previews/button-demo"
 
-## Installation
+<ComponentPreview>
+  <ButtonDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `Button` for anything that performs an action: submit, save, delete, open a dialog. If the control navigates, render a link (or `BreadcrumbLink` / `NavigationMenuLink`) styled as a button rather than a button that pushes a route. For a persistent on/off state reach for `Toggle`, and for two or three actions that read as one control use `ButtonGroup`.
+
+## Platform notes
+
+One `--primary` button per screen region: `destructive` is reserved for irreversible actions, and `secondary`, `outline` and `ghost` carry everything else. The `outline` variant carries `shadow-xs`, which compiles to a transparent value under the Platform theme, so the edge you see is the border, and adding a shadow utility of your own will paint nothing either. Every label, including the `aria-label` on an icon-only button, is a react-i18next message; an icon-only button with no label fails the WCAG 2.2 AA name requirement. Async submits need a real pending state (disabled plus `Spinner`), which is the loading state the design rules require, not an optional nicety.
+
+## Install
 
 ```bash
 npx shadcn@latest add button
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 export function ButtonDemo() {
   return (
@@ -27,15 +39,9 @@ export function ButtonDemo() {
       <Button variant="link">Link</Button>
       <Button disabled>Disabled</Button>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ButtonDemo />
-</div>
 
 ## Full API
 

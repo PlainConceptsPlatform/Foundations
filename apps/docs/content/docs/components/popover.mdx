@@ -5,19 +5,31 @@ description: "Displays rich content in a portal, triggered by a button."
 
 import { PopoverDemo } from "@/components/previews/popover-demo"
 
-## Installation
+<ComponentPreview>
+  <PopoverDemo />
+</ComponentPreview>
+
+## When to use
+
+Popover holds a small interactive layer anchored to the control that opened it: a filter, a quick edit, a colour or date choice. Use `Tooltip` when the content is a short non-interactive hint, `DropdownMenu` when it is a list of actions, and `Dialog` when the task deserves a focus trap and the page behind it should go inert.
+
+## Platform notes
+
+Content consumes `--popover` and `--popover-foreground`, and in light mode `--popover` is the same white as `--background`, so with `shadow-md` neutralised the border is the only thing that makes the popover look like a separate surface; do not remove it or swap the surface for `bg-background`. A Popover is not modal, so nothing inside is focus trapped: everything must be reachable by keyboard with a visible `ring`, and every input needs a real label. The enter and exit animation reads `--radix-popover-content-transform-origin`, so if you reposition the content with `align` or `sideOffset` the animation follows automatically and needs no extra transition. Keep the primitive in `shared/ui` and the popover body (a filter form, an entity picker) in the feature slice that owns it, with its strings coming from react-i18next.
+
+## Install
 
 ```bash
 npx shadcn@latest add popover
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function PopoverDemo() {
   return (
@@ -32,15 +44,9 @@ export function PopoverDemo() {
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <PopoverDemo />
-</div>
 
 ## Full API
 

@@ -5,16 +5,28 @@ description: "A window overlaid on the primary window, rendering the content und
 
 import { DialogDemo } from "@/components/previews/dialog-demo"
 
-## Installation
+<ComponentPreview>
+  <DialogDemo />
+</ComponentPreview>
+
+## When to use
+
+Use a Dialog for a focused create or edit task the user should finish without losing the screen behind it, typically a short form with Save and Cancel. When the decision is destructive or irreversible, use `AlertDialog` instead so it cannot be dismissed by clicking outside; when the content is a long form or a detail panel, use `Sheet`.
+
+## Platform notes
+
+Elevation here is not a shadow: `DialogContent` ships `shadow-lg`, which the theme resolves to a transparent value, so the `bg-black/50` overlay and the content border are the only separation from the page. That matters in light mode, where `--background`, `--card` and `--popover` are all the same white, so never strip the border from `DialogContent`. Always render `DialogTitle` and `DialogDescription` (Radix uses them for the accessible name and description) and source every label, including the trigger and footer buttons, from react-i18next. The primitive stays in `shared/ui`; the form inside it belongs to the feature slice that owns the use case, wired with react-hook-form and zod.
+
+## Install
 
 ```bash
 npx shadcn@latest add dialog
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -24,9 +36,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function DialogDemo() {
   return (
@@ -51,15 +63,9 @@ export function DialogDemo() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <DialogDemo />
-</div>
 
 ## Full API
 

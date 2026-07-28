@@ -174,21 +174,35 @@ export type DataTableProps<T> = {
 // --- persisted-state helper (localStorage-backed useState) -------------------
 
 function usePersistedState<S>(key: string, initial: S) {
-  const [state, setState] = useState<S>(() => {
+  // Start from `initial` so the server-rendered HTML and the client's first render
+  // agree. Reading localStorage in the useState initializer caused a hydration
+  // mismatch: on the server localStorage does not exist and the initializer fell
+  // back to `initial`, while the client's first render returned the stored value.
+  const [state, setState] = useState<S>(initial);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(key);
-      return raw != null ? (JSON.parse(raw) as S) : initial;
+      if (raw != null) setState(JSON.parse(raw) as S);
     } catch {
-      return initial;
+      /* storage unavailable or holds invalid JSON; keep `initial` */
     }
-  });
+    setHydrated(true);
+  }, [key]);
+
   useEffect(() => {
+    // Gated on `hydrated` state (not a ref) so this effect re-runs once hydration
+    // has landed. Without the gate it fires on the first commit, when `state` is
+    // still `initial`, and overwrites the value we were about to read back.
+    if (!hydrated) return;
     try {
       localStorage.setItem(key, JSON.stringify(state));
     } catch {
       /* ignore */
     }
-  }, [key, state]);
+  }, [key, state, hydrated]);
+
   return [state, setState] as const;
 }
 
@@ -462,10 +476,13 @@ export function DataTable<T>(props: DataTableProps<T>) {
               {activeGroupBy.length === 0 ? texts.dragToGroup : texts.groupedBy}
             </span>
             {activeGroupBy.map((k, i) => (
-              <button
+              // A span, not a button: this element is a drag handle with no click
+              // action, and it contains the remove Button. Nesting a button inside a
+              // button is invalid HTML and leaves the inner control unreachable for
+              // assistive tech and inconsistent under keyboard focus.
+              <span
                 key={k}
-                type="button"
-                className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium cursor-default border-0"
+                className="inline-flex cursor-default items-center gap-1 rounded-md bg-secondary px-2 py-0.5 font-medium text-xs"
                 draggable
                 onDragStart={(e) => {
                   e.stopPropagation();
@@ -492,7 +509,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 >
                   <IconX className="size-3" />
                 </Button>
-              </button>
+              </span>
             ))}
             {activeGroupBy.length > 0 && (
               <Button variant="ghost" size="xs" onClick={() => setGroupBy([])}>
@@ -528,6 +545,18 @@ export function DataTable<T>(props: DataTableProps<T>) {
                     active && "text-foreground",
                   )}
                   style={{ textAlign: c.align, width: c.width, cursor: "grab" }}
+                  // Only sortable columns advertise a sort state. Emitting
+                  // aria-sort="none" on a fixed column tells screen readers it is
+                  // sortable when it is not.
+                  aria-sort={
+                    sortable
+                      ? active
+                        ? sort.order === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                      : undefined
+                  }
                   {...thDragProps(c)}
                   {...thDropProps(c)}
                 >

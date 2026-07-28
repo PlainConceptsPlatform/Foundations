@@ -5,13 +5,25 @@ description: "Fast, composable, unstyled command menu."
 
 import { CommandDemo } from "@/components/previews/command-demo"
 
-## Installation
+<ComponentPreview block>
+  <CommandDemo />
+</ComponentPreview>
+
+## When to use
+
+`Command` is for keyboard-first search across actions, records, or navigation targets, either inline as in the demo or wrapped in `CommandDialog` as a palette. To pick a value inside a form use `Combobox`, and for a short fixed list use `Select`.
+
+## Platform notes
+
+cmdk filters on rendered text, so under react-i18next it only matches the active locale; add a translated `keywords` list per item when users type English terms in a non-English UI. `CommandEmpty` is the mandatory empty state and its text is a translation message, as is the input placeholder, and the vendored file exports no loading wrapper, so a remote-backed palette renders its own skeleton and error rows inside `CommandList`. `CommandDialog` defaults `title` to `Command Palette` and `description` to `Search for a command to run...`, both hardcoded English and both the dialog's accessible name, so pass translated values in. Keep the palette shell in `shared/ui` and let each slice contribute its own item list, so the search surface does not accumulate knowledge of every domain.
+
+## Install
 
 ```bash
 npx shadcn@latest add command
 ```
 
-## Usage
+## Code
 
 ```tsx
 import {
@@ -22,7 +34,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 
 export function CommandDemo() {
   return (
@@ -42,15 +54,9 @@ export function CommandDemo() {
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <CommandDemo />
-</div>
 
 ## Full API
 

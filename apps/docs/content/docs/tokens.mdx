@@ -3,26 +3,72 @@ title: Tokens
 description: Colors, typography and radius from the Platform styleguide.
 ---
 
-import { Palette, TypeScale } from "@/components/showcase";
+import { ChartRamp, Palette, SemanticTokens, TypeScale } from "@/components/showcase";
 
 Use **semantic tokens**, never raw hex or pixel values. `bg-primary`, `text-muted-foreground`,
-`border`, `rounded-lg`. The values below come from `@plainconceptsplatform/ui-theme`.
+`border`, `rounded-lg`.
 
-## Color
+<Callout type="info">
+  Every value on this page is generated from `packages/theme/src/theme.css`, so it cannot drift from
+  the theme. Click any swatch or token name to copy the **token**, not the hex.
+</Callout>
+
+## The three layers
+
+Tokens flow through three layers, and you only work with the middle one:
+
+<Steps>
+  <Step>
+    **Primitives** (`--pc-blue-500`) are the raw brand ramp. Rarely referenced directly.
+  </Step>
+  <Step>
+    **Semantic slots** (`--primary`, `--border`) map primitives onto roles. Both light and dark
+    values live here, which is why swapping a palette never touches component code.
+  </Step>
+  <Step>
+    **Tailwind utilities** (`bg-primary`, `border-border`) are what you write in components.
+  </Step>
+</Steps>
+
+## Semantic tokens
+
+The layer app code consumes. Light and dark side by side, because the dark palette is derived
+rather than designed and this is where you can review it.
+
+<SemanticTokens />
+
+## Primitive ramps
 
 <Palette />
 
 The primary action color is the brand blue `#2f69ff`. The functional palette (error, warning,
 success, info) each has a light tint, a solid base, and a dark variant for text on tint.
 
-> The Special Days, Unit, Area, and Teams palettes are app-specific data-viz sets. They
-> live in the app, not in the shared theme.
+## Data visualization
+
+The shared categorical ramp. Every entry clears 3:1 against `--background` in both modes, so thin
+lines and small legend swatches stay visible, and the two blue-family hues sit at opposite ends so
+adjacent series never collide.
+
+<ChartRamp />
+
+<Callout type="warn">
+  Do not use `--accent` or another tint token as a series color. They are hover surfaces and
+  disappear against a card. The Special Days, Unit, Area, and Teams palettes are app-specific
+  data-viz sets and live in the app, not in the shared theme.
+</Callout>
 
 ## Typography
 
 The single typeface is **Outfit**. Load it with `next/font/google` and expose it as `--font-sans`.
 
 <TypeScale />
+
+<Callout>
+  The scale above is what the Figma defines: one heading step plus three paragraph sizes. It is an
+  application UI scale, not a documentation scale, so headings in long-form content are set by the
+  docs site rather than the theme.
+</Callout>
 
 ## Radius
 

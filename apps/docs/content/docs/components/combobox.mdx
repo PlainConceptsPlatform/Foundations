@@ -5,28 +5,32 @@ description: "A searchable select built on the Command and Popover primitives."
 
 import { ComboboxDemo } from "@/components/previews/combobox-demo"
 
-## Installation
+<ComponentPreview>
+  <ComboboxDemo />
+</ComponentPreview>
 
-Combobox is a composite pattern, not a standalone shadcn registry item. It
-assembles two primitives whose dependencies are already present
-(`cmdk` and `radix-ui`):
+## When to use
+
+Use when the list is long enough that the user should type to narrow it: people, projects, clients, anything past roughly fifteen entries. For a short fixed list use `Select` or `RadioGroup`; for a global "jump to" or action launcher use `Command` in a dialog, not this.
+
+## Platform notes
+
+This is a recipe rather than a shadcn component, `Popover` plus `Command` assembled by hand, so it is yours to maintain and it belongs in the slice that owns the data, not in `shared/ui`. It is fully controlled (`open` and the selected value both in state, no hidden input), so react-hook-form needs a `Controller`, and `CommandEmpty` is the only state the primitives give you: a skeleton while the options load and an error path for a failed fetch are on you. One token detail: the trigger is `Button variant="outline"`, which borders on `--border`, a step lighter than the `--input` used by `Input` and `SelectTrigger`, so add `border-input` to the trigger when it shares a row with them. The trigger placeholder, the search placeholder and the empty message are three separate user-facing strings, all of them `t()` calls.
+
+## Install
 
 ```bash
-npx shadcn@latest add command popover
+npx shadcn@latest add combobox
 ```
 
-`Command` provides the searchable list (powered by `cmdk`) and `Popover` hosts
-it in a floating panel. The preview tracks open state and the selected value
-with `useState`, so it opts into client rendering.
-
-## Usage
+## Code
 
 ```tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -34,13 +38,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 const frameworks = [
   { value: "next.js", label: "Next.js" },
@@ -48,24 +50,23 @@ const frameworks = [
   { value: "tailwind", label: "Tailwind CSS" },
   { value: "shadcn", label: "shadcn/ui" },
   { value: "radix", label: "Radix UI" },
-]
+];
 
 export function ComboboxDemo() {
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          // biome-ignore lint/a11y/useSemanticElements: combobox opens a listbox, not a native <select>
           role="combobox"
           aria-expanded={open}
           className="w-[220px] justify-between"
         >
-          {value
-            ? frameworks.find((f) => f.value === value)?.label
-            : "Select framework..."}
+          {value ? frameworks.find((f) => f.value === value)?.label : "Select framework..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -80,8 +81,8 @@ export function ComboboxDemo() {
                   key={framework.value}
                   value={framework.value}
                   onSelect={(current) => {
-                    setValue(current === value ? "" : current)
-                    setOpen(false)
+                    setValue(current === value ? "" : current);
+                    setOpen(false);
                   }}
                 >
                   {framework.label}
@@ -98,15 +99,9 @@ export function ComboboxDemo() {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ComboboxDemo />
-</div>
 
 ## Full API
 

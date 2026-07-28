@@ -5,27 +5,33 @@ description: "An input where the user selects a value from a given range."
 
 import { SliderDemo } from "@/components/previews/slider-demo"
 
-## Installation
+<ComponentPreview>
+  <SliderDemo />
+</ComponentPreview>
+
+## When to use
+
+Good for imprecise, continuous values where the visual position is the point: opacity, zoom, a price band, a threshold someone is tuning. When an exact figure matters use a numeric `Input`, and when both matter, pair the slider with an `Input` bound to the same value.
+
+## Platform notes
+
+A gotcha in this copy: the thumb is `bg-white` with `border-primary`, hardcoded rather than tokenised, so it does not follow dark mode; switch it to `bg-background` if you re-vendor the file. The track is `--muted` and the filled range is `--primary`, a colour-only signal, so the current value has to be rendered as text near the control as well. It renders no label of its own, so supply an `aria-label` or an `aria-labelledby` pointing at a `FieldLabel`, and check that the hover-to-`ring-4` growth still reads as focus rather than decoration. Thumbs are keyed by their value, so a range slider whose two handles land on the same number produces a duplicate React key.
+
+## Install
 
 ```bash
 npx shadcn@latest add slider
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Slider } from "@/components/ui/slider"
+import { Slider } from "@/components/ui/slider";
 
 export function SliderDemo() {
-  return <Slider defaultValue={[50]} max={100} step={1} className="w-full max-w-sm" />
+  return <Slider defaultValue={[50]} max={100} step={1} className="w-full max-w-sm" />;
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <SliderDemo />
-</div>
 
 ## Full API
 

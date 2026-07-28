@@ -7,7 +7,7 @@ first; the backend (.NET) architecture is the final section.
 
 ## Architecture Overview
 
-- **Foundation repo** (`Platform-Foundations`): a pnpm monorepo holding the shared theme package,
+- **Foundation repo** (`PlainConceptsPlatform/Foundations`): a pnpm monorepo holding the shared theme package,
   the shared components package, the docs/showcase site, and the conventions in `ai/`. It ships
   tokens + shared components + docs, **not** a full component library.
 - **Platform frontend apps** (separate repos): **Next.js (App Router) + React + TypeScript**, using
@@ -70,7 +70,7 @@ requirement has appeared in **multiple** apps.
 ## Foundation repo structure
 
 ```text
-Platform-Foundations/
+Foundations/
 ├── apps/
 │   └── docs/                  # Fumadocs (Next.js), docs + live themed component previews
 ├── packages/

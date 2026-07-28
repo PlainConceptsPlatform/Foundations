@@ -1,20 +1,32 @@
 ---
 title: "Kbd"
-description: "A styled key cap for keyboard shortcuts."
+description: "Represents keyboard input or hotkeys."
 ---
 
 import { KbdDemo } from "@/components/previews/kbd-demo"
 
-## Installation
+<ComponentPreview>
+  <KbdDemo />
+</ComponentPreview>
+
+## When to use
+
+Kbd prints a key or a chord inline: help text, tooltips, command palette rows, menu items that advertise a shortcut. Use `KbdGroup` for multi-key chords. For inline code, a file path or a value, use a `<code>` element with `bg-muted`, not Kbd.
+
+## Platform notes
+
+Kbd only displays a shortcut, it never registers one: the handler belongs to the feature that owns the action, and the displayed key should be derived from the same source so the two cannot drift. Key names are user-facing text and go through react-i18next (`Enter`, `Shift`, `Esc`), while the modifier glyph depends on the client (Command on macOS, Ctrl elsewhere), so it is resolved at runtime rather than baked into a translation. The component is `bg-muted` with `text-muted-foreground`, `pointer-events-none`, and it inherits Outfit through `font-sans`, so it will not align with a mono code sample. Documenting a shortcut does not discharge the keyboard obligation: the same action still has to be reachable in tab order with a visible focus ring.
+
+## Install
 
 ```bash
 npx shadcn@latest add kbd
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 
 export function KbdDemo() {
   return (
@@ -33,15 +45,9 @@ export function KbdDemo() {
         Submit the form with <Kbd>Enter</Kbd>.
       </span>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <KbdDemo />
-</div>
 
 ## Full API
 

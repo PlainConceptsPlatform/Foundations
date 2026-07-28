@@ -5,18 +5,32 @@ description: "Group multiple buttons together with separators and text slots."
 
 import { ButtonGroupDemo } from "@/components/previews/button-group-demo"
 
-## Installation
+<ComponentPreview>
+  <ButtonGroupDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for `ButtonGroup` when two or three related actions belong together as one control: copy plus confirm, a value with an adjacent action, an input with a trailing button. When the members are mutually exclusive states, use `ToggleGroup` instead, and when there are more than about three choices, collapse them into a `DropdownMenu`.
+
+## Platform notes
+
+`ButtonGroupSeparator` paints `bg-input` rather than `--border`, one step darker, so the divider stays visible between two `outline` buttons that already have borders. Focus inside the group is raised with `z-index` on `focus-visible` instead of a shadow, which keeps the ring unclipped under the border plus `bg-card` elevation rule. `ButtonGroupText` (the `$ 99` slot in the demo) is a non-interactive label: it is not focusable and must not hold the action or a value users need to change. The group itself is `shared/ui`; which actions get grouped is a decision for the feature composing them, so that arrangement lives in the slice, not in the shared component.
+
+## Install
 
 ```bash
 npx shadcn@latest add button-group
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { ChevronRight, Check, Copy } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@/components/ui/button-group"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@/components/ui/button-group";
+import { Check, ChevronRight, Copy } from "lucide-react";
 
 export function ButtonGroupDemo() {
   return (
@@ -38,15 +52,9 @@ export function ButtonGroupDemo() {
         </Button>
       </ButtonGroup>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ButtonGroupDemo />
-</div>
 
 ## Full API
 

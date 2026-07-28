@@ -5,13 +5,25 @@ description: "Displays the path to the current resource using a hierarchy of lin
 
 import { BreadcrumbDemo } from "@/components/previews/breadcrumb-demo"
 
-## Installation
+<ComponentPreview>
+  <BreadcrumbDemo />
+</ComponentPreview>
+
+## When to use
+
+`Breadcrumb` shows where the current screen sits in a hierarchy three or more levels deep and gives a way back up it. A two-level screen only needs a back link. It does not move between siblings, which is what `Tabs` and `Pagination` are for.
+
+## Platform notes
+
+The final crumb is `BreadcrumbPage`, which carries `aria-current="page"` and is deliberately not a link; turning it into one breaks the pattern for screen reader users. Separators are `aria-hidden`, so assistive tech hears just the trail, but the vendored `BreadcrumbEllipsis` contains a hardcoded sr-only `More` that has to be replaced with a react-i18next message. Crumb labels come from the entity's translated display name, never from the URL slug. Links render at `--muted-foreground` with the current page at `--foreground`; that pairing already clears AA, so do not lighten it further to make the trail recede.
+
+## Install
 
 ```bash
 npx shadcn@latest add breadcrumb
 ```
 
-## Usage
+## Code
 
 ```tsx
 import {
@@ -21,7 +33,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb";
 
 export function BreadcrumbDemo() {
   return (
@@ -40,15 +52,9 @@ export function BreadcrumbDemo() {
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <BreadcrumbDemo />
-</div>
 
 ## Full API
 

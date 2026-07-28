@@ -1,19 +1,29 @@
 ---
 title: "Input OTP"
-description: "An accessible one-time password input, built on input-otp."
+description: "A one-time password input built on the input-otp library."
 ---
 
 import { InputOtpDemo } from "@/components/previews/input-otp-demo"
 
-## Installation
+<ComponentPreview>
+  <InputOtpDemo />
+</ComponentPreview>
+
+## When to use
+
+For fixed-length codes typed or pasted in from another channel: two-factor confirmation, email verification, a short PIN. Anything of variable length is an `Input`, and a long-lived secret belongs in a password `Input`, not here.
+
+## Platform notes
+
+Visually it is a row of `div` slots, but the real control is a single hidden input, so react-hook-form binds one string and pasting the whole code works without extra handling. Slots share edges (`border-y border-r` with `first:border-l`), all on `--input`, and the active slot lifts to `--ring`, so a `className` that adds a full border will double every divider line. The blinking caret uses `animate-caret-blink`, and the theme's `base.css` already collapses animations under `prefers-reduced-motion`, so nothing extra is required for that. Since the slots are not labelled elements, label the group and put the instruction in a `FieldDescription`, both strings coming from react-i18next.
+
+## Install
 
 ```bash
 npx shadcn@latest add input-otp
 ```
 
-This pulls in `input-otp` as a runtime dependency.
-
-## Usage
+## Code
 
 ```tsx
 import {
@@ -21,7 +31,7 @@ import {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "@/components/ui/input-otp";
 
 export function InputOtpDemo() {
   return (
@@ -38,15 +48,9 @@ export function InputOtpDemo() {
         <InputOTPSlot index={5} />
       </InputOTPGroup>
     </InputOTP>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <InputOtpDemo />
-</div>
 
 ## Full API
 

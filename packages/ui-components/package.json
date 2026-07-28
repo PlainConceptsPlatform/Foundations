@@ -45,7 +45,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PlainConceptsPlatform/Platform-Foundations.git",
+    "url": "git+https://github.com/PlainConceptsPlatform/Foundations.git",
     "directory": "packages/ui-components"
   },
   "publishConfig": {

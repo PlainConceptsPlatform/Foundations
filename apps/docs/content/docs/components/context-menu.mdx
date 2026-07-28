@@ -1,17 +1,29 @@
 ---
 title: "Context Menu"
-description: "A menu triggered on right-click, for contextual actions."
+description: "Displays a menu of actions triggered by a right-click."
 ---
 
 import { ContextMenuDemo } from "@/components/previews/context-menu-demo"
 
-## Installation
+<ComponentPreview>
+  <ContextMenuDemo />
+</ComponentPreview>
+
+## When to use
+
+Add `ContextMenu` as a secondary shortcut to actions that are already reachable another way, typically on a table row or a card. Right-click is not discoverable and does not exist on touch, so it must never be the only route to an action: pair it with the same items behind a `DropdownMenu` trigger.
+
+## Platform notes
+
+The trigger has to look like a target, which is why the demo gives it a dashed `border` and `text-muted-foreground`; an unmarked region leaves users with no way to know a menu exists. `inset` aligns items that have no icon with items that do, so keep it consistent inside a group instead of mixing the two. Keyboard users open it with the context-menu key or Shift+F10, meaning every action here must be operable from the keyboard alone to meet WCAG 2.2 AA. Item text and the `ContextMenuShortcut` labels come from react-i18next, and the destructive entry uses `variant="destructive"` rather than a hand-picked colour.
+
+## Install
 
 ```bash
 npx shadcn@latest add context-menu
 ```
 
-## Usage
+## Code
 
 ```tsx
 import {
@@ -21,7 +33,7 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu"
+} from "@/components/ui/context-menu";
 
 export function ContextMenuDemo() {
   return (
@@ -48,15 +60,9 @@ export function ContextMenuDemo() {
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ContextMenuDemo />
-</div>
 
 ## Full API
 

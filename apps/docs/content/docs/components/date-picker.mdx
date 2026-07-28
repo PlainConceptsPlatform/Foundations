@@ -1,46 +1,53 @@
 ---
 title: "Date Picker"
-description: "A themed date range picker built on the Calendar and Popover primitives."
+description: "A date selection component built on Calendar and Popover."
 ---
 
 import { DatePickerDemo } from "@/components/previews/date-picker-demo"
 
-## Installation
+<ComponentPreview>
+  <DatePickerDemo />
+</ComponentPreview>
 
-Date Picker is a composite pattern, not a shadcn registry item. It assembles two
-primitives whose dependencies are already present (`react-day-picker` and
-`radix-ui`):
+## When to use
+
+Compose Calendar inside a Popover when a date or a range is one field in a form or a filter bar and the month should stay out of the way until it is asked for. Reach for plain `Calendar` when the month must be permanently visible, and for a date entered as text or a value that includes a time use `Input` with a zod schema rather than stretching this pattern.
+
+## Platform notes
+
+This is a recipe, not a registry entry: `Calendar`, `Popover` and `Button` come from `shared/ui`, while the composed field lives in the slice that owns it and is exported through that slice's `index.ts`. Everything the trigger renders is user-facing, so the placeholder, the range separator and the `date-fns` pattern all come from i18next with the matching `date-fns` locale; the demo's hardcoded placeholder and `LLL d, y` pattern do not survive review. Selection is controlled in the demo while the popover's open state is not, and in `mode="range"` the value passes through a state where `from` is set and `to` is still undefined, so guard on both before you submit and do not take over `open` just to close on the first click; the trigger is a `Button`, not a labelled input, so give it its own accessible name instead of relying on the formatted date. Keep `PopoverContent` at `w-auto p-0`: the default `w-72` is too narrow for `numberOfMonths={2}`, the calendar drops its own background inside `data-slot=popover-content`, and the popover border carries the elevation because its `shadow-md` paints nothing, so verify the two-month layout below `md` where the months stack into a column.
+
+## Install
+
+Compose it from `calendar` and `popover`, both of which are registry items:
 
 ```bash
 npx shadcn@latest add calendar popover
 ```
 
-The preview wraps `Calendar` (from `react-day-picker`) inside `Popover` and tracks
-the selected `DateRange` with `useState`, so it opts into client rendering.
+There is no `shadcn add date-picker`: it is a pattern you assemble, not a registry item.
 
-## Usage
+## Code
 
 ```tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import type { DateRange } from "react-day-picker"
+import { format } from "date-fns";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 
 export function DatePickerDemo() {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(2026, 0, 12),
     to: new Date(2026, 0, 18),
-  })
+  });
 
   return (
     <Popover>
@@ -67,23 +74,12 @@ export function DatePickerDemo() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="range"
-          selected={date}
-          onSelect={setDate}
-          numberOfMonths={2}
-        />
+        <Calendar mode="range" selected={date} onSelect={setDate} numberOfMonths={2} />
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <DatePickerDemo />
-</div>
 
 ## Full API
 

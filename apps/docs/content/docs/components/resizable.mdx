@@ -1,33 +1,36 @@
 ---
 title: "Resizable"
-description: "Resizable panels with drag handles, built on react-resizable-panels."
+description: "A set of resizable panels built on react-resizable-panels."
 ---
 
 import { ResizableDemo } from "@/components/previews/resizable-demo"
 
-## Installation
+<ComponentPreview block>
+  <ResizableDemo />
+</ComponentPreview>
+
+## When to use
+
+Panels earn their place when a user genuinely rebalances two regions: a list beside a detail pane, an editor beside a preview, filters beside results. Fixed proportions should just be a grid, a temporary side surface is a `Sheet`, and collapsing app navigation is the `Sidebar`.
+
+## Platform notes
+
+Pass `withHandle` as the demo does: the bare separator is a 1px `bg-border` line with a 4px hit area, a demanding pointer target, and the grip is also what makes the focused `ring` visible. The separator is keyboard operable (focus it, then arrow keys resize), so re-test that after overriding its `className`. Sizes are percentages of the group, so verify at `sm` and `md`: two panes that work on a desktop become two unusable slivers on a phone, where stacking with `orientation="vertical"` or not resizing at all is the honest answer. Nothing divides the panes except that border, which is the intent here, since elevation is border plus `bg-card` and `shadow-*` paints nothing.
+
+## Install
 
 ```bash
 npx shadcn@latest add resizable
 ```
 
-This pulls in `react-resizable-panels` as a runtime dependency.
-
-## Usage
+## Code
 
 ```tsx
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 export function ResizableDemo() {
   return (
-    <ResizablePanelGroup
-      orientation="horizontal"
-      className="max-w-md rounded-lg border"
-    >
+    <ResizablePanelGroup orientation="horizontal" className="max-w-md rounded-lg border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-[180px] items-center justify-center p-4 text-center text-sm">
           Left panel
@@ -40,15 +43,9 @@ export function ResizableDemo() {
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ResizableDemo />
-</div>
 
 ## Full API
 

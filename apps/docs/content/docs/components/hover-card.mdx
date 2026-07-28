@@ -1,25 +1,33 @@
 ---
 title: "Hover Card"
-description: "Shows related content when a user hovers over a target."
+description: "For sighted users to preview information available behind a link."
 ---
 
 import { HoverCardDemo } from "@/components/previews/hover-card-demo"
 
-## Installation
+<ComponentPreview>
+  <HoverCardDemo />
+</ComponentPreview>
+
+## When to use
+
+A HoverCard previews an entity behind a link on pointer devices: the person, project or record a name refers to. It is a supplement and never the only route to that information; when the content is interactive or must be reachable by keyboard and touch, use `Popover`, and when it is a one line hint use `Tooltip`.
+
+## Platform notes
+
+Hover is the only trigger, so under WCAG 2.2 AA nothing in the card may be information the user cannot get another way, typically by following the link itself. It renders on the same `--popover` surface as `Popover`, which in light mode matches the page background, so the border is what separates it and should stay. When the card loads entity data on open it still owes the required states: a skeleton in place of the body and a quiet inline error, not a silent empty card. The card body is entity UI and belongs in the `entities/<name>/ui` slice while the primitive stays in `shared/ui`, with all copy resolved through react-i18next.
+
+## Install
 
 ```bash
 npx shadcn@latest add hover-card
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Button } from "@/components/ui/button"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
+import { Button } from "@/components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 export function HoverCardDemo() {
   return (
@@ -32,22 +40,15 @@ export function HoverCardDemo() {
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">@plainconcepts</h4>
             <p className="text-sm text-muted-foreground">
-              Plain Concepts platform shared foundation: theme tokens,
-              components, and docs.
+              Plain Concepts platform shared foundation: theme tokens, components, and docs.
             </p>
           </div>
         </div>
       </HoverCardContent>
     </HoverCard>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <HoverCardDemo />
-</div>
 
 ## Full API
 

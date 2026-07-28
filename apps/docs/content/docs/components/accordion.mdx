@@ -5,13 +5,25 @@ description: "A vertically stacked set of interactive headings that each reveal 
 
 import { AccordionDemo } from "@/components/previews/accordion-demo"
 
-## Installation
+<ComponentPreview>
+  <AccordionDemo />
+</ComponentPreview>
+
+## When to use
+
+Use an accordion to collapse a long screen into labelled sections a user opens one at a time: FAQ blocks, grouped settings, the steps of a long form. When there is only one region to show or hide, `Collapsible` is the smaller tool; when the sections are peers a user switches between rather than reads through, use `Tabs`.
+
+## Platform notes
+
+The only tokens in play are `border` on each item and `ring` on the trigger's focus outline, so an accordion sits straight on the page surface with no `bg-card` and nothing to lift it (the theme compiles `shadow-*` to a transparent value in any case). The open and close height animation comes from the `animate-accordion-down` / `animate-accordion-up` keyframes in `tw-animate-css`, imported once in `app/global.css`, and `base.css` already flattens it to 1ms under `prefers-reduced-motion`, so do not layer a transition of your own on top. Trigger labels and panel copy are user-facing text, which means react-i18next keys and no literals in JSX. The component lives in `shared/ui`; the list of sections and the content inside them belongs to the slice that owns the data.
+
+## Install
 
 ```bash
 npx shadcn@latest add accordion
 ```
 
-## Usage
+## Code
 
 ```tsx
 import {
@@ -19,7 +31,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 
 export function AccordionDemo() {
   return (
@@ -37,15 +49,9 @@ export function AccordionDemo() {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <AccordionDemo />
-</div>
 
 ## Full API
 

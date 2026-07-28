@@ -5,16 +5,28 @@ description: "A responsive table component."
 
 import { TableDemo } from "@/components/previews/table-demo"
 
-## Installation
+<ComponentPreview block>
+  <TableDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `Table` for a read-only tabular set that fits on a screen and needs no sorting, grouping or column control: a summary panel, an invoice line list, a config dump. The moment users need to sort, group, reorder or hide columns, move to [Data Table](/docs/components/data-table) rather than hand-rolling those behaviours on top. For records that read as a title plus description plus actions, `Item` inside an `ItemGroup` is a better fit than a two-column table.
+
+## Platform notes
+
+The primitives paint row rules with `--border`, hover and footer with `--muted` at 50%, and header cells with `--foreground`; nothing here is elevated, so the surface around it is `bg-card` plus `border-border`. Both `TableHead` and `TableCell` set `whitespace-nowrap` and the wrapper is `overflow-x-auto`, so a wide table scrolls sideways instead of wrapping: cap the offending column with `max-w-*` and truncate if you need it to fit. Column headers, cell copy and the caption are all react-i18next messages, and status enums arriving from the API get mapped to messages in the slice rather than rendered raw. Table itself belongs in `shared/ui`, while the column set and cell renderers for one screen belong to the slice that owns that screen, and that slice owes the table a skeleton, an empty row and an error path, since the component renders only the rows you hand it.
+
+## Install
 
 ```bash
 npx shadcn@latest add table
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,13 +34,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
 const rows = [
   { app: "Numa", stack: "React", status: "Active" },
   { app: "Docs", stack: "Next.js", status: "Active" },
   { app: "Legacy", stack: ".NET", status: "Deprecated" },
-]
+];
 
 export function TableDemo() {
   return (
@@ -54,15 +66,9 @@ export function TableDemo() {
         ))}
       </TableBody>
     </Table>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <TableDemo />
-</div>
 
 ## Full API
 

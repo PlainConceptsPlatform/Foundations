@@ -5,17 +5,30 @@ description: "A two-state button that can be toggled on or off."
 
 import { ToggleDemo } from "@/components/previews/toggle-demo"
 
-## Installation
+<ComponentPreview>
+  <ToggleDemo />
+</ComponentPreview>
+
+## When to use
+
+`Toggle` is for a single independent on/off control that acts on content, formatting-style: underline, mute, pin. Use `Switch` for a setting that reads as on/off in prose and applies immediately, `Checkbox` when the value is a form field, and `ToggleGroup` when the options are exclusive.
+
+## Platform notes
+
+The pressed state paints `--accent` with `--accent-foreground`, which is also the hover surface, so a default-variant toggle sitting on an `--accent` or `--sidebar-accent` background has no visible pressed state; use `variant="outline"` there, as the demo does for three of its four toggles. Radix supplies `aria-pressed`, so never render your own "on" / "off" text next to it. Each toggle carries an `aria-label` because the content is often just a Lucide icon, and that label is a react-i18next message like every other user-facing string.
+
+## Install
 
 ```bash
 npx shadcn@latest add toggle
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Underline } from "lucide-react"
-import { Toggle } from "@/components/ui/toggle"
+import { Underline } from "lucide-react";
+
+import { Toggle } from "@/components/ui/toggle";
 
 export function ToggleDemo() {
   return (
@@ -31,15 +44,9 @@ export function ToggleDemo() {
         <Underline />
       </Toggle>
     </div>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <ToggleDemo />
-</div>
 
 ## Full API
 

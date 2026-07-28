@@ -1,4 +1,4 @@
-# Platform-Foundations
+# Platform Foundations
 
 **Platform Foundations** is the shared foundation for PlainConcepts **Platform** apps. It keeps many
 independent apps consistent and easy for developers *and* AI agents to work in, without becoming a

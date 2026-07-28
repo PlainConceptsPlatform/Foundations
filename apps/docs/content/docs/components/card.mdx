@@ -5,16 +5,28 @@ description: "Displays content and actions in a card, with a header, content, an
 
 import { CardDemo } from "@/components/previews/card-demo"
 
-## Installation
+<ComponentPreview block>
+  <CardDemo />
+</ComponentPreview>
+
+## When to use
+
+Card is the default container for a self-contained block on a Platform screen: a dashboard panel, a form section, a summary tile. Prefer it to a bare `div` with borders so every surface in the app matches. It is the wrong choice for a repeated list of records, where `Item` in an `ItemGroup` is lighter, and for anything that overlays the page, where `Dialog`, `Sheet` or `Popover` belong.
+
+## Platform notes
+
+Card is the canonical elevation in this theme: `border` plus `bg-card` and `text-card-foreground`, with no shadow. The vendored component still carries `shadow-sm`, which compiles to a fully transparent shadow because the theme overrides Tailwind's shadow scale, so leave the class in place (upstream source stays copy-pasteable) and do not reach for `shadow-md` expecting depth. `CardTitle` and `CardDescription` render as `div`, not headings, so pass a heading element through `CardTitle` (or wire `aria-labelledby`) when the card is a real section of the page. A card holding fetched data owns its states: skeleton inside `CardContent` with the header left intact so nothing jumps, plus a written empty state and an error path.
+
+## Install
 
 ```bash
 npx shadcn@latest add card
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -22,7 +34,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 export function CardDemo() {
   return (
@@ -41,15 +53,9 @@ export function CardDemo() {
         <Button>Deploy</Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <CardDemo />
-</div>
 
 ## Full API
 

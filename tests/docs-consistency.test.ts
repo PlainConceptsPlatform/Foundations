@@ -67,9 +67,21 @@ describe("stack facts are stated once and consistently", () => {
 });
 
 describe("links point at resources that exist", () => {
-  it("uses the full Platform-Foundations repo name", () => {
-    // The repo is PlainConceptsPlatform/Platform-Foundations; the short form 404s.
-    expect(filesMatching(/PlainConceptsPlatform\/Foundations\b/)).toEqual([]);
+  it("uses the repo name the remote actually serves", () => {
+    // Ground truth is `git remote -v`: https://github.com/PlainConceptsPlatform/Foundations.
+    // "Platform-Foundations" is a stale earlier name and every such URL 404s. The
+    // display name of the project is still "Platform Foundations" (with a space),
+    // so only match it as part of a github.com URL or a package repository field.
+    expect(filesMatching(/github\.com\/PlainConceptsPlatform\/Platform-Foundations/)).toEqual([]);
+  });
+
+  it("points both published packages at the real repository", () => {
+    for (const pkg of ["packages/theme", "packages/ui-components"]) {
+      const manifest = JSON.parse(read(`${pkg}/package.json`));
+      expect(manifest.repository.url).toBe(
+        "git+https://github.com/PlainConceptsPlatform/Foundations.git",
+      );
+    }
   });
 
   it("does not reference the pre-rename CKGrafico org for Platform tools", () => {

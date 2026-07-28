@@ -5,27 +5,33 @@ description: "A message component for chat and messaging UIs with avatar alignme
 
 import { MessageDemo } from "@/components/previews/message-demo"
 
-## Installation
+<ComponentPreview block>
+  <MessageDemo />
+</ComponentPreview>
+
+## When to use
+
+`Message` composes one turn: avatar, content, and optional header and footer, aligned by author. Give the current user `align="end"` and everyone else `align="start"`, and leave the surface styling to `Bubble`; when a turn carries no avatar or metadata, a `Bubble` on its own is enough.
+
+## Platform notes
+
+This is layout plus two tokens: `bg-muted` behind the avatar and `text-muted-foreground` for header and footer text. Alignment is a `data-align` attribute that reverses the flex row and is read by children through `group-data-[align=end]/message:`, which is why the demo sets `align` on both `Message` and its `Bubble`; setting it in one place only half works. Author names, status labels and relative times go through react-i18next and are formatted for the active locale, while the message body is user data and must never be passed to the translator. Keep `Message` in `shared/ui` and put the mapping from your conversation model onto it in the slice that owns the conversation, exposed through that slice's `index.ts`.
+
+## Install
 
 ```bash
 npx shadcn@latest add message
 ```
 
-## Usage
+## Code
 
 ```tsx
-import { Bot } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  Bubble,
-  BubbleContent,
-} from "@/components/ui/bubble"
-import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-  MessageGroup,
-} from "@/components/ui/message"
+"use client";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
+import { Message, MessageAvatar, MessageContent, MessageGroup } from "@/components/ui/message";
+import { Bot } from "lucide-react";
 
 export function MessageDemo() {
   return (
@@ -38,9 +44,7 @@ export function MessageDemo() {
         </MessageAvatar>
         <MessageContent>
           <Bubble variant="tinted">
-            <BubbleContent>
-              How do I add the new shadcn components?
-            </BubbleContent>
+            <BubbleContent>How do I add the new shadcn components?</BubbleContent>
           </Bubble>
         </MessageContent>
       </Message>
@@ -55,22 +59,16 @@ export function MessageDemo() {
         <MessageContent>
           <Bubble variant="tinted" align="end">
             <BubbleContent>
-              Just run <code>npx shadcn@latest add</code> with the component
-              name. The docs use the Platform theme automatically.
+              Just run <code>npx shadcn@latest add</code> with the component name. The docs use the
+              Platform theme automatically.
             </BubbleContent>
           </Bubble>
         </MessageContent>
       </Message>
     </MessageGroup>
-  )
+  );
 }
 ```
-
-## Preview
-
-<div className="my-4 flex flex-wrap items-center gap-4 rounded-lg border border-border p-6">
-  <MessageDemo />
-</div>
 
 ## Full API
 
