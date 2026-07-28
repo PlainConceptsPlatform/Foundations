@@ -6,7 +6,7 @@ typography:
   family: Outfit
   scale:
     h1: { weight: 700, size: 20px, lineHeight: 25px }
-    paragraph-l: { weight: 400, size: 16px, lineHeight: 16px }
+    paragraph-l: { weight: 400, size: 16px, lineHeight: 24px }
     paragraph-m: { weight: 400, size: 14px, lineHeight: 24px }
     paragraph-s: { weight: 400, size: 12px, lineHeight: 15px }
 color:
@@ -90,6 +90,29 @@ dark variant for text-on-tint.
   optional. Validate forms inline with clear messages.
 - **Responsive by default.** Mobile-first; use the Tailwind breakpoints; verify at sm/md/lg.
 - **Consistency over cleverness.** Prefer the theme's tokens and shadcn patterns to bespoke styling.
+
+## Motion and elevation
+
+A single contract, so nothing needs a bespoke hover and the whole surface feels
+deliberate rather than assembled.
+
+- **Transition `color`, `background-color`, `border-color`, `opacity` and `transform` only.** Never
+  `width`, `height`, `top`/`left`, or `box-shadow`; they force layout or paint work on every frame.
+- **150ms, ease-out**, for anything triggered by hover, focus or a state change. Radix overlays keep
+  their own enter/exit animations (`tw-animate-css`); do not add a second transition on top.
+- **Motion follows a state change.** If nothing changed, nothing moves: no scroll-triggered reveals,
+  parallax, auto-rotating carousels, count-up numbers, or typewriter text.
+- **Always honour `prefers-reduced-motion: reduce`** by dropping to no transition.
+- **Elevation is a border plus a surface**, `border-border` with `bg-card`, not a shadow. Flat
+  surfaces (cards, inputs, buttons, table rows) carry no shadow at all.
+
+## Data visualization
+
+Use the shared categorical ramp `--chart-1` through `--chart-5` for series colour. Every entry clears
+3:1 against `--background` in both modes, so thin lines and small legend swatches stay visible, and
+the two blue-family hues sit at opposite ends so adjacent series never collide. Do not use `--accent`
+or other tint tokens as a series colour; they are hover surfaces and disappear against a card.
+Domain-specific palettes (Special Days, Unit, Area, Teams) stay in the app that owns them.
 
 ## Application-specific vs shared
 

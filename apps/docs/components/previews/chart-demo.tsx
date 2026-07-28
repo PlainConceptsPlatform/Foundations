@@ -20,9 +20,11 @@ const data = [
   { month: "Jun", theme: 214, components: 170 },
 ];
 
+// Uses the shared categorical ramp. --accent is a pale tint meant for hover
+// surfaces, so it all but disappeared against the card behind it.
 const chartConfig = {
-  theme: { label: "Theme", color: "var(--primary)" },
-  components: { label: "Components", color: "var(--accent)" },
+  theme: { label: "Theme", color: "var(--chart-1)" },
+  components: { label: "Components", color: "var(--chart-3)" },
 } satisfies ChartConfig;
 
 export function ChartDemo() {

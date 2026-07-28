@@ -25,4 +25,18 @@
     font-size: 1.25rem; /* 20px */
     line-height: 1.5625rem; /* 25px */
   }
+
+  /* DESIGN.md requires respecting this; enforce it once here rather than asking
+     every component to remember. Keeps a 1ms duration so transitionend still
+     fires and JS waiting on it does not stall. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
