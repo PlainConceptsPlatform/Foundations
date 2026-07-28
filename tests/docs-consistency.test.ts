@@ -96,6 +96,18 @@ describe("install instructions match how the packages actually ship", () => {
     expect(filesMatching(stale)).toEqual([]);
   });
 
+  it("installs the Platform tools by their scoped npm names", () => {
+    // The unscoped `loop-task` and `opencode-onboard` are earlier releases of the
+    // same tools that no longer track the scoped ones (loop-task was 2.6.0 unscoped
+    // versus 2.9.1 scoped), so telling a reader to install them hands them a stale
+    // version. The binaries are still named without the scope; only install and npx
+    // invocations need it.
+    const unscoped =
+      /(?:npm (?:install|i)(?:\s+-g)?|pnpm add(?:\s+-g)?|yarn (?:global )?add|npx)\s+(?:loop-task|opencode-onboard)(?![\w/-])/;
+
+    expect(filesMatching(unscoped)).toEqual([]);
+  });
+
   it("keeps both packages configured for public npm", () => {
     for (const pkg of ["packages/theme", "packages/ui-components"]) {
       const manifest = JSON.parse(read(`${pkg}/package.json`));

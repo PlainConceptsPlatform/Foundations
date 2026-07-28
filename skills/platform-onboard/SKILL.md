@@ -106,7 +106,7 @@ Process domains in order. For each domain:
 
 ### Domain 1: Agentic infra
 
-Run `npx opencode-onboard@latest` in the repository root. This generates `.opencode/` with agents,
+Run `npx @plainconceptsplatform/opencode-onboard@latest` in the repository root. This generates `.opencode/` with agents,
 commands, and `opencode-onboard.json`. Then run `/repo-initialize` to generate the architecture and
 design documentation for a brownfield project and activate the agent team.
 

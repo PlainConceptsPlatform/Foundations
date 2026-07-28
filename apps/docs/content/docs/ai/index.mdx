@@ -86,16 +86,16 @@ Prepare any codebase for AI. A single interactive wizard wires [OpenCode](https:
 ### Quick start
 
 ```bash
-npx opencode-onboard@latest
+npx @plainconceptsplatform/opencode-onboard@latest
 ```
 
 Requires **Node.js 18 or higher**. You can also run individual steps directly:
 
 ```bash
-npx opencode-onboard clean        # reset old AI files
-npx opencode-onboard platform     # reconfigure backlog/repository
-npx opencode-onboard optimization # RTK, quota, caveman, codegraph, agentmemory, humanizer
-npx opencode-onboard --help
+npx @plainconceptsplatform/opencode-onboard clean        # reset old AI files
+npx @plainconceptsplatform/opencode-onboard platform     # reconfigure backlog/repository
+npx @plainconceptsplatform/opencode-onboard optimization # RTK, codegraph, agentmemory, humanizer
+npx @plainconceptsplatform/opencode-onboard --help
 ```
 
 ### What the wizard does
@@ -167,14 +167,20 @@ Loop engineering for your terminal. A cross-platform CLI that runs shell command
 ### Quick start
 
 ```bash
-npm install -g loop-task
+npm install -g @plainconceptsplatform/loop-task
 loop-task                          # open the board
 loop-task start                    # start the daemon, restore persisted loops
 loop-task new 30m -- npm test      # create a background loop
 loop-task new 30m --now -- opencode run "find missing translations and translate them, 3 max"
 ```
 
-Requires **Node.js 20 or higher**. Or run directly with `npx loop-task`.
+The package is scoped; the command it installs is still `loop-task`. Requires **Node.js 20 or
+higher**, or run directly with `npx @plainconceptsplatform/loop-task`.
+
+<Callout type="warn" title="Use the scoped package">
+  The unscoped `loop-task` on npm is an earlier release of the same tool and no longer tracks this
+  one. Installing it gets you a version several minors behind.
+</Callout>
 
 ### Concepts
 
@@ -265,8 +271,9 @@ opencode-onboard            loop-task                orbion
 (prepare codebase for AI)   (schedule AI runs)       (manage all loops)
         │                          │                       │
         ▼                          ▼                       ▼
-  npx opencode-onboard@latest  loop-task new 30m --    register instance
-  /repo-initialize             opencode run "..."      watch loops + logs
+  npx @plainconceptsplatform/   loop-task new 30m --    register instance
+  opencode-onboard@latest      opencode run "..."      watch loops + logs
+  /repo-initialize
 ```
 
 1. **Onboard once** — run opencode-onboard in your repo to wire agents, OpenSpec, and the full command set.
