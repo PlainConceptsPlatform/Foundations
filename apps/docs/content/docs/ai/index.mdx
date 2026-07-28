@@ -11,6 +11,64 @@ The Plain Concepts Platform uses three open-source tools for AI-augmented engine
 | **loop-task** | Run any command on a cadence (the heartbeat) | [PlainConceptsPlatform/loop-task](https://github.com/PlainConceptsPlatform/loop-task) |
 | **orbion** | Desktop control plane for loop-task instances | [PlainConceptsPlatform/orbion](https://github.com/PlainConceptsPlatform/orbion) |
 
+## How to run agents on a cadence
+
+Read this before picking a tool, because the default is not one of ours.
+
+### Recommended: Agentic Workflows on a self-hosted runner
+
+For work that lives in a GitHub repository, the recommended practice is
+[GitHub Agentic Workflows](https://github.github.io/gh-aw/) running on a **self-hosted runner with
+an authenticated `opencode`**. Workflows are markdown in `.github/workflows/`, compiled to Actions
+YAML.
+
+The self-hosted runner is what makes this work for us rather than a compromise:
+
+- **Event triggers instead of polling.** A workflow fires on the issue comment or review that
+  should have started it. A 20-minute interval means up to 20 minutes of latency and a run every
+  interval that usually finds nothing to do.
+- **Your subscription, not an API key.** gh-aw ships an `opencode` engine, so point it at the
+  binary on the runner and it uses the session already authenticated there. On a GitHub-hosted
+  runner you would be on the `claude` engine with an `ANTHROPIC_API_KEY`, which does not accept
+  OAuth subscription tokens, and paying per token for a workflow that fires all day.
+
+  ```yaml
+  engine:
+    id: opencode        # experimental in gh-aw
+    command: /usr/bin/opencode
+  ```
+- **A fresh checkout per run.** Most of the recovery machinery in a long-lived local loop exists
+  only because state persists between runs on one machine. It disappears here.
+- **Local context stays available.** VPN-only resources, a local database, licensed tooling.
+- **One runner is a mutex.** It processes one job at a time, which is the exclusivity that
+  interval loops otherwise have to coordinate by hand.
+- **Guardrails.** Safe Outputs, staged approval, changes arriving as pull requests, and an audit
+  trail in Actions.
+
+<Callout type="warn" title="Never attach a self-hosted runner to a public repository">
+  A pull request from a fork would execute arbitrary code on your runner, with whatever credentials
+  it holds. Private and internal repositories only.
+</Callout>
+
+### The alternative: loop-task
+
+`loop-task` is what you use when you **cannot depend on the above**. It is a deliberate fallback,
+not a preference:
+
+- **The work is not repository-shaped.** Health checks, data syncs, deploy polls, report
+  generation. There is no repository event to hang them off.
+- **You are not on GitHub Actions.** Azure DevOps, GitLab, or no CI at all.
+- **A self-hosted runner is not an option**, and API-key billing for a loop that fires every
+  20 minutes is not acceptable.
+- **The work needs a specific machine.** Anything a runner cannot reach or cannot be trusted with.
+- **You need to watch it run.** Live logs, pause and resume mid-flight, one board across several
+  machines. Actions gives you logs after the fact.
+- **Sessions are long or stateful** in ways a job timeout does not accommodate.
+
+What decides is whether the trigger is an **event** or a **clock**, and whether the work can leave
+the machine it is on. The two compose: a repository loop can live in Actions while a local loop
+watches something Actions cannot see.
+
 ## opencode-onboard
 
 Prepare any codebase for AI. A single interactive wizard wires [OpenCode](https://opencode.ai), [OpenSpec](https://github.com/fission-ai/openspec), [codegraph](https://github.com/colbymchenry/codegraph), and [agentmemory](https://github.com/rohitg00/agentmemory) into a multi-agent development workflow powered by native parallel subagents.
