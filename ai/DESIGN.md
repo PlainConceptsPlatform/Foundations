@@ -103,8 +103,10 @@ deliberate rather than assembled.
 - **Motion follows a state change.** If nothing changed, nothing moves: no scroll-triggered reveals,
   parallax, auto-rotating carousels, count-up numbers, or typewriter text.
 - **Always honour `prefers-reduced-motion: reduce`** by dropping to no transition.
-- **Elevation is a border plus a surface**, `border-border` with `bg-card`, not a shadow. Flat
-  surfaces (cards, inputs, buttons, table rows) carry no shadow at all.
+- **Elevation is a border plus a surface**, `border-border` with `bg-card`, not a shadow. This is
+  enforced by the theme, not by discipline: Tailwind's shadow scale is overridden to a transparent
+  value, so `shadow-*` classes on vendored shadcn components compile but paint nothing, and upstream
+  component source can be copied in unmodified. Focus rings are unaffected.
 
 ## Data visualization
 

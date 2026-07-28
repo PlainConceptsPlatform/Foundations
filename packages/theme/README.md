@@ -83,5 +83,18 @@ stays blue. See [`packages/ui-components/README.md`](../ui-components/README.md)
 Components are copied per app (shadcn model). This package keeps every app visually consistent
 because they all import the **same versioned tokens**. Bump the version to roll out theme changes.
 
-> `--radius` is a foundation-chosen default marked `TODO verify` against Figma. The design uses
-> no shadow tokens.
+> `--radius` is a foundation-chosen default marked `TODO verify` against Figma.
+
+## Elevation: no shadows
+
+Elevation is a border plus a surface, never a shadow. The theme overrides Tailwind's whole shadow
+scale (`--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--text-shadow-*`) to a transparent
+value, so `shadow-sm`/`shadow-lg` still compile but paint nothing.
+
+The practical benefit: `npx shadcn@latest add` output needs no edits. Upstream components ship with
+`shadow-*` classes, those classes are inert here, and the component still looks Platform-native. No
+patching, and nothing to redo on the next shadcn update.
+
+Focus rings are unaffected: Tailwind composes rings into the same `box-shadow` declaration, so the
+override is a transparent shadow rather than `none` (which is invalid inside a comma-separated list
+and would remove the ring too).

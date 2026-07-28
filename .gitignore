@@ -13,6 +13,7 @@ test-results/
 .env
 .env*.local
 .turbo/
+.claude/
 
 # generated: docs site reference pages synced from repo markdown
 apps/docs/content/docs/reference/

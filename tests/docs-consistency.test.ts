@@ -164,6 +164,42 @@ describe("the docs site is themed by the package it documents", () => {
     }
   });
 
+  it("neutralizes every shadow scale, so vendored shadcn shadows paint nothing", () => {
+    const theme = read("packages/theme/src/theme.css");
+
+    // 29 vendored components ship shadow-* classes. Rather than patch them all and
+    // fight `shadcn add`, the scale they resolve from is overridden.
+    const scales = [
+      ["--shadow", ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"]],
+      ["--inset-shadow", ["2xs", "xs", "sm"]],
+      ["--drop-shadow", ["xs", "sm", "md", "lg", "xl", "2xl"]],
+      ["--text-shadow", ["2xs", "xs", "sm", "md", "lg"]],
+    ] as const;
+
+    for (const [prefix, steps] of scales) {
+      for (const step of steps) {
+        expect(theme, `${prefix}-${step} must be neutralized`).toContain(
+          `${prefix}-${step}: 0 0 #0000;`,
+        );
+      }
+    }
+  });
+
+  it("never neutralizes a shadow with `none`, which would break focus rings", () => {
+    // Tailwind composes ring and inset-ring into the same box-shadow declaration.
+    // `none` inside a comma-separated list is invalid CSS, so the browser drops the
+    // whole declaration and the focus ring disappears with it.
+    const theme = read("packages/theme/src/theme.css");
+    const offenders = [...theme.matchAll(/--(?:inset-|drop-|text-)?shadow-[0-9a-z]+:\s*([^;]+);/g)]
+      .map((match) => match[1]?.trim())
+      .filter((value) => value !== "0 0 #0000");
+
+    expect(
+      offenders,
+      `shadow scale values must be "0 0 #0000", found: ${offenders.join(", ")}`,
+    ).toHaveLength(0);
+  });
+
   it("exposes those groups as Tailwind utilities", () => {
     // bg-sidebar / text-chart-1 only exist if declared inside @theme inline.
     const theme = read("packages/theme/src/theme.css");

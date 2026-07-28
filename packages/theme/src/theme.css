@@ -209,3 +209,42 @@
 
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
+
+/* 4. Neutralize elevation ------------------------------------------------- */
+/* The Platform design has no shadows: elevation is a border plus a surface.
+ * Rather than stripping shadow-* classes from every vendored shadcn component
+ * (which would fight `shadcn add` on every update), override the scale the
+ * utilities resolve from. `shadow-sm`, `shadow-lg`, `drop-shadow-md` and friends
+ * still compile, they just paint nothing, so upstream component source can be
+ * copied in unmodified and still look like a Platform app.
+ *
+ * The value is `0 0 #0000`, not `none`: Tailwind composes ring and inset-ring
+ * into the same `box-shadow` declaration, and `none` inside a comma-separated
+ * list is invalid CSS, which would drop the whole declaration and take the
+ * focus ring with it. A fully transparent shadow is valid and paints nothing. */
+@theme {
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+
+  --inset-shadow-2xs: 0 0 #0000;
+  --inset-shadow-xs: 0 0 #0000;
+  --inset-shadow-sm: 0 0 #0000;
+
+  --drop-shadow-xs: 0 0 #0000;
+  --drop-shadow-sm: 0 0 #0000;
+  --drop-shadow-md: 0 0 #0000;
+  --drop-shadow-lg: 0 0 #0000;
+  --drop-shadow-xl: 0 0 #0000;
+  --drop-shadow-2xl: 0 0 #0000;
+
+  --text-shadow-2xs: 0 0 #0000;
+  --text-shadow-xs: 0 0 #0000;
+  --text-shadow-sm: 0 0 #0000;
+  --text-shadow-md: 0 0 #0000;
+  --text-shadow-lg: 0 0 #0000;
+}
