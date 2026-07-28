@@ -1,7 +1,5 @@
-name: Deploy showcase (Azure App Service)
+name: Deploy docs (GitHub Pages)
 
-# Gated on CI rather than racing it. Both used to trigger on push to main with no
-# dependency between them, so a red build could still ship.
 on:
   workflow_run:
     workflows: [CI]
@@ -9,32 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# The docs site is a Next.js Node server deployed to Azure App Service (a Web App,
-# not Static Web Apps).
-#
-# Target resource names and the one-time Azure setup runbook are kept out of this
-# public repo. The App Service name comes from the AZURE_WEBAPP_NAME repository
-# variable; see the internal Platform runbook for provisioning and auth config.
-
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
-# Never run two deploys at once, and never cancel one midway: a half-finished
-# deploy is worse than a queued one.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
-env:
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
-
 jobs:
-  build-and-deploy:
-    # workflow_run fires for failed runs too, so check the conclusion.
+  build:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: production
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -47,17 +33,26 @@ jobs:
       - name: Build shared components
         run: pnpm --filter @plainconceptsplatform/ui-components build
 
-      - name: Build (standalone)
+      - name: Build (static export)
         run: pnpm --filter @plainconceptsplatform/docs build
 
-      - name: Assemble standalone bundle
-        working-directory: apps/docs
-        run: |
-          cp -r .next/static .next/standalone/apps/docs/.next/static
-          if [ -d public ]; then cp -r public .next/standalone/apps/docs/public; fi
+      - name: Add .nojekyll
+        working-directory: apps/docs/out
+        run: touch .nojekyll
 
-      - uses: azure/webapps-deploy@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: apps/docs/.next/standalone
+          path: apps/docs/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
