@@ -1,4 +1,4 @@
-import { siteName } from "@/lib/site";
+import { siteName, themeVersion } from "@/lib/site";
 import { PlainLogo } from "@plainconceptsplatform/ui-components";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
@@ -12,6 +12,10 @@ export const baseOptions: BaseLayoutProps = {
           <PlainLogo />
         </span>
         <span className="font-semibold">{siteName}</span>
+        {/* A trust signal, not decoration, so it stays plain and muted. */}
+        <span className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+          v{themeVersion}
+        </span>
       </>
     ),
     url: "/",

@@ -5,569 +5,572 @@ export type Swatch = { step: string; hex: string };
 export type SemanticSlot = { token: string; hex: string; ref: string | null };
 export type TypeStep = { name: string; weight: number; size: number; lineHeight: number };
 
+/** Published version of @plainconceptsplatform/ui-theme, shown in the site nav. */
+export const themeVersion = "0.1.0";
+
 export const tokens = {
-  ramps: {
-    blue: [
+  "ramps": {
+    "blue": [
       {
-        step: "50",
-        hex: "#f5f8ff",
+        "step": "50",
+        "hex": "#f5f8ff"
       },
       {
-        step: "100",
-        hex: "#ebf0ff",
+        "step": "100",
+        "hex": "#ebf0ff"
       },
       {
-        step: "200",
-        hex: "#dce6ff",
+        "step": "200",
+        "hex": "#dce6ff"
       },
       {
-        step: "400",
-        hex: "#5282ff",
+        "step": "400",
+        "hex": "#5282ff"
       },
       {
-        step: "500",
-        hex: "#2f69ff",
+        "step": "500",
+        "hex": "#2f69ff"
       },
       {
-        step: "600",
-        hex: "#0043f0",
+        "step": "600",
+        "hex": "#0043f0"
       },
       {
-        step: "700",
-        hex: "#0032b2",
-      },
+        "step": "700",
+        "hex": "#0032b2"
+      }
     ],
-    neutral: [
+    "neutral": [
       {
-        step: "0",
-        hex: "#ffffff",
+        "step": "0",
+        "hex": "#ffffff"
       },
       {
-        step: "50",
-        hex: "#fafafc",
+        "step": "50",
+        "hex": "#fafafc"
       },
       {
-        step: "100",
-        hex: "#f2f3f7",
+        "step": "100",
+        "hex": "#f2f3f7"
       },
       {
-        step: "200",
-        hex: "#e9eaf2",
+        "step": "200",
+        "hex": "#e9eaf2"
       },
       {
-        step: "300",
-        hex: "#dfe1ec",
+        "step": "300",
+        "hex": "#dfe1ec"
       },
       {
-        step: "400",
-        hex: "#8e8f95",
+        "step": "400",
+        "hex": "#8e8f95"
       },
       {
-        step: "500",
-        hex: "#6a6f74",
+        "step": "500",
+        "hex": "#6a6f74"
       },
       {
-        step: "600",
-        hex: "#4a4a4a",
+        "step": "600",
+        "hex": "#4a4a4a"
       },
       {
-        step: "700",
-        hex: "#383838",
+        "step": "700",
+        "hex": "#383838"
       },
       {
-        step: "900",
-        hex: "#0d0e0f",
-      },
+        "step": "900",
+        "hex": "#0d0e0f"
+      }
     ],
-    error: [
+    "error": [
       {
-        step: "100",
-        hex: "#fde1e6",
+        "step": "100",
+        "hex": "#fde1e6"
       },
       {
-        step: "300",
-        hex: "#f99bac",
+        "step": "300",
+        "hex": "#f99bac"
       },
       {
-        step: "500",
-        hex: "#f33859",
+        "step": "500",
+        "hex": "#f33859"
       },
       {
-        step: "700",
-        hex: "#c72e49",
-      },
+        "step": "700",
+        "hex": "#c72e49"
+      }
     ],
-    warning: [
+    "warning": [
       {
-        step: "100",
-        hex: "#feeec6",
+        "step": "100",
+        "hex": "#feeec6"
       },
       {
-        step: "300",
-        hex: "#fddd8c",
+        "step": "300",
+        "hex": "#fddd8c"
       },
       {
-        step: "500",
-        hex: "#fbc740",
+        "step": "500",
+        "hex": "#fbc740"
       },
       {
-        step: "700",
-        hex: "#a6842a",
-      },
+        "step": "700",
+        "hex": "#a6842a"
+      }
     ],
-    success: [
+    "success": [
       {
-        step: "100",
-        hex: "#d8f1ef",
+        "step": "100",
+        "hex": "#d8f1ef"
       },
       {
-        step: "300",
-        hex: "#9cdcd7",
+        "step": "300",
+        "hex": "#9cdcd7"
       },
       {
-        step: "500",
-        hex: "#3abaaf",
+        "step": "500",
+        "hex": "#3abaaf"
       },
       {
-        step: "700",
-        hex: "#257770",
-      },
+        "step": "700",
+        "hex": "#257770"
+      }
     ],
-    info: [
+    "info": [
       {
-        step: "100",
-        hex: "#e3f8ff",
+        "step": "100",
+        "hex": "#e3f8ff"
       },
       {
-        step: "300",
-        hex: "#99e1f9",
+        "step": "300",
+        "hex": "#99e1f9"
       },
       {
-        step: "500",
-        hex: "#00b5f1",
+        "step": "500",
+        "hex": "#00b5f1"
       },
       {
-        step: "700",
-        hex: "#008ebd",
-      },
-    ],
+        "step": "700",
+        "hex": "#008ebd"
+      }
+    ]
   },
-  semantic: {
-    light: [
+  "semantic": {
+    "light": [
       {
-        token: "--background",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--background",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--foreground",
-        hex: "#0d0e0f",
-        ref: "--pc-neutral-900",
+        "token": "--foreground",
+        "hex": "#0d0e0f",
+        "ref": "--pc-neutral-900"
       },
       {
-        token: "--card",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--card",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--card-foreground",
-        hex: "#0d0e0f",
-        ref: "--pc-neutral-900",
+        "token": "--card-foreground",
+        "hex": "#0d0e0f",
+        "ref": "--pc-neutral-900"
       },
       {
-        token: "--popover",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--popover",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--popover-foreground",
-        hex: "#0d0e0f",
-        ref: "--pc-neutral-900",
+        "token": "--popover-foreground",
+        "hex": "#0d0e0f",
+        "ref": "--pc-neutral-900"
       },
       {
-        token: "--primary",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--primary",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--primary-foreground",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--primary-foreground",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--secondary",
-        hex: "#f2f3f7",
-        ref: "--pc-neutral-100",
+        "token": "--secondary",
+        "hex": "#f2f3f7",
+        "ref": "--pc-neutral-100"
       },
       {
-        token: "--secondary-foreground",
-        hex: "#383838",
-        ref: "--pc-neutral-700",
+        "token": "--secondary-foreground",
+        "hex": "#383838",
+        "ref": "--pc-neutral-700"
       },
       {
-        token: "--muted",
-        hex: "#f2f3f7",
-        ref: "--pc-neutral-100",
+        "token": "--muted",
+        "hex": "#f2f3f7",
+        "ref": "--pc-neutral-100"
       },
       {
-        token: "--muted-foreground",
-        hex: "#6a6f74",
-        ref: "--pc-neutral-500",
+        "token": "--muted-foreground",
+        "hex": "#6a6f74",
+        "ref": "--pc-neutral-500"
       },
       {
-        token: "--accent",
-        hex: "#ebf0ff",
-        ref: "--pc-blue-100",
+        "token": "--accent",
+        "hex": "#ebf0ff",
+        "ref": "--pc-blue-100"
       },
       {
-        token: "--accent-foreground",
-        hex: "#0032b2",
-        ref: "--pc-blue-700",
+        "token": "--accent-foreground",
+        "hex": "#0032b2",
+        "ref": "--pc-blue-700"
       },
       {
-        token: "--destructive",
-        hex: "#f33859",
-        ref: "--pc-error-500",
+        "token": "--destructive",
+        "hex": "#f33859",
+        "ref": "--pc-error-500"
       },
       {
-        token: "--destructive-foreground",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--destructive-foreground",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--border",
-        hex: "#e9eaf2",
-        ref: "--pc-neutral-200",
+        "token": "--border",
+        "hex": "#e9eaf2",
+        "ref": "--pc-neutral-200"
       },
       {
-        token: "--input",
-        hex: "#dfe1ec",
-        ref: "--pc-neutral-300",
+        "token": "--input",
+        "hex": "#dfe1ec",
+        "ref": "--pc-neutral-300"
       },
       {
-        token: "--ring",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--ring",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--success",
-        hex: "#3abaaf",
-        ref: "--pc-success-500",
+        "token": "--success",
+        "hex": "#3abaaf",
+        "ref": "--pc-success-500"
       },
       {
-        token: "--success-foreground",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--success-foreground",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--warning",
-        hex: "#fbc740",
-        ref: "--pc-warning-500",
+        "token": "--warning",
+        "hex": "#fbc740",
+        "ref": "--pc-warning-500"
       },
       {
-        token: "--warning-foreground",
-        hex: "#0d0e0f",
-        ref: "--pc-neutral-900",
+        "token": "--warning-foreground",
+        "hex": "#0d0e0f",
+        "ref": "--pc-neutral-900"
       },
       {
-        token: "--info",
-        hex: "#00b5f1",
-        ref: "--pc-info-500",
+        "token": "--info",
+        "hex": "#00b5f1",
+        "ref": "--pc-info-500"
       },
       {
-        token: "--info-foreground",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--info-foreground",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--sidebar",
-        hex: "#f2f3f7",
-        ref: "--pc-neutral-100",
+        "token": "--sidebar",
+        "hex": "#f2f3f7",
+        "ref": "--pc-neutral-100"
       },
       {
-        token: "--sidebar-foreground",
-        hex: "#0d0e0f",
-        ref: "--pc-neutral-900",
+        "token": "--sidebar-foreground",
+        "hex": "#0d0e0f",
+        "ref": "--pc-neutral-900"
       },
       {
-        token: "--sidebar-primary",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--sidebar-primary",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--sidebar-primary-foreground",
-        hex: "#ffffff",
-        ref: "--pc-neutral-0",
+        "token": "--sidebar-primary-foreground",
+        "hex": "#ffffff",
+        "ref": "--pc-neutral-0"
       },
       {
-        token: "--sidebar-accent",
-        hex: "#ebf0ff",
-        ref: "--pc-blue-100",
+        "token": "--sidebar-accent",
+        "hex": "#ebf0ff",
+        "ref": "--pc-blue-100"
       },
       {
-        token: "--sidebar-accent-foreground",
-        hex: "#0032b2",
-        ref: "--pc-blue-700",
+        "token": "--sidebar-accent-foreground",
+        "hex": "#0032b2",
+        "ref": "--pc-blue-700"
       },
       {
-        token: "--sidebar-border",
-        hex: "#e9eaf2",
-        ref: "--pc-neutral-200",
+        "token": "--sidebar-border",
+        "hex": "#e9eaf2",
+        "ref": "--pc-neutral-200"
       },
       {
-        token: "--sidebar-ring",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--sidebar-ring",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--chart-1",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--chart-1",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--chart-2",
-        hex: "#a6842a",
-        ref: "--pc-warning-700",
+        "token": "--chart-2",
+        "hex": "#a6842a",
+        "ref": "--pc-warning-700"
       },
       {
-        token: "--chart-3",
-        hex: "#257770",
-        ref: "--pc-success-700",
+        "token": "--chart-3",
+        "hex": "#257770",
+        "ref": "--pc-success-700"
       },
       {
-        token: "--chart-4",
-        hex: "#f33859",
-        ref: "--pc-error-500",
+        "token": "--chart-4",
+        "hex": "#f33859",
+        "ref": "--pc-error-500"
       },
       {
-        token: "--chart-5",
-        hex: "#008ebd",
-        ref: "--pc-info-700",
-      },
+        "token": "--chart-5",
+        "hex": "#008ebd",
+        "ref": "--pc-info-700"
+      }
     ],
-    dark: [
+    "dark": [
       {
-        token: "--background",
-        hex: "#0d0e0f",
-        ref: null,
+        "token": "--background",
+        "hex": "#0d0e0f",
+        "ref": null
       },
       {
-        token: "--foreground",
-        hex: "#fafafc",
-        ref: null,
+        "token": "--foreground",
+        "hex": "#fafafc",
+        "ref": null
       },
       {
-        token: "--card",
-        hex: "#17181b",
-        ref: null,
+        "token": "--card",
+        "hex": "#17181b",
+        "ref": null
       },
       {
-        token: "--card-foreground",
-        hex: "#fafafc",
-        ref: null,
+        "token": "--card-foreground",
+        "hex": "#fafafc",
+        "ref": null
       },
       {
-        token: "--popover",
-        hex: "#17181b",
-        ref: null,
+        "token": "--popover",
+        "hex": "#17181b",
+        "ref": null
       },
       {
-        token: "--popover-foreground",
-        hex: "#fafafc",
-        ref: null,
+        "token": "--popover-foreground",
+        "hex": "#fafafc",
+        "ref": null
       },
       {
-        token: "--primary",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--primary",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--primary-foreground",
-        hex: "#ffffff",
-        ref: null,
+        "token": "--primary-foreground",
+        "hex": "#ffffff",
+        "ref": null
       },
       {
-        token: "--secondary",
-        hex: "#22242a",
-        ref: null,
+        "token": "--secondary",
+        "hex": "#22242a",
+        "ref": null
       },
       {
-        token: "--secondary-foreground",
-        hex: "#fafafc",
-        ref: null,
+        "token": "--secondary-foreground",
+        "hex": "#fafafc",
+        "ref": null
       },
       {
-        token: "--muted",
-        hex: "#22242a",
-        ref: null,
+        "token": "--muted",
+        "hex": "#22242a",
+        "ref": null
       },
       {
-        token: "--muted-foreground",
-        hex: "#8e8f95",
-        ref: null,
+        "token": "--muted-foreground",
+        "hex": "#8e8f95",
+        "ref": null
       },
       {
-        token: "--accent",
-        hex: "#17244a",
-        ref: null,
+        "token": "--accent",
+        "hex": "#17244a",
+        "ref": null
       },
       {
-        token: "--accent-foreground",
-        hex: "#dce6ff",
-        ref: null,
+        "token": "--accent-foreground",
+        "hex": "#dce6ff",
+        "ref": null
       },
       {
-        token: "--destructive",
-        hex: "#f33859",
-        ref: "--pc-error-500",
+        "token": "--destructive",
+        "hex": "#f33859",
+        "ref": "--pc-error-500"
       },
       {
-        token: "--destructive-foreground",
-        hex: "#ffffff",
-        ref: null,
+        "token": "--destructive-foreground",
+        "hex": "#ffffff",
+        "ref": null
       },
       {
-        token: "--border",
-        hex: "#2a2c33",
-        ref: null,
+        "token": "--border",
+        "hex": "#2a2c33",
+        "ref": null
       },
       {
-        token: "--input",
-        hex: "#2a2c33",
-        ref: null,
+        "token": "--input",
+        "hex": "#2a2c33",
+        "ref": null
       },
       {
-        token: "--ring",
-        hex: "#5282ff",
-        ref: "--pc-blue-400",
+        "token": "--ring",
+        "hex": "#5282ff",
+        "ref": "--pc-blue-400"
       },
       {
-        token: "--success",
-        hex: "#3abaaf",
-        ref: "--pc-success-500",
+        "token": "--success",
+        "hex": "#3abaaf",
+        "ref": "--pc-success-500"
       },
       {
-        token: "--success-foreground",
-        hex: "#06231f",
-        ref: null,
+        "token": "--success-foreground",
+        "hex": "#06231f",
+        "ref": null
       },
       {
-        token: "--warning",
-        hex: "#fbc740",
-        ref: "--pc-warning-500",
+        "token": "--warning",
+        "hex": "#fbc740",
+        "ref": "--pc-warning-500"
       },
       {
-        token: "--warning-foreground",
-        hex: "#0d0e0f",
-        ref: null,
+        "token": "--warning-foreground",
+        "hex": "#0d0e0f",
+        "ref": null
       },
       {
-        token: "--info",
-        hex: "#00b5f1",
-        ref: "--pc-info-500",
+        "token": "--info",
+        "hex": "#00b5f1",
+        "ref": "--pc-info-500"
       },
       {
-        token: "--info-foreground",
-        hex: "#04222c",
-        ref: null,
+        "token": "--info-foreground",
+        "hex": "#04222c",
+        "ref": null
       },
       {
-        token: "--sidebar",
-        hex: "#17181b",
-        ref: null,
+        "token": "--sidebar",
+        "hex": "#17181b",
+        "ref": null
       },
       {
-        token: "--sidebar-foreground",
-        hex: "#fafafc",
-        ref: null,
+        "token": "--sidebar-foreground",
+        "hex": "#fafafc",
+        "ref": null
       },
       {
-        token: "--sidebar-primary",
-        hex: "#2f69ff",
-        ref: "--pc-blue-500",
+        "token": "--sidebar-primary",
+        "hex": "#2f69ff",
+        "ref": "--pc-blue-500"
       },
       {
-        token: "--sidebar-primary-foreground",
-        hex: "#ffffff",
-        ref: null,
+        "token": "--sidebar-primary-foreground",
+        "hex": "#ffffff",
+        "ref": null
       },
       {
-        token: "--sidebar-accent",
-        hex: "#17244a",
-        ref: null,
+        "token": "--sidebar-accent",
+        "hex": "#17244a",
+        "ref": null
       },
       {
-        token: "--sidebar-accent-foreground",
-        hex: "#dce6ff",
-        ref: null,
+        "token": "--sidebar-accent-foreground",
+        "hex": "#dce6ff",
+        "ref": null
       },
       {
-        token: "--sidebar-border",
-        hex: "#2a2c33",
-        ref: null,
+        "token": "--sidebar-border",
+        "hex": "#2a2c33",
+        "ref": null
       },
       {
-        token: "--sidebar-ring",
-        hex: "#5282ff",
-        ref: "--pc-blue-400",
+        "token": "--sidebar-ring",
+        "hex": "#5282ff",
+        "ref": "--pc-blue-400"
       },
       {
-        token: "--chart-1",
-        hex: "#5282ff",
-        ref: "--pc-blue-400",
+        "token": "--chart-1",
+        "hex": "#5282ff",
+        "ref": "--pc-blue-400"
       },
       {
-        token: "--chart-2",
-        hex: "#fbc740",
-        ref: "--pc-warning-500",
+        "token": "--chart-2",
+        "hex": "#fbc740",
+        "ref": "--pc-warning-500"
       },
       {
-        token: "--chart-3",
-        hex: "#3abaaf",
-        ref: "--pc-success-500",
+        "token": "--chart-3",
+        "hex": "#3abaaf",
+        "ref": "--pc-success-500"
       },
       {
-        token: "--chart-4",
-        hex: "#f33859",
-        ref: "--pc-error-500",
+        "token": "--chart-4",
+        "hex": "#f33859",
+        "ref": "--pc-error-500"
       },
       {
-        token: "--chart-5",
-        hex: "#00b5f1",
-        ref: "--pc-info-500",
-      },
-    ],
+        "token": "--chart-5",
+        "hex": "#00b5f1",
+        "ref": "--pc-info-500"
+      }
+    ]
   },
-  typography: {
-    family: "Outfit",
-    scale: [
+  "typography": {
+    "family": "Outfit",
+    "scale": [
       {
-        name: "h1",
-        weight: 700,
-        size: 20,
-        lineHeight: 25,
+        "name": "h1",
+        "weight": 700,
+        "size": 20,
+        "lineHeight": 25
       },
       {
-        name: "paragraph-l",
-        weight: 400,
-        size: 16,
-        lineHeight: 24,
+        "name": "paragraph-l",
+        "weight": 400,
+        "size": 16,
+        "lineHeight": 24
       },
       {
-        name: "paragraph-m",
-        weight: 400,
-        size: 14,
-        lineHeight: 24,
+        "name": "paragraph-m",
+        "weight": 400,
+        "size": 14,
+        "lineHeight": 24
       },
       {
-        name: "paragraph-s",
-        weight: 400,
-        size: 12,
-        lineHeight: 15,
-      },
-    ],
+        "name": "paragraph-s",
+        "weight": 400,
+        "size": 12,
+        "lineHeight": 15
+      }
+    ]
   },
-  radius: "0.375rem",
+  "radius": "0.375rem"
 } as {
   ramps: Record<string, Swatch[]>;
   semantic: { light: SemanticSlot[]; dark: SemanticSlot[] };

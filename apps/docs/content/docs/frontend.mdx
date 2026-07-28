@@ -20,6 +20,7 @@ between apps already knows where things live. Apps still own their own component
 | Theme | `@plainconceptsplatform/ui-theme` |
 | Icons | Lucide (`lucide-react`) |
 | Dependency injection | inversify-hooks |
+| Internationalization | react-i18next + i18next |
 | Data fetching | TanStack Query (or RSC / Server Actions) |
 | Forms | react-hook-form + zod |
 | Lint and format | Biome |
@@ -123,6 +124,32 @@ const form = useForm({ resolver: zodResolver(schema) });
 
 Validate on the client and show errors inline. Always design the empty, loading, success, and error
 states, not just the happy path.
+
+## Internationalization
+
+Every user-facing string goes through **react-i18next**. This is mandatory, and the rule is absolute:
+**zero magic strings**. That includes the ones easy to forget, such as `aria-label` on an icon-only
+button, placeholder text, empty-state copy, validation messages, and date format patterns.
+
+```tsx
+const { t } = useTranslation();
+
+// Good
+<Button aria-label={t("invoice.actions.delete")}>
+  <Trash2 />
+</Button>
+
+// Avoid: invisible to translators, and impossible to audit
+<Button aria-label="Delete invoice">
+  <Trash2 />
+</Button>
+```
+
+Two consequences worth planning for. Text expands, often by 30% or more, so verify layouts with a
+longer language rather than only English. And date and number formatting must use the same locale as
+the active language, which means passing the matching `date-fns` locale rather than relying on the
+browser default. For right-to-left languages, wrap the app in the `DirectionProvider` from the
+[Direction](/docs/components/direction) component.
 
 ## Testing
 

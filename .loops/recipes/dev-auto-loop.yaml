@@ -102,7 +102,11 @@ tasks:
     onFailureTaskId: null
 
   - id: dev-auto-pr
-    name: "Create PR and squash merge (auto-admin)"
+    name: "Create PR and enable auto-merge once checks pass"
+    # --auto, never --admin. --admin bypasses branch protection, so an unattended
+    # loop would merge code that CI has not approved (and this repo publishes two
+    # packages to npm). --auto hands the decision to GitHub: it merges only after
+    # the required checks are green, and simply waits otherwise.
     command: sh
     commandArgs:
       - -c
@@ -112,7 +116,7 @@ tasks:
         && PR_URL=$(gh pr create
         --title "Resolve #{{number}}: {{title}}"
         --body "Closes #{{number}}" --label code:done)
-        && gh pr merge "$PR_URL" --squash --delete-branch --admin
+        && gh pr merge "$PR_URL" --squash --delete-branch --auto
         && printf '{"prUrl":"%s"}\n' "$PR_URL"
     onSuccessTaskId: dev-auto-complete
     onFailureTaskId: dev-auto-merge-fail
@@ -143,18 +147,14 @@ tasks:
     onFailureTaskId: null
 
   - id: dev-auto-merge-fail
-    name: "Recovery: retry merge with admin, then leave for review"
+    name: "Recovery: hand the PR to a human for review"
+    # No retry with elevated permissions. If auto-merge could not be enabled or the
+    # checks failed, that is a signal to stop, not to push harder: label the issue
+    # and leave the branch and PR intact for someone to look at.
     command: sh
     commandArgs:
       - -c
       - >
-        BRANCH=$(git branch --show-current 2>/dev/null);
-        if [ -n "$BRANCH" ] && [ "$BRANCH" != "main" ]; then
-        PR_URL=$(gh pr list --head "$BRANCH" --state open
-        --json url --jq ".[0].url" 2>/dev/null);
-        if [ -n "$PR_URL" ]; then
-        gh pr merge "$PR_URL" --squash --delete-branch --admin
-        && exit 0; fi; fi;
         gh issue edit {{number}} --add-label code:review
         --remove-label code:doing
         && git checkout -- . && git clean -fd && git switch main
@@ -183,11 +183,11 @@ diagram: |
       devAutoVerify["Verify<br/>Lint, typecheck, tests, and build"] -->|✓| devAutoCommit
       devAutoVerify -.->|✗| devAutoImplement
       devAutoCommit("Commit<br/>Stage and commit all changes") -->|✓| devAutoPr
-      devAutoPr["PR<br/>Create PR and squash merge autoAdmin"] -->|✓| devAutoComplete
+      devAutoPr["PR<br/>Create PR, auto-merge once checks pass"] -->|✓| devAutoComplete
       devAutoPr -.->|✗| devAutoMergeFail
       devAutoComplete(("Complete<br/>Mark issue done, close it,<br/>and return to main"))
       devAutoFail(("Fail<br/>Reset and return issue<br/>to code:pick"))
-      devAutoMergeFail(("Merge Fail<br/>Retry merge with admin,<br/>else leave for review"))
+      devAutoMergeFail(("Merge Fail<br/>Label code:review and<br/>leave the PR for a human"))
       devAutoNothing(("Idle<br/>No code:pick issues<br/>are available"))
       classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
       classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033

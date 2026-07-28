@@ -1,0 +1,62 @@
+---
+title: Principles
+description: The five rules that decide what belongs in the foundation and what does not.
+---
+
+Five principles decide every scoping question here. They are deliberately restrictive: the failure
+mode for a shared foundation is not being too small, it is growing into a framework nobody wants to
+depend on.
+
+## 1. Prefer established open-source libraries over custom code
+
+If a well-maintained library solves the problem, use it. Every line of custom code in a shared package
+is a line the Platform team maintains forever, on behalf of teams who did not choose it.
+
+The practical test: could a new engineer learn this from public documentation, or only from us? The
+first is a library, the second is a liability.
+
+## 2. Use shadcn/ui components directly
+
+Do not wrap them, and do not build a proprietary component library on top of them.
+
+Apps copy component source into their own repo, so they can read it, edit it, and are never blocked on
+our release cycle. What keeps them consistent is that they all import the same tokens. That is the
+whole trick: local control and a shared look at the same time.
+
+<Callout type="warn">
+  Wrapping a shadcn component "just in case" is the most common way this principle gets broken. The
+  wrapper starts as a pass-through, accumulates props, and becomes the proprietary library this
+  principle exists to prevent.
+</Callout>
+
+## 3. App-specific components live in the app
+
+Share a component only after the same real requirement has appeared in **multiple** apps.
+
+One app with a need is a signal. Two apps with the same need is a case. Speculative sharing produces
+abstractions shaped by a single caller, which then fit the second caller badly.
+
+## 4. The foundation owns the theme, conventions, docs, and showcase
+
+Nothing more. Explicitly out of scope: custom business components, auth, API or state-management
+abstractions, observability and feature-flag packages, routing wrappers, app-shell components, a
+custom CLI, and project generators.
+
+Each of those is a reasonable thing to want. None of them is worth the coupling it creates across
+independent apps with their own teams, domains, and lifecycles.
+
+## 5. Keep the scope small
+
+Add a directory or a package only when it has a clear job today.
+
+This is why the repo has two packages rather than eight, why there is no Turborepo or Nx, and why the
+FSD layers are earned rather than scaffolded. Structure you add before you need it is structure you
+have to justify later.
+
+## Applying them
+
+Most proposals resolve by asking, in order: has this appeared in more than one app, could a documented
+convention do the job instead, and does it belong to the look or to a domain?
+
+A convention costs a paragraph. Shared code costs a version, a migration path, and a maintainer. Reach
+for the paragraph first. [Contributing](/docs/contributing) covers the process.

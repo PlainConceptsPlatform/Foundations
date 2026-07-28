@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the theme, the shared components, or the docs site is wrong.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - "@plainconceptsplatform/ui-theme (tokens)"
+        - "@plainconceptsplatform/ui-components"
+        - Docs site
+        - platform-onboard skill
+        - Loop recipes
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the version you are on if it is a published package.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: A component, a token, or a page plus the steps. A minimal repro beats a description.
+    validations:
+      required: true
+
+  - type: input
+    id: app
+    attributes:
+      label: Which app hit this
+      description: Helps us judge whether it belongs in the foundation or in the app.

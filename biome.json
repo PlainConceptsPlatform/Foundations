@@ -35,6 +35,6 @@
     }
   },
   "files": {
-    "ignore": ["**/.next/**", "**/out/**", "**/dist/**", "**/.source/**"]
+    "ignore": ["**/.next/**", "**/out/**", "**/dist/**", "**/.source/**", "**/*.generated.ts"]
   }
 }

@@ -7,6 +7,16 @@ description: Onboard a brownfield project onto the Plain Concepts Platform stack
 
 Bring a brownfield project onto the Plain Concepts Platform stack. The migration follows a fixed sequence of six domains, each with binary preflight checks. Start at the first failing check and work down.
 
+## Scope
+
+This checklist targets **consumer Platform applications**, not the foundation repo itself.
+
+The Foundations repo deliberately fails some of these checks, and that is correct rather than a gap to
+close: it keeps its canonical docs in `ai/` (so the docs site can sync them into a Reference section),
+it publishes the theme rather than consuming it, and it has no `views/` or `entities/` because it is a
+docs site and two packages, not a product app. Do not "fix" the foundation to satisfy a checklist
+written for the apps that depend on it.
+
 ## The six domains
 
 ```
@@ -40,8 +50,8 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 
 | Check | How to detect | Pass condition |
 |---|---|---|
-| ARCHITECTURE.md | `ARCHITECTURE.md` exists at root | Not a placeholder (more than 10 lines) |
-| DESIGN.md | `DESIGN.md` exists at root | Not a placeholder (more than 10 lines) |
+| ARCHITECTURE.md | `ARCHITECTURE.md` or `ai/ARCHITECTURE.md` exists | Not a placeholder (more than 10 lines) |
+| DESIGN.md | `DESIGN.md` or `ai/DESIGN.md` exists | Not a placeholder (more than 10 lines) |
 | Project guardrails | `skills/ob-guardrails-project/SKILL.md` exists | File present when project guardrails are used |
 
 ### Domain 3: OpenSpec

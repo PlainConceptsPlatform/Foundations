@@ -1,3 +1,4 @@
+import { ThemedScreen } from "@/components/themed-screen";
 import { source } from "@/lib/source";
 import { AppWindow, Bot, Boxes, Palette, Rocket, Server } from "lucide-react";
 import Link from "next/link";
@@ -128,6 +129,23 @@ export default function HomePage() {
             })}
           </ul>
         </nav>
+
+        <section className="mt-20">
+          <h2 className="font-semibold text-xl tracking-tight">The theme at screen scale</h2>
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            An information-dense internal tool built only from the published tokens: elevation is a
+            border and a surface, corners are one radius, and nothing casts a shadow. Composed from
+            the same component demos in the{" "}
+            <Link href="/docs/components" className="text-primary hover:underline">
+              catalog
+            </Link>
+            .
+          </p>
+
+          <div className="mt-6">
+            <ThemedScreen />
+          </div>
+        </section>
       </div>
     </main>
   );
