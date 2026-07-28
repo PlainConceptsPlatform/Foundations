@@ -3,6 +3,12 @@ title: Loop recipes
 description: "Production-grade loop-task recipes with Mermaid diagrams. From simple verify-and-fix patterns to full delivery pipelines that pick, implement, verify, ship, and close issues autonomously."
 ---
 
+<Callout type="warn" title="Check the recommendation first">
+  Recipes are for [loop-task, which is the fallback](/docs/ai). If the work reacts to a repository
+  event, the Platform default is Agentic Workflows on a self-hosted runner, and these patterns
+  translate to event triggers rather than intervals.
+</Callout>
+
 Recipes are the fastest way to learn loop-task. Each recipe is a YAML file with a task chain, a cadence, and an embedded Mermaid diagram that documents the flow. Install the loop-task skills so your agent understands the recipe schema:
 
 ```bash

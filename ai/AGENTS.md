@@ -68,8 +68,15 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
 ## Recommended tooling & workflow
 
 - **pnpm** for all package/script commands.
-- **Loop-engineering:** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task) for
-  iterative task loops; [`PlainConceptsPlatform/opencode-onboard`](https://github.com/PlainConceptsPlatform/opencode-onboard)
+- **Running agents against a repository:** [GitHub Agentic Workflows](https://github.github.io/gh-aw/)
+  on a **self-hosted runner** with `engine: opencode` pointed at the binary on that machine. This is
+  the Platform default. Event triggers instead of polling, a fresh checkout per run, a `concurrency`
+  group instead of a hand-rolled mutex, and the already-authenticated `opencode` session instead of
+  an API key. Never attach a self-hosted runner to a **public** repository.
+- **Loop-engineering (fallback):** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task)
+  for work with no repository event to react to, or that cannot run on a runner. Do not reach for it
+  when the trigger is a repository event.
+- **Agent onboarding:** [`PlainConceptsPlatform/opencode-onboard`](https://github.com/PlainConceptsPlatform/opencode-onboard)
   for the `make-architecture` / `make-design` onboarding skills.
 - **Optimizations (recommended to enable):** RTK check, opencode-quota plugin, caveman concise
   mode, codegraph semantic index, agentmemory local memory server, humanizer skill.

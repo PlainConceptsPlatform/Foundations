@@ -1,15 +1,25 @@
 ---
 title: AI
-description: "Three open-source tools for AI-augmented engineering: opencode-onboard, loop-task, and orbion. Use them separately or together."
+description: "How Platform runs AI agents: GitHub Agentic Workflows on a self-hosted runner is the recommendation, with opencode-onboard, loop-task, and orbion around it."
 ---
 
-The Plain Concepts Platform uses three open-source tools for AI-augmented engineering. Each stands on its own; together they form a complete loop-engineering pipeline that prepares a codebase for AI, runs agents on a cadence, and manages all the loops from a single desktop app.
+<Callout type="info" title="The recommendation, up front">
+  To run an agent against a repository, use
+  [**GitHub Agentic Workflows**](https://github.github.io/gh-aw/) on a self-hosted runner with
+  `engine: opencode`. That is the Platform default, and it is not one of our tools.
 
-| Tool | What it does | Repo |
+  **`loop-task` is the fallback**, for work that has no repository event to react to or cannot run
+  on a runner. Reaching for it first is the wrong instinct.
+</Callout>
+
+Alongside that recommendation, Platform maintains three open-source tools. They prepare a codebase
+for agents, and cover the cases Actions cannot.
+
+| Tool | What it does | When to use it |
 |---|---|---|
-| **opencode-onboard** | Prepare any codebase for AI agents | [PlainConceptsPlatform/opencode-onboard](https://github.com/PlainConceptsPlatform/opencode-onboard) |
-| **loop-task** | Run any command on a cadence (the heartbeat) | [PlainConceptsPlatform/loop-task](https://github.com/PlainConceptsPlatform/loop-task) |
-| **orbion** | Desktop control plane for loop-task instances | [PlainConceptsPlatform/orbion](https://github.com/PlainConceptsPlatform/orbion) |
+| [**opencode-onboard**](https://github.com/PlainConceptsPlatform/opencode-onboard) | Prepare any codebase for AI agents | Always, whichever runner you end up on |
+| [**loop-task**](https://github.com/PlainConceptsPlatform/loop-task) | Run any command on a cadence | **Fallback only**: no repository event to react to, or no runner available |
+| [**orbion**](https://github.com/PlainConceptsPlatform/orbion) | Desktop control plane for loop-task instances | Only if you are already running loop-task |
 
 ## How to run agents on a cadence
 
@@ -145,7 +155,12 @@ Installed as slash commands in `.opencode/commands/`:
 
 Mix backlog and repository platforms. Examples: Jira backlog plus GitHub repository, browser backlog plus GitLab repository. The matching `ob-userstory-*` skill is installed based on your backlog choice; PR operations are injected into `/ops-*` commands based on your repo choice.
 
-## loop-task
+## loop-task (fallback)
+
+<Callout type="warn" title="Not the default">
+  Only reach for this once you have established that Agentic Workflows on a runner will not work for
+  the case in hand. If the trigger is a repository event, you are in the wrong section.
+</Callout>
 
 Loop engineering for your terminal. A cross-platform CLI that runs shell commands at human-readable intervals. Create loops in the background, manage them from an interactive TUI board, or run them in the foreground.
 
