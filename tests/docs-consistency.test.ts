@@ -293,18 +293,27 @@ describe("the workflow examples stay runnable", () => {
     }
   });
 
-  // The provider chain: `openai` satisfies gh-aw's fixed allowlist, `plainconcepts`
-  // is what opencode.ci.json declares against gh-aw's proxy. Changing one without the
-  // other routes the run at a provider that does not exist.
+  // `openai` satisfies gh-aw's fixed provider allowlist; the traffic goes to
+  // OPENAI_BASE_URL through gh-aw's proxy. opencode.ci.json carries the provider
+  // definition and the CI agent.
   it("keeps the model aliasing consistent across the chain", () => {
     const provider = JSON.parse(read("workflows/opencode.ci.json"));
     expect(Object.keys(provider.provider)).toContain("plainconcepts");
     expect(provider.model).toBe("plainconcepts/glm-5-2");
 
     for (const file of examples) {
-      const body = read(file);
-      expect(body, file).toMatch(/^model: openai\//m);
-      expect(body, file).toContain("plainconcepts/glm-5-2");
+      expect(read(file), file).toMatch(/^model: openai\//m);
+    }
+  });
+
+  // `engine.args: ["--model", ...]` is silently dropped by the compiler: a lock built
+  // with it is byte-identical to one built without. Shipping it in an example teaches
+  // people to write configuration that does nothing.
+  it("does not ship engine.args, which the compiler discards", () => {
+    for (const file of examples) {
+      // The key inside the engine block, not the string: both files mention `--model`
+      // in the comment warning against it.
+      expect(read(file), file).not.toMatch(/^ {2}args:/m);
     }
   });
 

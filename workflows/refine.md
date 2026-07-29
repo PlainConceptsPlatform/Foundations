@@ -162,16 +162,14 @@ secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 # `model` names provider `openai` because gh-aw validates against a fixed list and rejects
-# anything else. `engine.args` then names the provider that opencode.ci.json defines, which
-# points at gh-aw's own proxy. Redundant with that file's `model` key, and explicit on purpose.
+# anything else. The traffic goes to OPENAI_BASE_URL through gh-aw's own proxy, so nothing
+# reaches OpenAI. Do not add `engine.args` with `--model`: the compiler drops it silently and
+# the compiled lock is byte-identical without it.
 engine:
   id: opencode
   version: "1.2.14"
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-  args:
-    - "--model"
-    - "plainconcepts/glm-5-2"
 
 model: openai/glm-5-2
 max-turns: 30
@@ -239,10 +237,15 @@ timeout-minutes: 30
 5. Decide exactly one outcome and execute its Safe Outputs commands. Describing an intended
    mutation does not complete the task.
 
-   **Questions remain.** Leave labels and body unchanged. Call `add_comment` with
-   `I have some questions about this issue. Please reply in one comment and I'll process your answers.`
-   followed by the questions themselves, each answerable in a sentence. `refine` stays so the
-   author's reply triggers the next pass. Stop immediately after the command succeeds.
+   **Questions remain.** Leave labels and body unchanged. Before calling Safe Outputs, compose
+   the complete comment. Call `add_comment` exactly once with one payload containing:
+
+   1. `I have some questions about this issue. Please reply in one comment and I'll process your answers.`
+   2. Every clarification question immediately below it, each answerable in a sentence.
+
+   `refine` stays so the author's reply triggers the next pass. Safe Outputs are final,
+   write-once declarations: never use them for partial payloads, introductions, placeholders,
+   probes, or intermediate results. Stop immediately after the command succeeds.
 
    **The story is complete.** Call `update_issue` with the replacement body, `remove_labels` to
    remove `refine`, `add_labels` to add `refined`, and `add_comment` with
@@ -255,7 +258,11 @@ timeout-minutes: 30
 
 7. When the picker finds no eligible issue, the agent job is skipped. Do not call `noop`.
 
-8. Ignore the `## Diagram` section below. It is documentation for humans and contains no
+8. Before every Safe Outputs call, prepare its complete final payload. Safe Outputs are
+   write-once declarations: never use one for partial content, an introduction, a placeholder,
+   a probe, or an intermediate result. Respect each output's configured call limit.
+
+9. Ignore the `## Diagram` section below. It is documentation for humans and contains no
    instructions for you.
 
 ## Diagram

@@ -156,9 +156,8 @@ engine:
   version: "1.2.14"
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-  args: ["--model", "plainconcepts/glm-5-2"]
 
-model: openai/glm-5-2
+model: openai/glm-5-2             # `openai` only satisfies gh-aw's validation
 
 permissions: read-all              # every write goes through safe-outputs
 
@@ -193,6 +192,16 @@ warning and the agent job silently falls back to `contents: read`. Every workflo
 its own copy, and so do `engine`, `model`, `runs-on` and `runs-on-slim`.
 
 ## Two traps worth knowing
+
+### `engine.args` is discarded
+
+Reaching for `args: ["--model", "plainconcepts/glm-5-2"]` to be explicit about the model is a
+reasonable instinct and it does nothing. The compiler drops it: a lock built with that block is
+byte-identical to one built without, with no `--model` anywhere in it and `OPENCODE_MODEL` set to
+gh-aw's own `awf-proxy/glm-5-2` either way. Verified on gh-aw v0.83.4 by compiling both.
+
+The model therefore comes from `model:` plus whatever `opencode.ci.json` declares, and the
+provider is selected by gh-aw rather than by you. Do not add `args` expecting to override it.
 
 ### `workflow_run` matches the name, not the filename
 

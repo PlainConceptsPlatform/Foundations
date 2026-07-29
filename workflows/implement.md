@@ -106,16 +106,14 @@ secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 # `model` names provider `openai` because gh-aw validates against a fixed list and rejects
-# anything else. `engine.args` then names the provider that opencode.ci.json defines, which
-# points at gh-aw's own proxy. Redundant with that file's `model` key, and explicit on purpose.
+# anything else. The traffic goes to OPENAI_BASE_URL through gh-aw's own proxy, so nothing
+# reaches OpenAI. Do not add `engine.args` with `--model`: the compiler drops it silently and
+# the compiled lock is byte-identical without it.
 engine:
   id: opencode
   version: "1.2.14"
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-  args:
-    - "--model"
-    - "plainconcepts/glm-5-2"
 
 model: openai/glm-5-2
 

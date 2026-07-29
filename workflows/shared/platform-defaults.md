@@ -34,6 +34,17 @@ safe-outputs:
   # leaked secrets and malicious patches before any safe output is applied. Pinned so it does
   # not drift onto a different runner than the agent. Each workflow still declares its own
   # write capabilities, which stay visible where they are granted.
+  #
+  # It needs its own `engine`, and this is easy to miss: threat detection is itself a model
+  # call. Without one it runs on whatever gh-aw defaults to rather than our gateway, so the
+  # job that inspects the agent's output is the one job not using our model.
   threat-detection:
+    enabled: true
     runs-on: ubuntu-latest
+    engine:
+      id: opencode
+      version: "1.2.14"
+      env:
+        OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
+      model: openai/glm-5-2
 ---
