@@ -70,6 +70,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # The docs app imports workspace packages (e.g. ui-components) via their
+      # "import" export condition, which points at dist/. Without this, the
+      # webServer that Playwright boots fails with "Module not found".
+      - name: Build workspace packages
+        run: pnpm build
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
