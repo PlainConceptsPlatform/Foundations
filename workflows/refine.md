@@ -9,7 +9,7 @@ description: |
 
 name: "Agent: Refine Issue"
 
-# Shared: the network + threat-detection contract, and the CI-only OpenCode configuration.
+# Shared: the network and threat-detection contract, and the CI-only OpenCode configuration.
 # permissions, engine, model and runs-on cannot be shared — see shared/platform-defaults.md.
 imports:
   - shared/platform-defaults.md

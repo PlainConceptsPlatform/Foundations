@@ -191,6 +191,30 @@ against gh-aw v0.83.4 by compiling and reading the lock file:
 warning and the agent job silently falls back to `contents: read`. Every workflow therefore keeps
 its own copy, and so do `engine`, `model`, `runs-on` and `runs-on-slim`.
 
+### Threat detection is off, and why
+
+gh-aw can run a model over the agent's output before any safe output is applied, looking for
+prompt injection, leaked secrets and malicious patches. Platform sets `threat-detection: false`,
+which is a costed decision rather than an oversight, so here is the reasoning to disagree with.
+
+It is a **second full model run for every workflow run**, and it looks for what the deterministic
+scanners on a pull request already find: TruffleHog for secrets, Semgrep for the patch, Trivy for
+dependencies. Those are cheaper, reproducible, and do not have an opinion. Paying tokens to
+repeat them is duplicated spend, so each project owns this in its own CI.
+
+What bounds a hijacked agent is unchanged, and it is not the scanner:
+
+- `permissions: read-all`, so the agent can write nothing directly. It requests, the framework
+  applies.
+- An allowlist per safe output. `add-labels: allowed: [refined]` cannot close an issue no matter
+  what the model was talked into.
+- An unauthenticated `gh`, so "do not use `gh`" is enforced rather than requested.
+- Untrusted text arriving inside a marked boundary rather than fetched mid-conversation.
+
+**Turn it on if your repository has no secret scanning or SAST on pull requests.** Then nothing
+else reads the patch, and the calculation inverts. It needs its own `engine` block when you do,
+or the one job inspecting the agent runs on gh-aw's default model instead of your gateway.
+
 ## Two traps worth knowing
 
 ### `engine.args` is discarded
@@ -242,7 +266,8 @@ a machine you own. It is not free, and these are the requirements rather than ni
   nothing failing. Without an alert, nobody notices.
 
 Everything targets the runner in four places, and missing any one of them leaves work on
-GitHub-hosted machines: `runs-on`, `runs-on-slim`, `safe-outputs.threat-detection.runs-on`, and
+GitHub-hosted machines: `runs-on`, `runs-on-slim`, `safe-outputs.threat-detection.runs-on` if you
+enable it, and
 `maintenance.runs_on` in `.github/workflows/aw.json` for the generated maintenance workflow.
 
 ## Compiling is not working

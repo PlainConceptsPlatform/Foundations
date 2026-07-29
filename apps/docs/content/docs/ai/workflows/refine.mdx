@@ -151,8 +151,7 @@ purpose: this workflow reads that label in the cascade but never writes it, beca
 is the lock.
 
 With `permissions: read-all`, the agent itself can write nothing at all. It *requests* these
-mutations and the framework applies them after the threat-detection job has looked at what it
-produced.
+mutations and the framework applies them, each one checked against the allowlist above.
 
 ## The outcome must be exactly one thing
 

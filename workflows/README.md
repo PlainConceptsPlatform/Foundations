@@ -8,7 +8,7 @@ the parts that only mean something inside one repository removed.
 |---|---|---|
 | `refine.md` | `refine` label added, or the author replies | Rewrites the issue as a user story, or asks questions |
 | `implement.md` | `implement` label added, or the merge gate finishes | Implements, verifies, opens a pull request |
-| `shared/platform-defaults.md` | Imported, never compiled | `network.allowed` and the pinned threat-detection runner |
+| `shared/platform-defaults.md` | Imported, never compiled | `network.allowed`, and threat detection turned off with the reasoning |
 | `shared/opencode-ci.md` | Imported, never compiled | Merges `opencode.ci.json` into `opencode.jsonc` before the agent starts |
 | `opencode.ci.json` | Read at runtime | Declares the `plainconcepts` provider and the CI agent |
 

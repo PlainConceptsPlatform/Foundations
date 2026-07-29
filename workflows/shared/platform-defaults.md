@@ -30,21 +30,21 @@ network:
     - forge.plainconcepts.com
 
 safe-outputs:
-  # Infrastructure, not a capability grant: it inspects agent output for prompt injection,
-  # leaked secrets and malicious patches before any safe output is applied. Pinned so it does
-  # not drift onto a different runner than the agent. Each workflow still declares its own
-  # write capabilities, which stay visible where they are granted.
+  # Off, and this is a costed decision rather than a shortcut.
   #
-  # It needs its own `engine`, and this is easy to miss: threat detection is itself a model
-  # call. Without one it runs on whatever gh-aw defaults to rather than our gateway, so the
-  # job that inspects the agent's output is the one job not using our model.
-  threat-detection:
-    enabled: true
-    runs-on: ubuntu-latest
-    engine:
-      id: opencode
-      version: "1.2.14"
-      env:
-        OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-      model: openai/glm-5-2
+  # Threat detection is itself a model call: it asks a model to inspect the agent's output for
+  # prompt injection, leaked secrets and malicious patches before any safe output is applied.
+  # That is a second full model run per workflow run, looking for what the deterministic
+  # scanners on a pull request already find — TruffleHog for secrets, Semgrep for the patch,
+  # Trivy for dependencies. Paying tokens to repeat them is duplicated spend, so each project
+  # owns this in CI instead.
+  #
+  # What bounds a hijacked agent is unchanged: `permissions: read-all` so it writes nothing
+  # directly, an allowlist per safe output so it cannot reach a capability it was not granted,
+  # an unauthenticated `gh`, and untrusted text arriving inside a marked boundary.
+  #
+  # Turn it on if the repository has no secret scanning or SAST on pull requests. It then needs
+  # its own `engine`, or the one job reading the agent's output is the one job not using our
+  # gateway.
+  threat-detection: false
 ---
