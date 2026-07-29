@@ -26,7 +26,9 @@ written for the apps that depend on it.
 4. FRONTEND STACK         pnpm -> Next -> Tailwind v4 -> shadcn -> Biome
                            -> FSD + Steiger -> inversify-hooks
                            -> react-i18next -> Platform theme
-5. LOOP AUTOMATION        .loops/recipes/ + GitHub labels
+5. AGENT AUTOMATION       private/internal: gh-aw markdown workflows on the
+                           self-hosted runner with engine: opencode
+                           public: .loops/recipes/ fallback + GitHub labels
 6. BACKEND GUARDRAILS     (if .NET) plain-dotnet-guardrails, arch tests
 ```
 
@@ -77,12 +79,30 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 | Platform theme | `@plainconceptsplatform/ui-theme` in `package.json` deps | Tokens package installed |
 | Platform components | `@plainconceptsplatform/ui-components` in `package.json` deps (optional) | Shared components installed |
 
-### Domain 5: Loop automation
+### Domain 5: Agent automation
+
+The Platform default is **GitHub Agentic Workflows on a self-hosted runner**, with `loop-task`
+as the fallback. Which set of checks applies depends on the repository:
+
+**If the repository is private or internal** (a self-hosted runner is safe):
+
+| Check | How to detect | Pass condition |
+|---|---|---|
+| Agentic workflows | `.github/workflows/` contains at least one `.md` workflow | Markdown workflow present |
+| gh-aw skill | `.github/skills/agentic-workflows/SKILL.md` exists | `gh aw init` has been run |
+| Self-hosted runner | `gh api repos/{owner}/{repo}/actions/runners` lists an online runner | Runner online with the expected label |
+| Runner wiring | Each `.md` workflow sets both `runs-on` and `runs-on-slim` | Framework jobs are not on a hosted runner |
+| Engine | Each `.md` workflow sets `engine.id: opencode` with `engine.command` | Uses the runner's authenticated opencode |
+
+**If the repository is public** (a self-hosted runner is unsafe, so the fallback applies):
 
 | Check | How to detect | Pass condition |
 |---|---|---|
 | Loop recipes | `.loops/recipes/` exists with at least one `.yaml` file | YAML recipe present |
-| GitHub labels | `gh label list` includes `code:pick` | Label set created |
+| GitHub labels | `gh label list` includes the workflow intent labels | Label set created |
+
+Never attach a self-hosted runner to a public repository: a pull request from a fork would
+execute arbitrary code on it, with whatever credentials it holds.
 
 ### Domain 6: Backend guardrails (.NET only)
 
@@ -137,12 +157,30 @@ pnpm -> Next.js -> Tailwind v4 -> shadcn/ui -> Biome -> FSD + Steiger -> inversi
 
 Each step is an OpenSpec change. Capture Playwright characterization tests before the first migration step to preserve visual and behavioral parity. Run these tests after every step.
 
-### Domain 5: Loop automation
+### Domain 5: Agent automation
 
-Read `references/loop-recipes.md` before starting. The setup has two parts:
+Which path you take depends on the repository, and the choice is not a preference.
 
-1. Create GitHub labels (use the setup script from the reference).
-2. Add YAML recipes, each with an embedded Mermaid `diagram` field, to `.loops/recipes/`.
+**Private or internal repository: Agentic Workflows on the self-hosted runner.**
+
+1. Run `gh aw init`. This installs GitHub's first-party `agentic-workflows` skill at
+   `.github/skills/agentic-workflows/SKILL.md`, which is the reference for the format,
+   `gh aw compile`, `gh aw trial` and debugging. Do not write your own guide for that.
+2. Register the runner and confirm it is online with the expected label. Install its service
+   as the user that holds the `opencode` session, or the engine will fail to authenticate in
+   a way that looks like an agent problem and is not.
+3. Author the workflows. Load the **`platform-agentic-workflows`** skill: it carries the
+   Platform frontmatter contract, the event-over-schedule rule, the Mermaid convention shared
+   with `.loops/recipes/`, and the token telemetry pattern.
+4. Create the GitHub labels the workflows filter on.
+
+**Public repository: `loop-task` recipes.** A self-hosted runner is unsafe on a public
+repository, so the fallback applies. Read `references/loop-recipes.md`, create the labels, and
+add YAML recipes with an embedded Mermaid `diagram` field to `.loops/recipes/`.
+
+Keep `.loops/recipes/` in place while migrating a repository from one path to the other. The
+recipes are the reference for what the workflows must reproduce, and deleting them early loses
+the only record of the behaviour.
 
 ### Domain 6: Backend guardrails
 
