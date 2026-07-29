@@ -37,16 +37,23 @@ The self-hosted runner is what makes this work for us rather than a compromise:
 - **Event triggers instead of polling.** A workflow fires on the issue comment or review that
   should have started it. A 20-minute interval means up to 20 minutes of latency and a run every
   interval that usually finds nothing to do.
-- **Your subscription, not an API key.** gh-aw ships an `opencode` engine, so point it at the
-  binary on the runner and it uses the session already authenticated there. On a GitHub-hosted
-  runner you would be on the `claude` engine with an `ANTHROPIC_API_KEY`, which does not accept
-  OAuth subscription tokens, and paying per token for a workflow that fires all day.
+- **Our gateway and our model, not a vendor's.** gh-aw ships an `opencode` engine, pointed at
+  `forge.plainconcepts.com` rather than at a vendor API. The spend and the model choice stay ours.
 
   ```yaml
   engine:
     id: opencode        # experimental in gh-aw
-    command: /usr/bin/opencode
+    version: "1.2.14"
+    env:
+      OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
+    args: ["--model", "plainconcepts/glm-5-2"]
+
+  model: openai/glm-5-2   # `openai` only satisfies gh-aw's validation
   ```
+
+  That `openai` is not a mistake and nothing reaches OpenAI. gh-aw rejects any provider outside a
+  fixed list, so the real provider is declared in `opencode.ci.json` instead and points at
+  gh-aw's own proxy. [The workflows section](/docs/ai/workflows) explains the chain.
 - **A fresh checkout per run.** Most of the recovery machinery in a long-lived local loop exists
   only because state persists between runs on one machine. It disappears here.
 - **Local context stays available.** VPN-only resources, a local database, licensed tooling.
@@ -59,6 +66,25 @@ The self-hosted runner is what makes this work for us rather than a compromise:
   A pull request from a fork would execute arbitrary code on your runner, with whatever credentials
   it holds. Private and internal repositories only.
 </Callout>
+
+Being the recommendation does not make it free. Three requirements, learned by breaking each one:
+
+- **Disk, more than you would guess.** Every agentic run pulls gh-aw's firewall containers, every
+  CI run writes a tool cache, and scanners pull their own images. A 29 GB disk running both hit
+  100% and the runner's worker was killed mid-job, which presents as a workflow that hangs rather
+  than one that fails. Budget 64 GB and alert on free space.
+- **More than one runner instance.** One runner serialises everything, so a pull-request check
+  waits behind a 90-minute agent run. Two instances on the same machine is usually enough.
+- **An alert for the runner going offline.** Cancelling a job can leave a stale session
+  (`A session for this runner already exists`), and the symptom is every job queuing forever with
+  nothing marked failed. Re-registering the runner clears it; noticing is the hard part.
+
+Start on GitHub-hosted runners if none of that is in place yet. A hosted runner with our gateway
+still gives you event triggers, safe outputs and the audit trail — it costs Actions minutes and
+loses access to anything VPN-only.
+
+Once it is running, [**the workflows section**](/docs/ai/workflows) has the label state machine,
+the determinism ladder, and two complete workflows you can copy.
 
 ### The alternative: loop-task
 

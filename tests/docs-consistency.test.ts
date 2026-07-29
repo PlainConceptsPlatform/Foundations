@@ -259,3 +259,75 @@ describe("the public repo does not leak infrastructure identifiers", () => {
     expect(leaking).toEqual([]);
   });
 });
+
+describe("the workflow examples stay runnable", () => {
+  const examples = ["workflows/refine.md", "workflows/implement.md"];
+
+  // A wrong value here is not an error: the trigger silently never fires. gh-aw
+  // title-cases the filename into a name when this is absent, so referencing the
+  // filename from another workflow's `workflow_run` would resolve to nothing.
+  it("sets an explicit workflow name", () => {
+    for (const file of examples) {
+      expect(read(file), file).toMatch(/^name: "Agent: /m);
+    }
+  });
+
+  // Both are needed. Without runs-on-slim the framework jobs run somewhere else than
+  // the agent, which defeats the point of choosing a runner at all.
+  it("pins both runner keys", () => {
+    for (const file of examples) {
+      const body = read(file);
+      expect(body, file).toMatch(/^runs-on: /m);
+      expect(body, file).toMatch(/^runs-on-slim: /m);
+    }
+  });
+
+  // permissions, engine, model and runs-on do not merge from an import, so each
+  // example has to carry them even though the shared fragments exist.
+  it("keeps the unmergeable fields local and imports the rest", () => {
+    for (const file of examples) {
+      const body = read(file);
+      expect(body, file).toMatch(/^permissions: read-all$/m);
+      expect(body, file).toContain("shared/platform-defaults.md");
+      expect(body, file).toContain("shared/opencode-ci.md");
+    }
+  });
+
+  // The provider chain: `openai` satisfies gh-aw's fixed allowlist, `plainconcepts`
+  // is what opencode.ci.json declares against gh-aw's proxy. Changing one without the
+  // other routes the run at a provider that does not exist.
+  it("keeps the model aliasing consistent across the chain", () => {
+    const provider = JSON.parse(read("workflows/opencode.ci.json"));
+    expect(Object.keys(provider.provider)).toContain("plainconcepts");
+    expect(provider.model).toBe("plainconcepts/glm-5-2");
+
+    for (const file of examples) {
+      const body = read(file);
+      expect(body, file).toMatch(/^model: openai\//m);
+      expect(body, file).toContain("plainconcepts/glm-5-2");
+    }
+  });
+
+  // Every write goes through safe outputs, and the diagram is what a human reads first.
+  it("declares safe outputs and ships a diagram", () => {
+    for (const file of examples) {
+      const body = read(file);
+      expect(body, file).toContain("safe-outputs:");
+      expect(body, file).toContain("```mermaid");
+      // The shared Platform classDef set, so diagrams read the same everywhere.
+      expect(body, file).toContain("classDef decision fill:#fff8e8");
+    }
+  });
+
+  // The docs quote these files. If an example drops a label the prose still claims,
+  // the reader copies a workflow that cannot do what the page says it does.
+  it("uses the label set the docs document", () => {
+    const refine = read("workflows/refine.md");
+    expect(refine).toContain("allowed: [refined]");
+    expect(refine).toContain("allowed: [refine]");
+
+    const implement = read("workflows/implement.md");
+    expect(implement).toContain("allowed: [bot-working, review]");
+    expect(implement).toContain("allowed: [implement, bot-working]");
+  });
+});

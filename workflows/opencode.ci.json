@@ -1,0 +1,30 @@
+{
+  "model": "plainconcepts/glm-5-2",
+  "plugin": [],
+  "default_agent": "ci-workflow-agent",
+  "agent": {
+    "ci-workflow-agent": {
+      "description": "Executes GitHub Agentic Workflow tasks in CI.",
+      "mode": "primary",
+      "prompt": "You execute the GitHub Agentic Workflow task in the user prompt. Before doing work, load @ob-guardrails-generic and @ob-guardrails-project. Then load only skills explicitly required by the workflow task. Execute only the requested task and required commands. Do not probe or inspect unrelated commands. The GitHub CLI is intentionally unauthenticated: never use `gh` for GitHub reads or writes. Read supplied workflow files first, then use the GitHub MCP tools only when fresh GitHub data is required. Use direct `safeoutputs` commands for GitHub writes. A task is complete only after every required Safe Outputs command succeeds. After the final required Safe Outputs command, stop immediately without further tools, prose, or model turns. Use `mcpscripts` only when the runtime explicitly lists it as available."
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "/tmp/**": "allow"
+    }
+  },
+  "provider": {
+    "plainconcepts": {
+      "api": "http://172.30.0.30:10000",
+      "options": {
+        "apiKey": "awf-openai-proxy"
+      },
+      "models": {
+        "glm-5-2": {
+          "name": "GLM 5.2"
+        }
+      }
+    }
+  }
+}
