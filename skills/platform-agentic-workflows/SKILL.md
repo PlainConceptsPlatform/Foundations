@@ -1,385 +1,479 @@
 ---
 name: platform-agentic-workflows
-version: 1.0.0
+version: 2.1.0
 description: >
-  Author GitHub Agentic Workflows as markdown for PlainConcepts Platform repos.
-  Load when creating or reviewing a .github/workflows/*.md agentic workflow, when
-  migrating a .loops/recipes/*.yaml recipe to a workflow, when a workflow needs its
-  Mermaid diagram, or when wiring the self-hosted runner and the opencode engine.
-  Covers the Platform frontmatter contract (runs-on + runs-on-slim, engine:
-  opencode, network.allowed, safe-outputs), the event-over-schedule rule, the
-  Platform Mermaid colour scheme, and token telemetry back onto the issue.
+  Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
+  deterministic decision into GitHub Actions primitives and spending the agent only on
+  judgement. Load when creating or reviewing a .github/workflows/*.md agentic workflow, when
+  migrating a .loops/recipes/*.yaml recipe, when a workflow needs its Mermaid diagram, when
+  choosing a trigger or a safe output, or when a compiled workflow misbehaves. Covers the
+  determinism ladder, the verified frontmatter contract, the opencode engine on Forge, the
+  full safe-output surface, trigger filters, and the Platform Mermaid scheme.
 ---
 
 # Platform Agentic Workflows
 
 A GitHub Agentic Workflow is a **markdown file whose body is the prompt**. The YAML
-frontmatter is wiring: when it fires, where it runs, what it may touch, what it may write.
+frontmatter is wiring: when it fires, where it runs, what it may read, what it may write.
 Everything below the frontmatter is fed to the model as instructions.
 
-Hold that sentence in your head, because it is the source of every mistake in this format.
-A heading you added for humans is an instruction. A Mermaid diagram at the bottom is an
-instruction. This skill exists to make the wiring correct and to keep the documentation out
-of the prompt.
+Hold that sentence, because it is the source of every mistake in this format. A heading you
+added for humans is an instruction. A Mermaid diagram at the bottom is an instruction.
 
-## Scope
+## The thesis
 
-This skill covers **Platform conventions only**. It deliberately does not teach the format.
+Anyone can write an agentic workflow. Trigger on everything, grant broad permissions, and
+write a paragraph asking the model to sort it out. It will appear to work, and it will be
+slow, expensive, and non-reproducible, because a model was asked to do arithmetic that a
+`gh` command answers exactly.
 
-For authoring mechanics, `gh aw compile`, `gh aw trial`, debugging failed runs, and the
-frontmatter reference, use GitHub's own first-party skill, installed by `gh aw init` at
-`.github/skills/agentic-workflows/SKILL.md`. Do not reimplement it here.
+A good agentic workflow is mostly **not** agentic. It is a GitHub Actions workflow that has
+an agent in the middle of it. Everything a script can decide, a script decides — before the
+agent starts, deterministically, for free. The agent is reserved for the part that genuinely
+needs judgement: reading code, weighing risk, writing prose, deciding what a human meant.
 
-What is ours, and what this skill is for:
+That principle has a mechanical form, and it is the core of this skill.
 
-1. The frontmatter contract every Platform workflow must satisfy.
-2. Events over schedules, with the mapping.
-3. The Mermaid diagram convention, shared with `.loops/recipes/`.
-4. Token telemetry reported onto the issue.
+## The determinism ladder
+
+Every decision a workflow makes sits on one of seven rungs. **Push each decision to the
+lowest rung that can hold it.** Lower is cheaper, faster, reproducible, and auditable.
+
+```
+RUNG                       COSTS          DECIDES                        PROMPT CAN READ IT
+────                       ─────          ───────                        ──────────────────
+0  Trigger                 nothing        Does this run at all?          n/a
+1  Trigger filters         nothing        Is this event even ours?        n/a
+2  Pre-activation steps    ~10s runner    Is there work? (gate only)      NO
+3  Precompute steps        ~30s runner    What are the facts?             via /tmp/gh-aw/agent/
+4  Custom jobs             a job          Which item? Facts + outputs     YES
+5  The agent               model tokens   Judgement                       n/a
+6  Safe outputs            a job          Writing, validated              n/a
+```
+
+Mind the last column. Rung 2 gates but its outputs cannot reach the prompt; rung 4 both gates
+and hands values over. Getting that backwards fails silently.
+
+Rungs 0 to 2 can end a run without ever starting the model. Rung 6 is the only rung allowed
+to write. **A decision on rung 5 that belonged on rung 2 is the defining error of this
+format.**
+
+### Rung 0 — The trigger
+
+Never poll, and never ask the agent whether there is work. The event *is* the answer.
+
+### Rung 1 — Trigger filters
+
+`names:`, `roles:`, `bots:`, `skip-bots:`, `skip-author-associations:`, `forks:`,
+`skip-if-match:`, `skip-if-no-match:`. These are evaluated before a runner is claimed.
+
+Writing `roles: [admin, maintainer, write]` replaces a whole paragraph of "check the comment
+author is a collaborator", and it cannot be talked out of it by a comment body.
+
+### Rung 2 — Pre-activation steps
+
+`on.steps` with `on.permissions`, gated by `if: needs.pre_activation.outputs.<id>_result`.
+A step with an `id` exposes `<id>_result` (`success` / `failure`). **If the answer is "no
+work", the agent job is never created.**
+
+```yaml
+on:
+  issues:
+    types: [labeled]
+    names: [implement]
+  permissions:
+    issues: read
+  steps:
+    - name: Is there anything to do at all?
+      id: any
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        # ... exits non-zero when there is nothing
+
+if: needs.pre_activation.outputs.any_result == 'success'
+```
+
+**Use this rung for a pure gate only.** Its `$GITHUB_OUTPUT` values land on the
+`pre_activation` job, and the agent job does not depend on `pre_activation`. gh-aw will
+happily interpolate `${{ needs.pre_activation.outputs.foo }}` into your prompt, and it
+arrives **empty** — a silent failure, not a compile error. Anything the prompt needs to read
+goes on rung 4.
+
+### Rung 3 — Precompute steps
+
+Top-level `steps:` run inside the agent job, after checkout, before the model. Write facts
+to `/tmp/gh-aw/agent/`, which is handed to the agent and uploaded as an artifact.
+
+```yaml
+steps:
+  - name: Collect the diff and the failing checks
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      set -euo pipefail
+      mkdir -p /tmp/gh-aw/agent
+      gh pr diff "$PR" > /tmp/gh-aw/agent/diff.patch
+```
+
+The agent reads a file instead of spending twenty tool calls gathering it.
+
+### Rung 4 — Custom jobs
+
+Top-level `jobs:`. **This is where selection lives whenever the prompt needs the answer**,
+because the compiler adds custom jobs to the agent job's `needs`, so
+`${{ needs.<job>.outputs.<name> }}` genuinely arrives — in the prompt and in rung-3 `steps:`.
+Also the right rung when the facts need a different runner, a matrix, or other permissions.
+
+Report "no work" as an output rather than a non-zero exit, and gate on it, so the run is
+skipped rather than marked failed:
+
+```yaml
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    outputs:
+      found: ${{ steps.pick.outputs.found }}
+      number: ${{ steps.pick.outputs.number }}
+    steps:
+      - id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          none() { echo "found=false" >> "$GITHUB_OUTPUT"; echo "$1"; exit 0; }
+          # ... calls none "nothing eligible" when there is no work
+          { echo "found=true"; echo "number=$number"; } >> "$GITHUB_OUTPUT"
+
+if: needs.pick.outputs.found == 'true'
+```
+
+**A custom job has no checkout.** Pass `--repo "$REPO"` on every `gh issue`, `gh pr` and
+`gh run` call, with `REPO: ${{ github.repository }}` in the job `env`. Without it `gh` tries
+to infer the repository from a git remote that is not there and the job dies with
+`fatal: not a git repository`. Rung-3 `steps:` run in the checked-out agent job and do not
+have this problem, which is exactly what makes it easy to miss.
+
+**A custom job is not gated by the trigger filters, so repeat the filter on the job.** This is
+the sharp edge of rung 4. `names: [implement]` is a gh-aw construct compiled into the
+*activation* job's condition, and GitHub Actions has no native label filter for
+`issues: [labeled]` — so a run is created for **every** label added to any issue, and a custom
+job with no `if:` runs on all of them.
+
+The symptom: adding one unrelated label spawns a run of every label-triggered workflow, each
+burning a runner before activation skips it. Mirror gh-aw's own condition:
+
+```yaml
+jobs:
+  pick:
+    if: >
+      github.event_name != 'issues' || github.event.action != 'labeled' ||
+      github.event.label.name == 'implement'
+```
+
+The run entry still appears in the Actions tab, greyed out with every job skipped. That is the
+floor — only the runner cost can be removed, not the run. Yes, the label name is now written
+twice; there is no way to reference `names:` from an `if:`, so mirror the three-part form
+exactly and keep them adjacent.
+
+The other trade-off against rung 2: a custom job runs in parallel with `pre_activation`, so it
+is not gated by `roles:` either. `on.steps` runs inside `pre_activation`, after the role check,
+but its outputs cannot reach the agent. Gate cheaply on rung 2; select on rung 4, guarded.
+
+### Rung 5 — The agent
+
+What only a model can do: read code and judge it, weigh merge risk, write a user story,
+decide what a reviewer meant, fix a failing test.
+
+What must never be here: counting, sorting, label arithmetic, "find the lowest-numbered
+open issue", "check whether all referenced issues are closed", parsing JSON you could have
+had `jq` parse on rung 3.
+
+### Rung 6 — Safe outputs
+
+The agent proposes; the framework writes, in a separate job, with validation, sanitisation
+and an audit trail. **Never grant a write permission to do by hand what a safe output
+does.** `permissions: read-all` and let `safe-outputs:` do every write.
+
+See `references/determinism.md` for worked before-and-after migrations of each rung.
 
 ## Your task
 
 1. **Establish the trigger.** Decide whether the work reacts to a repository event or to a
-   clock, and write the `on:` block. Completion criterion: a schedule appears only when no
-   event can express the trigger, and the reason is stated in a comment.
+   clock. *Done when:* a `schedule:` appears only where no event can express the trigger,
+   and a comment says why.
 
-2. **Wire the frontmatter contract.** Runner, engine, network, permissions, safe-outputs,
-   timeout. Completion criterion: every entry in the Frontmatter contract below is present
-   or consciously omitted with a comment saying why.
+2. **Walk the ladder.** For every decision the workflow makes, name its rung and push it as
+   low as it goes. *Done when:* no numbered prompt step asks the model to count, sort,
+   filter or select; every such decision has a `gh` command behind it on rung 1–4; and every
+   value the prompt interpolates comes from a custom job, never from `pre_activation`.
 
-3. **Write the prompt body.** Numbered, sequential, imperative. Completion criterion: a
-   reader can follow it without knowing the YAML, and the last numbered step tells the model
-   to ignore the `## Diagram` section.
+3. **Wire the frontmatter contract.** *Done when:* every row of the contract below is
+   present, or absent with a comment saying why.
 
-4. **Render the diagram.** Map the workflow to a Mermaid flowchart under a final
-   `## Diagram` heading, using the class definitions verbatim. Completion criterion: every
-   quality gate passes.
+4. **Write the prompt body.** Numbered, sequential, imperative, second person. *Done when:*
+   a reader can follow it without reading the YAML, and the last numbered step carries the
+   `## Diagram` exclusion line verbatim.
 
-## Leading word: prompt
+5. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
 
-The body is the **prompt**. Not documentation, not a README, not a description of the
-workflow. When you write a sentence in the body, ask whether you would say it to an engineer
-you were handing the task to. If the answer is no, it does not belong in the body, or it
-belongs under `## Diagram` with the exclusion line in place.
+6. **Compile and verify.** *Done when:* `gh aw compile` reports zero errors, you have read
+   every warning, and the generated job graph contains the jobs you intended.
 
-## Frontmatter contract
+7. **Test the shell before a run.** *Done when:* every rung-2/rung-4 script has been executed
+   from a directory with no `.git`, and its `$GITHUB_OUTPUT` asserted. See
+   `references/verify.md`.
 
-Platform repositories run agentic workflows on **our self-hosted runner** with **our
-opencode**. Both are mandatory, and each has a trap.
+## Compiling is not working
+
+The lesson behind most of the traps in this skill: **a field can compile perfectly and still do
+nothing.** There are three ways, and none of them produces an error.
+
+| Failure | Example |
+|---|---|
+| Dropped by the engine | `tools:` under `engine: opencode` — one warning, whole block gone |
+| Wired to a job that cannot see it | `needs.pre_activation.outputs.*` in the prompt — arrives empty |
+| Not merged from an import | `permissions: read-all` in a shared file — no warning at all |
+
+The published docs also run ahead of the installed compiler: `on.workflow_run.conclusion` is
+documented and rejected by v0.83.4.
+
+So for anything this skill does not explicitly confirm: **probe it, then grep the `.lock.yml` to
+confirm it produced something.** Three minutes, and it is the difference between a workflow that
+looks right and one that is. `references/verify.md` has the procedure.
+
+## The frontmatter contract
+
+Verified against gh-aw **v0.83.4**. Full field surface in `references/frontmatter.md`.
 
 ```yaml
-# WHEN. Prefer an event. See the mapping below.
-on:
+---
+description: |
+  What this does, and which recipe or chain it replaces.
+
+name: "Agent: Thing"        # REQUIRED. workflow_run matches this, not the filename.
+
+on:                          # Rung 0-2. Event, filters, pre-activation steps.
   issues:
     types: [labeled]
+    names: [implement]       # Rung 1: cheaper than checking in the prompt.
 
-# WHERE. Both keys are required.
-#   runs-on      the agent job
-#   runs-on-slim the framework jobs (activation, safe-outputs, APM, cache)
-# Omitting runs-on-slim silently sends the framework jobs to a GitHub-hosted
-# ubuntu-slim, which defeats the point and leaks work off the runner.
-runs-on: [self-hosted, linux, agents]
-runs-on-slim: [self-hosted, linux, agents]
+runs-on: ubuntu-latest       # Both keys, always. Omitting runs-on-slim silently
+runs-on-slim: ubuntu-latest  # sends framework jobs to a GitHub-hosted ubuntu-slim.
 
-# WHAT MODEL. The local binary, so it uses the session already authenticated on
-# that machine rather than an API key.
-engine:
-  id: opencode          # experimental in gh-aw
-  command: /usr/bin/opencode
+engine:                      # Platform standard: opencode via Forge.
+  id: opencode
+  env:
+    OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
+  args: ["--model", "awf-proxy/glm-5-2"]
 
-# WHAT IT MAY REACH. Self-hosted runners need this stated explicitly.
-network:
-  allowed:
-    - defaults
+model: openai/glm-5-2        # The provider segment must be `openai`. See references/opencode.md.
 
-# WHAT IT MAY READ. Start read-only and widen only with a reason.
-permissions: read-all
+network:                     # Explicit. Forge is not in `defaults`.
+  allowed: [defaults, forge.plainconcepts.com]
 
-# WHAT IT MAY WRITE. The agent proposes; the framework writes. Never grant write
-# permissions to do by hand what a safe-output already does.
-safe-outputs:
+permissions: read-all        # Read-only. Every write goes through safe-outputs.
+
+safe-outputs:                # Rung 6.
+  threat-detection:
+    runs-on: ubuntu-latest
   add-comment:
-  push-to-pull-request-branch:
 
-timeout-minutes: 20
+concurrency:                 # Wherever two runs must not overlap.
+  group: thing
+  cancel-in-progress: false
+
+timeout-minutes: 30          # Always. Default is 20.
+---
 ```
 
-### Runner requirements
+**`tools:` is silently ignored under `engine: opencode`.** The compiler warns once and drops
+the whole block, `cache-memory` included. Do not write one, and never rely on a `bash:`
+allowlist for safety here. This is the single biggest trap in the Platform setup;
+`references/opencode.md` covers what to do instead.
 
-The runner must be Linux with a working Docker daemon and Node.js available. Write transient
-state to `$RUNNER_TEMP`, never a hardcoded path: it is cleaned between jobs. Do not assume
-root, and do not install into shared system paths.
+### Shared components
 
-<!-- Known upstream issue: runs-on can revert to defaults after `gh aw upgrade` or
-     `gh aw compile`. Re-check both runner keys after either command. -->
+The repeated parts live in `.github/workflows/shared/*.md` — a markdown file with **no `on:`**,
+which the compiler validates but never compiles on its own:
 
-### Never on a public repository
+```yaml
+imports:
+  - shared/platform-defaults.md   # network.allowed, pinned threat-detection runner
+  - shared/opencode-ci.md         # merges the CI-only engine config
+```
 
-A self-hosted runner on a public repository lets a pull request from a fork execute arbitrary
-code on it, with whatever credentials it holds. Private and internal repositories only. If
-the repository is public, this skill does not apply and the work stays on `loop-task`.
+**Only some fields merge.** `network`, `safe-outputs`, `steps`, `pre-agent-steps`, `post-steps`,
+`tools`, `env` and `checkout` do. `permissions`, `engine`, `model`, `runs-on`, `runs-on-slim` and
+the `on:` filters do **not**, so every workflow keeps its own.
+
+`permissions` is the trap worth memorising: `permissions: read-all` in a shared file compiles
+with no warning and the agent job silently falls back to `contents: read`. Full verified table in
+`references/frontmatter.md`.
 
 ## Events over schedules
 
-A schedule is a fallback, not a default. An interval means latency up to the interval and a
-run every interval that usually finds nothing to do. Most of the state machinery in a polling
-loop exists only because polling cannot see what changed.
+A schedule is a fallback. An interval means latency up to the interval, and a run every
+interval that usually finds nothing to do. Most of the state machinery in a polling loop
+exists only because polling cannot see what changed.
 
 | The work starts when | Trigger |
 |---|---|
-| A label is added | `issues: [labeled]`, then filter on the label |
+| A label is added | `issues: [labeled]` + `names: [thelabel]` |
+| A label means "do it now, once" | `label_command:` — auto-removes the label |
 | Someone replies on an issue | `issue_comment: [created]` |
-| Someone reviews or comments on a PR | `pull_request_review_comment: [created]`, `pull_request_review: [submitted]` |
+| Someone reviews a PR | `pull_request_review_comment: [created]`, `pull_request_review: [submitted]` |
 | A PR opens or updates | `pull_request: [opened, synchronize]` |
-| A workflow finishes | `workflow_run: [completed]` |
-| A human asks | `slash_command`, or `workflow_dispatch` |
-| Genuinely a clock (audits, reports) | `schedule` |
+| A workflow finishes | `workflow_run: [completed]` + `branches: [main]` |
+| A human asks | `slash_command:`, or `workflow_dispatch:` |
+| Genuinely a clock | `schedule:` |
 
 Two consequences worth planning for:
 
-- **You do not need to detect who acted.** The event tells you. Filter with
-  `github.event.comment.author_association` rather than reading the comment stream to work
-  out whether the last commenter was a human.
-- **Exclusivity is `concurrency`, not a label.** A polling loop coordinates with an
-  in-progress label because several loops share one working tree. Actions gives you a real
-  lock:
+- **You do not need to detect who acted.** The event says so. Use `roles:` and
+  `skip-author-associations:` on rung 1 rather than reading the comment stream on rung 5.
+- **Exclusivity is `concurrency`, not a label.** A polling loop needs an in-progress label
+  because several loops share one working tree. Actions gives you a real lock. Keep the
+  label only if humans need to see the state.
 
-  ```yaml
-  concurrency:
-    group: implement-${{ github.repository }}
-    cancel-in-progress: false
-  ```
+Full surface, including every filter, in `references/triggers.md`.
 
-  Keep an in-progress label only if humans need to see the state, not to prevent overlap.
+## Migrating a recipe
+
+| Recipe construct | Where it goes |
+|---|---|
+| `loops[].intervalHuman` | Delete. Find the event. `schedule:` only if truly clock-driven |
+| Preflight (clean tree, sync main) | Delete. Every run is a fresh checkout |
+| `sh` task that selects or locks | Rung 2, `on.steps` |
+| `sh` task that gathers facts | Rung 3, `steps:` into `/tmp/gh-aw/agent/` |
+| `sh` task that labels, comments, closes, merges | Rung 6, `safe-outputs:` |
+| `opencode` task | The prompt body |
+| `onSuccessTaskId` / `onFailureTaskId` | Numbered prompt steps; a separate workflow on `workflow_run` when it crosses a wait |
+| `maxRuns` on an agent task | `max-turns:` |
+| `maxRuns` on a verify task | A numbered "fix it and run it again" instruction |
+| `exit 75` / nothing-to-do task | Delete. A run that should not happen does not happen |
+| In-progress label used as a lock | `concurrency.group` |
+| `{{output}}` passed between tasks | `/tmp/gh-aw/agent/*.json`, or `needs.<job>.outputs.*` |
+| `{{opencode.tokens}}` / `{{opencode.cost}}` | A cost workflow on `workflow_run` |
+| `silentChain: true` idle task | Delete |
+| `diagram:` | The `## Diagram` section |
+
+## The prompt body
+
+The body is the **prompt**. Not a README, not a description of the workflow.
+
+- Numbered, sequential, imperative, second person. One decision per step.
+- State the stop conditions first. A workflow that should not act must stop before it
+  labels, comments or writes anything.
+- Name the facts already on disk: "Read `/tmp/gh-aw/agent/diff.patch`", not "fetch the diff".
+- Say what not to do where the model would plausibly do it: do not weaken a test, do not
+  merge, do not read outside the repository root.
+- Where a fact came from rung 2–4, interpolate it: `${{ needs.pre_activation.outputs.pick }}`.
+- The last numbered step is always, verbatim:
+
+  > Ignore the `## Diagram` section below. It is documentation for humans and contains no
+  > instructions for you.
+
+Anything a human needs but the model does not goes in `description:`, which the compiler
+keeps out of the prompt.
 
 ## The diagram
 
-Every Platform workflow ends with a Mermaid flowchart, the same convention as
-`.loops/recipes/*.yaml`, so a reader moving between them sees one visual language.
+Every Platform workflow ends with a Mermaid flowchart under a final `## Diagram` heading,
+sharing one visual language with `.loops/recipes/*.yaml`.
 
-### The prompt must exclude it
+Node roles: `start` (white, exactly one), `decision` (orange), `action` (purple), `success`
+(green terminal that writes), `failure` (red terminal), `idle` (dark grey no-op). Pass paths
+are `-->|✓|`, fail paths are `-.->|✗|`, node IDs are camelCase and never `end`.
 
-The body is the prompt, so the diagram would be read as instructions. Two things are required
-and neither is optional:
-
-1. The diagram lives under a final `## Diagram` heading, after every numbered step.
-2. The last numbered step of the prompt says, verbatim:
-
-   > Ignore the `## Diagram` section below. It is documentation for humans and contains no
-   > instructions for you.
-
-### Node shapes and classes
-
-Nodes are classified by **role**, matching the recipe convention.
-
-```
-ROLE          SHAPE            CLASS      FILL       WHEN
-─────────     ──────           ─────      ────       ────
-Trigger       ("label")        start      white      Exactly one per diagram. The `on:`
-                                                     event. No edges in.
-
-Decision      ["label"]        decision   orange     A step with both a pass and a fail
-                                                     path (a gate, a check, a filter).
-
-Action        ("label")        action     purple     A linear step: checkout, the agent
-                                                     run, a verification.
-
-Safe output   (("label"))      success    green      A terminal that writes: comment
-                                                     posted, branch pushed, issue closed.
-
-Failure end   (("label"))      failure    red        A terminal failure path: labels
-                                                     removed, details reported.
-
-Idle end      (("label"))      idle       dark grey  A terminal no-op: the filter did not
-                                                     match, nothing to do.
-```
-
-### Class definitions (copy verbatim)
-
-```
-classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
-classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
-classDef decision fill:#fff8e8,stroke:#c75b00,stroke-width:2px,color:#172033
-classDef idle fill:#202c40,stroke:#738198,stroke-width:2px,color:#ffffff
-classDef failure fill:#fff0f0,stroke:#ef2929,stroke-width:2px,color:#8b1a1a
-classDef success fill:#e8f8ec,stroke:#18883c,stroke-width:2px,color:#145a32
-```
-
-### Glyph map
-
-```
-CONCEPT                   MERMAID                                  NOTES
-───────                   ───────                                  ─────
-Direction                 flowchart TD                             always top-down
-
-Trigger node              prefixStart("Trigger<br/>event")         one per diagram
-                                                                   class: start
-
-Pass path                 -->|✓| target                            solid arrow
-
-Fail path                 -.->|✗| target                          dashed arrow
-
-Retry / back-edge         ↻N appended to the node label            only on the node the
-                                                                   cycle returns to
-
-Node IDs                  camelCase                                Mermaid rejects hyphens.
-                                                                   `implement-verify` becomes
-                                                                   `implementVerify`. Never
-                                                                   use `end`.
-
-Labels                    id["Short name<br/>Purpose"]             two lines, each under
-                                                                   40 characters, `<br/>`
-                                                                   for the break
-```
-
-## Token telemetry
-
-Every workflow reports what it spent, onto the issue it worked on. Two sources, in this
-order.
-
-**opencode is the source of truth.** It emits JSONL with token counts and cost. This is the
-same data `loop-task` surfaced as `{{opencode.tokens}}` and `{{opencode.cost}}`, so the
-parsing is already understood, and it does not depend on whether gh-aw's proxy observed the
-traffic. With `engine: opencode` pointed at a local binary on a subscription, the traffic
-very likely does **not** pass through gh-aw's API proxy, which means
-`sandbox/firewall/logs/api-proxy-logs/token-usage.jsonl` may be absent and
-`max-ai-credits` may never engage. Do not rely on either as the only source.
-
-**gh-aw's proxy metrics are the extra.** When present, `gh aw logs` and
-`gh aw audit <run-id>` give duration, tokens, AI Credits and turn count per run, and
-`gh aw logs --format markdown` gives a cross-run report with anomaly detection.
-
-**Report it from a separate workflow, not from each workflow.** A `workflow_run` tracker
-means one implementation, and a failure in the reporting cannot fail the work:
-
-```yaml
-on:
-  workflow_run:
-    workflows: [implement, refine]
-    types: [completed]
-safe-outputs:
-  add-comment:
-    target: "*"
-```
+The six `classDef` lines must be copied verbatim from `references/diagram.md`. Do not retype
+them from memory.
 
 ## Quality gates
 
 All must pass before the workflow is committed.
 
+**Determinism**
+- [ ] No prompt step asks the model to count, sort, filter or select
+- [ ] Every gate that can fail cheaply is on rung 1 or 2, not in the prompt
+- [ ] Facts the agent needs are precomputed to `/tmp/gh-aw/agent/` where a `gh` command yields them
+- [ ] Every `${{ needs.*.outputs.* }}` in the prompt or in `steps:` names a **custom job**,
+      never `pre_activation` — verify with `awk '/^  agent:/{f=1} f&&/needs:/{...}'` on the
+      `.lock.yml` that the job appears in the agent's `needs`
+- [ ] A selection job reports "no work" as an output and is gated with `if:`, so a quiet run
+      is skipped rather than failed
+- [ ] Every `gh issue` / `gh pr` / `gh run` call inside a custom job passes `--repo "$REPO"`
+      — custom jobs are not checked out. Audit with:
+      `awk '/^jobs:/{j=1} /^if:/{j=0} j' wf.md | grep -E 'gh (issue|pr|run) ' | grep -v -- --repo`
+- [ ] Every custom job on a label-triggered workflow repeats the label filter in its own `if:`
+      — `names:` only gates activation, so otherwise the job runs on *every* label added
+- [ ] Any rung-2/rung-4 script was tested from a directory with no `.git`, not from a clone
+- [ ] Every write goes through `safe-outputs`, none through granted write permissions
+
+**Wiring**
+- [ ] `name:` is set explicitly, and every `workflow_run.workflows` entry matches a real `name:`
 - [ ] `on:` uses an event, or a comment states why a schedule was unavoidable
-- [ ] Both `runs-on` and `runs-on-slim` are set to the self-hosted labels
-- [ ] The repository is private or internal, never public
-- [ ] `engine.id` is `opencode` and `engine.command` points at the binary on the runner
-- [ ] `network.allowed` is explicit
-- [ ] Writes go through `safe-outputs`, not through granted write permissions
-- [ ] `timeout-minutes` is set
+- [ ] `workflow_run` triggers carry `branches:`
+- [ ] Both `runs-on` and `runs-on-slim` are set
+- [ ] `engine.id` is `opencode` with `OPENAI_BASE_URL` on Forge, and `model:` starts `openai/`
+- [ ] No `tools:` block (it is ignored under opencode)
+- [ ] `network.allowed` lists `forge.plainconcepts.com`
+- [ ] `permissions: read-all`
+- [ ] `safe-outputs.threat-detection.runs-on` is pinned
+- [ ] `timeout-minutes` is set, and generously enough for the slowest honest run
 - [ ] A `concurrency` group exists wherever two runs must not overlap
-- [ ] Transient state uses `$RUNNER_TEMP`
-- [ ] The prompt body is numbered and imperative
-- [ ] The final numbered step contains the `## Diagram` exclusion line
-- [ ] The diagram is the last section, under `## Diagram`
-- [ ] Exactly one trigger node, class `start`
+- [ ] `push-to-pull-request-branch` with `target: "*"` also sets `checkout.fetch: ["*"]` and `fetch-depth: 0`
+
+**Prose**
+- [ ] The body is numbered and imperative, and stop conditions come first
+- [ ] The final numbered step contains the `## Diagram` exclusion line verbatim
+- [ ] Human-only explanation lives in `description:`, not the body
+
+**Diagram**
+- [ ] It is the last section, under `## Diagram`
+- [ ] Exactly one node of class `start`
 - [ ] Every pass path is `-->|✓|`, every fail path is `-.->|✗|`
-- [ ] All six `classDef` lines are present verbatim
+- [ ] All six `classDef` lines present verbatim, every node classified
 - [ ] Node IDs are camelCase, none is `end`
-- [ ] Token telemetry is reported onto the issue by the tracker workflow
-- [ ] `gh aw compile` succeeds and both runner keys survived it
 
-## Worked example
-
-`.github/workflows/refine.md`
-
-```markdown
----
-description: |
-  Refines an issue when a human asks for it, or when the author replies to the
-  bot's questions.
-
-on:
-  issues:
-    types: [labeled]
-  issue_comment:
-    types: [created]
-
-runs-on: [self-hosted, linux, agents]
-runs-on-slim: [self-hosted, linux, agents]
-
-engine:
-  id: opencode
-  command: /usr/bin/opencode
-
-network:
-  allowed:
-    - defaults
-
-permissions: read-all
-
-safe-outputs:
-  add-comment:
-
-concurrency:
-  group: refine-${{ github.event.issue.number }}
-  cancel-in-progress: false
-
-timeout-minutes: 20
----
-
-1. Stop unless this issue carries the `refine` label. On a comment event, stop
-   unless the comment author is an owner, member or collaborator, and stop if the
-   comment was written by you.
-2. Read the issue and every comment on it.
-3. Refine the issue: restate the goal, list the acceptance criteria, and name the
-   files most likely to change.
-4. If anything material is still unclear, post one comment containing only the
-   open questions, and stop.
-5. If nothing is unclear, post the refined description as a comment.
-6. Ignore the `## Diagram` section below. It is documentation for humans and
-   contains no instructions for you.
-
-## Diagram
-
-```mermaid
-flowchart TD
-    refineStart("Trigger<br/>Label added or comment created") --> refineFilter
-    refineFilter["Filter<br/>refine label + human author"] -->|✓| refineRead
-    refineFilter -.->|✗| refineIdle
-    refineRead("Read<br/>Issue and full comment stream") -->|✓| refineAssess
-    refineAssess["Assess<br/>Is anything still unclear?"] -->|✓| refineQuestions
-    refineAssess -.->|✗| refineDone
-    refineQuestions(("Questions<br/>Post open questions, wait"))
-    refineDone(("Refined<br/>Post refined description"))
-    refineIdle(("Idle<br/>Not for us"))
-    classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
-    classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
-    classDef decision fill:#fff8e8,stroke:#c75b00,stroke-width:2px,color:#172033
-    classDef idle fill:#202c40,stroke:#738198,stroke-width:2px,color:#ffffff
-    classDef failure fill:#fff0f0,stroke:#ef2929,stroke-width:2px,color:#8b1a1a
-    classDef success fill:#e8f8ec,stroke:#18883c,stroke-width:2px,color:#145a32
-    class refineStart start
-    class refineRead action
-    class refineFilter,refineAssess decision
-    class refineIdle idle
-    class refineQuestions,refineDone success
-```
-```
+**Verified**
+- [ ] `gh aw compile` reports zero errors
+- [ ] Every warning has been read and either fixed or consciously accepted
+- [ ] The `.lock.yml` is committed alongside the `.md`
 
 ## Not-for boundaries
 
 Do not use this skill for:
 
-- Teaching the gh-aw format, `gh aw compile`, or debugging runs. That is GitHub's
-  first-party `agentic-workflows` skill.
-- Public repositories. A self-hosted runner is unsafe there; the work stays on `loop-task`.
-- Writing `.loops/recipes/*.yaml`. For those, load `loop-task-loops` and
-  `loop-task-tasks`, and diagram them with `loop-task-diagram`.
-- Ordinary CI. A build-and-test workflow is a plain YAML Actions workflow, not an agentic one.
+- **Ordinary CI.** A build-and-test workflow is plain YAML. A gate that sometimes reaches a
+  different verdict is not a gate, so `app-*` workflows must never involve a model.
+- **Public repositories on a self-hosted runner.** A fork PR would execute arbitrary code on
+  the box holding the credentials. On GitHub-hosted runners a public repo is fine.
+- **Writing `.loops/recipes/*.yaml`.** Load `loop-task-loops` and `loop-task-tasks`.
+
+## References
+
+Load these as needed; do not read all of them up front.
+
+| File | Read it when |
+|---|---|
+| `references/determinism.md` | Moving work down the ladder. Worked before-and-after examples |
+| `references/frontmatter.md` | Any frontmatter field: the verified surface, defaults, what we never use |
+| `references/triggers.md` | Choosing a trigger, or filtering on rung 1 |
+| `references/safe-outputs.md` | Choosing what the workflow may write |
+| `references/opencode.md` | The engine, the Forge wiring, the `tools:` trap, cost telemetry |
+| `references/patterns.md` | Shaping a workflow, or splitting one that does too much |
+| `references/diagram.md` | Writing the `## Diagram` section. Contains the verbatim `classDef` lines |
+| `references/verify.md` | Compiling, probing an unfamiliar field, or debugging a failed run |
 
 ## Cross-Skill References
 
-- For the format itself, `gh aw compile`, `gh aw trial` and debugging, load GitHub's
-  **`agentic-workflows`** skill at `.github/skills/agentic-workflows/SKILL.md`.
 - For the recipe schema this migrates away from, load **`loop-task-loops`** and
   **`loop-task-tasks`**.
-- For the origin of the colour scheme and the shape vocabulary, load
-  **`loop-task-diagram`**. Both conventions must stay identical.
-- For bringing a repository onto the Platform stack, load **`platform-onboard`**.
+- For the origin of the colour scheme and shape vocabulary, load **`loop-task-diagram`**.
+  Both conventions must stay identical.
+- For bringing a repository onto the Platform stack, load **`platform-onboard`** (Domain 5).
+- For prose passes over generated issue bodies, load **`humanizer`**.

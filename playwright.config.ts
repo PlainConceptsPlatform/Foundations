@@ -26,9 +26,11 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 5"] } },
   ],
   webServer: {
-    // `start` serves the production build, which is what we actually deploy.
+    // The docs app builds with `output: "export"` (needed for the GitHub Pages
+    // deploy), which produces a static out/ dir that `next start` can't serve.
+    // `serve` mirrors what actually ships, same as a static host would.
     command:
-      "pnpm --filter @plainconceptsplatform/docs build && pnpm --filter @plainconceptsplatform/docs start",
+      "pnpm --filter @plainconceptsplatform/docs build && pnpm exec serve -l 3000 apps/docs/out",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
