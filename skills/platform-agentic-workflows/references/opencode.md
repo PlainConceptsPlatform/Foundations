@@ -12,13 +12,15 @@ and one significant trap, and neither is discoverable from the gh-aw docs.
 ```yaml
 engine:
   id: opencode
+  version: 1.1.58
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-  args:
-    - "--model"
-    - "awf-proxy/glm-5-2"
 
 model: openai/glm-5-2
+secrets:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+max-turns: 30
+max-turn-cache-misses: 30
 
 network:
   allowed:
@@ -26,13 +28,17 @@ network:
     - forge.plainconcepts.com
 ```
 
-Four parts, all load-bearing:
+Six parts, all load-bearing:
 
-1. **`id: opencode`.** Experimental in gh-aw; the compiler says so on every compile. That
+1. **`id: opencode` and pinned `version`.** Experimental in gh-aw; the compiler says so on every compile. That
    warning is expected and is not a problem to fix.
 2. **`OPENAI_BASE_URL`** points the OpenAI-compatible client at Forge.
 3. **`model: openai/glm-5-2`.** The provider segment must be `openai` — see below.
-4. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
+4. **Root `secrets.OPENAI_API_KEY`.** It supplies the model client without putting the key in
+   the agent's `engine.env`; the latter is rejected by strict compilation.
+5. **Both 30-turn budgets.** `max-turns` bounds tool loops; `max-turn-cache-misses` prevents
+   otherwise healthy Forge runs failing at the compiler default of five consecutive misses.
+6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
    the firewall will block it otherwise. That failure looks like a model timeout, not a network
    error, which makes it expensive to diagnose.
 
@@ -50,122 +56,39 @@ pointing `OPENAI_BASE_URL` at Forge routes there anyway. `plainconcepts/glm-5-2`
 validation, and would achieve nothing if it passed: the compiler rewrites the prefix to
 `awf-proxy` regardless, and Forge receives `glm-5-2` either way.
 
-### Authentication
+### Authentication and configuration
 
-The compiled workflow reads `OPENAI_API_KEY`, falling back to `CODEX_API_KEY`. Both are repo
-secrets, and no `secrets:` block is needed — an earlier attempt to add one mapped nothing and
-was removed.
+The API key must be mapped through root `secrets:`. Do not place `OPENAI_API_KEY` in
+`engine.env`: strict compilation rejects it. Keep `opencode.ci.json` deliberately small and
+direct — its top-level `model` should be `openai/glm-5-2` and its CI agent should use that model.
+Do not introduce an `awf-proxy` provider, `engine.args --model`, or a CI merge step unless a
+compiled workflow proves it is required.
 
-An API key rather than the SSO path because Forge's device-flow tokens expire in 900 seconds,
-so a secret holding one is stale within fifteen minutes.
+The CI config is a tracked repository file. Anything only present on a developer machine —
+agent selection, skills, MCP configuration, or permissions — does not exist in CI. Commit the
+minimal configuration the workflow needs, and remove unused provider indirection: it increases
+input complexity and makes failures harder to diagnose.
 
-The key is held by gh-aw's firewall proxy and excluded from the agent's environment
-(`--exclude-env OPENAI_API_KEY`), so the agent never sees it.
+### Unattended repository reads
 
-### What actually runs
+An Actions agent cannot approve a runtime permission request. If it must inspect repository
+files, make that permission explicit in `opencode.ci.json`:
 
-A plain `opencode run` inside the firewall proxy's container, not `--attach`. A persistent
-`opencode serve` on the runner is therefore not used: the model and the gateway are ours, the
-process is not.
-
----
-
-## gh-aw writes `opencode.jsonc` for you
-
-This is the part that is invisible from the frontmatter and causes the most confusion. The
-agent job contains a generated step, **Write OpenCode Config**, which does this:
-
-```bash
-CONFIG="$GITHUB_WORKSPACE/opencode.jsonc"
-BASE_CONFIG='{ …agent permissions…, "autoupdate": false,
-               "disabled_providers": ["opencode", "openai"],
-               "provider": { "awf-proxy": {
-                 "api": "http://172.30.0.30:10002",
-                 "options": { "apiKey": "awf-copilot-proxy" },
-                 "models": { "claude-sonnet-4.5": {} } } } }'
-if [ -f "$CONFIG" ]; then
-  MERGED=$(jq -n --argjson base "$BASE_CONFIG" --argjson existing "$(cat "$CONFIG")" '$existing * $base')
-  echo "$MERGED" > "$CONFIG"
-else
-  echo "$BASE_CONFIG" > "$CONFIG"
-fi
+```json
+{
+  "permission": {
+    "read": "allow",
+    "external_directory": {
+      "/tmp/**": "allow"
+    }
+  }
+}
 ```
 
-Four consequences worth knowing before you debug a model problem:
-
-**The merge direction is `$existing * $base`, so gh-aw wins on conflicting keys.** Distinct
-keys survive, and `jq`'s `*` recurses, so adding
-`provider.awf-proxy.models.<yours>` yields both your model and gh-aw's rather than replacing it.
-
-**The provider address is `172.30.0.30:10002`.** The sandbox exposes 10000–10003 and all four
-are in `NO_PROXY`, but 10002 is the one gh-aw designates for models. Hardcoding a different
-port works only until it moves.
-
-**The model in `BASE_CONFIG` is hardcoded**, not derived from your `model:`. With
-`model: openai/glm-5-2` the config still declares `claude-sonnet-4.5` under `awf-proxy`, so
-`awf-proxy/glm-5-2` refers to a model the provider does not list. Declare it yourself.
-
-**`OPENCODE_MODEL` outranks the config file.** gh-aw sets
-`OPENCODE_MODEL: awf-proxy/<model>` in the agent job's env, rewriting your provider prefix to
-`awf-proxy`. So the config's `model` key is not the deciding factor in CI — the frontmatter
-`model:` is. Setting `model` in a config file and expecting it to win is a common wrong guess.
-
-### The engine's repo config must be tracked
-
-`opencode.jsonc` is a **tracked repository file**, not just a developer's preference. In a CI
-checkout the agent gets whatever git provides plus gh-aw's merge, so anything only present on
-someone's laptop does not exist.
-
-Untracking it silently removes, from CI only:
-
-- `default_agent` — so `--agent` selection falls back
-- `skills.paths` — so *"load every skill available to you"* finds nothing
-- `mcp` servers — so any tool they provided is gone
-- `permission` — so the agent's own allow-list defaults change
-
-None of that fails loudly. The run proceeds with a less capable agent and produces worse work,
-which is much harder to diagnose than a crash. If a prompt depends on skills or slash commands,
-the config that defines them has to be committed.
-
-### Splitting CI-only config out of it
-
-Sandbox-only settings — a provider pointing at an address that exists only inside the firewall —
-are noise on a developer machine. Keep them in a separate tracked fragment and merge it in CI:
-
-```yaml
-# .github/workflows/shared/opencode-ci.md — imported by every agentic workflow
-pre-agent-steps:
-  - name: Merge the CI-only OpenCode provider into opencode.jsonc
-    run: |
-      set -euo pipefail
-      CONFIG=opencode.jsonc
-      FRAGMENT=opencode.ci.json
-      [ -f "$FRAGMENT" ] || { echo "::error::$FRAGMENT is missing"; exit 1; }
-      jq -e . "$FRAGMENT" > /dev/null || { echo "::error::$FRAGMENT is not valid JSON"; exit 1; }
-      if [ -f "$CONFIG" ]; then
-        merged=$(jq -s '.[0] * .[1]' "$CONFIG" "$FRAGMENT")   # fragment wins
-      else
-        merged=$(jq -S . "$FRAGMENT")
-      fi
-      printf '%s\n' "$merged" > "$CONFIG"
-```
-
-Three details that are each a bug if you get them wrong:
-
-- **`pre-agent-steps:`, not `steps:`.** `GH_AW_AGENT_FILES` lists `opencode.jsonc` alongside
-  `AGENTS.md` and `CLAUDE.md`, and the generated *Restore agent config folders from base branch*
-  step reverts them — a supply-chain guard that stops an agent editing its own instructions in a
-  PR. That restore sits between `steps:` and `pre-agent-steps:`, so a merge in `steps:` is undone
-  on pull-request events and nowhere else.
-- **Handle the file being absent.** Untracked, or excluded by a sparse checkout, means no file to
-  merge into.
-- **Pure JSON, not JSONC.** `jq` cannot parse `//` comments, and a naive comment-stripper
-  corrupts the `http://` in an api URL. Name it `.json` and validate with `jq -e .` so a later
-  edit fails loudly.
-
-Compiling a new secret name triggers gh-aw's **safe update mode**, which refuses to proceed
-and asks for a security review. That is working as designed. Pass `--approve` once you have
-read what changed, and note the new secret in the pull request description.
+This permits reads in the checked-out repository and temporary context directory. It does not
+grant GitHub write access or expose application, deployment, or third-party secrets. Diagnose
+`The user rejected permission to use this specific tool call` as a CI permission configuration
+problem, not as a model or Safe Outputs failure.
 
 ---
 
@@ -195,7 +118,6 @@ Three consequences to act on:
 
 **Do not write a `tools:` block.** It is dead configuration that reads like a control, which is
 worse than absent: the next reader will believe the workflow is constrained when it is not.
-`agent-report-cost.md` carried a `bash:` allowlist that never did anything.
 
 **The constraints that remain are the ones that matter.** `permissions: read-all` means the
 token cannot write. `safe-outputs` with `allowed:` lists means writes are enumerated and
@@ -243,27 +165,21 @@ must treat it that way rather than reporting a failure.
 **The agent's own output** in the run log, which reports its token counts directly. This is
 what `loop-task` surfaced as `{{opencode.tokens}}` and `{{opencode.cost}}`.
 
-### Report it from a separate workflow
+### Inline token usage in lifecycle comments
+
+The agent job exposes `effective_tokens` as a job output, parsed from the firewall proxy log.
+Every `conclude` and `incomplete` job depends on `agent` and can interpolate it:
 
 ```yaml
-on:
-  workflow_run:
-    workflows:
-      - "Agent: Implement Issue"
-      - "Agent: Merge Gate"
-    types: [completed]
-    branches: [main]
-
-safe-outputs:
-  add-comment:
-    target: "*"
+body: |
+  Automated work has finished.
+  Tokens: ${{ needs.agent.outputs.effective_tokens || 'not reported' }}
+  [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 ```
 
-One implementation instead of a final step in every workflow, and a failure while reporting
-cannot fail the work that was already done.
-
-Never estimate a missing figure. Write "not reported by this source": a fabricated cost is
-worse than a gap, because someone will budget against it.
+Expect `not reported` when Forge routing skips the proxy accounting. Do not run a separate
+cost workflow to post the same comment with a `jq` breakdown: the source is the same proxy
+log, and the inline aggregate is better than a fabricated breakdown.
 
 `gh aw logs` and `gh aw audit <run-id>` give duration, tokens, credits and turn count per run
 when the proxy did observe the traffic, and `gh aw logs --format markdown` gives a cross-run

@@ -2,15 +2,59 @@
 
 Verified against gh-aw **v0.83.4**.
 
-Safe outputs are rung 6: the only rung allowed to write. The agent runs read-only and emits
-structured requests; a separate job validates and applies them with the permissions it needs.
+Safe outputs are rung 6: the normal path for every **agent-directed** write. The agent runs
+read-only and emits structured requests; a separate job validates and applies them with the
+permissions it needs.
 
 That separation is not ceremony. It gives an audit trail, bounds the damage when the agent is
 wrong, sanitises anything the agent echoes from untrusted input, and means a prompt injection
 cannot reach further than the types you declared.
 
-**The rule: `permissions: read-all`, and every write through `safe-outputs`.** Granting
-`issues: write` so the agent can run `gh issue edit` throws all of the above away.
+**The rule: `permissions: read-all`, and every final agent decision writes through
+`safe-outputs`.** Granting the agent `issues: write` so it can run `gh issue edit` throws all
+of the above away. A deterministic custom job may make a minimal, idempotent pre-agent
+lifecycle reservation (such as adding `bot-working`); it must not make judgement-based writes.
+
+When that lifecycle write must be attributed to the Platform GitHub App rather than
+`github-actions[bot]`, mint an installation token in the custom job and pass it only to the
+local composite action:
+
+```yaml
+- uses: actions/create-github-app-token@v3.2.0
+  id: app-token
+  with:
+    app-id: ${{ secrets.BOT_APP_ID }}
+    private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+- uses: ./.github/actions/create-issue-comment
+  with:
+    token: ${{ steps.app-token.outputs.token }}
+    issue-number: ${{ needs.pick.outputs.number }}
+    body: |
+      Automated work has started.
+      [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+```
+
+Always include a run link and token usage in the deterministic completion comment in the
+`conclude` job that depends on both `agent` and `safe_outputs`:
+
+```yaml
+conclude:
+  needs: [pick, agent, safe_outputs]
+  if: >
+    needs.agent.result == 'success' &&
+    needs.safe_outputs.result == 'success' &&
+    needs.safe_outputs.outputs.process_safe_outputs_processed_count != '0'
+```
+
+```yaml
+body: |
+  ${{ env.MARKER }}
+  ${{ env.FINISHED_COMMENT }}
+  Tokens: ${{ needs.agent.outputs.effective_tokens || 'not reported' }}
+  [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+```
+
+Never expose the app token to the agent job.
 
 ---
 
@@ -153,6 +197,24 @@ safe-outputs:
 workflow can touch exactly those labels and no others, whatever the prompt is persuaded to
 attempt. Globs work (`team-*`, `area/*`), and `blocked:` is evaluated first.
 
+The emitted item schema is exact. Use `item_number` and `labels`:
+
+```json
+{"type":"add_labels","item_number":123,"labels":["review"]}
+{"type":"remove_labels","item_number":123,"labels":["bot-working"]}
+```
+
+Do not invent `label_names`, `issue_number`, or a partial label payload. State this directly in
+the prompt whenever labels are allowed; an incorrect Safe Outputs schema wastes a model run.
+
+### Complete final payloads
+
+Safe Outputs are terminal, not a conversational transport. Ask the agent to emit a complete
+payload once its judgement is done. For example, an issue-refinement workflow that needs to ask
+three questions emits **one** `add_comment` item containing the introduction and all questions,
+not a progress comment and later follow-ups. This minimizes turns, prevents duplicate comments,
+and makes the output job atomic from the user's point of view.
+
 ### `create-pull-request`
 
 ```yaml
@@ -227,8 +289,10 @@ safe-outputs:
 independently of `runs-on-slim`. It has its own AI credit budget (default 400), separate from
 the agent's.
 
-Do not disable it. If it is producing false positives, narrow the workflow's write surface or
-add a `prompt:` giving it context.
+Platform `agent-*.md` workflows set `threat-detection: false` explicitly in their own
+frontmatter to avoid an additional model call. Retain the narrow Safe Outputs surface, read-only
+agent permissions, network allowlist, and deterministic preconditions. Do not hide the setting
+in a shared import: the workflow must make its own security/cost trade-off visible.
 
 ---
 

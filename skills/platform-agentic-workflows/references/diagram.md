@@ -61,6 +61,26 @@ implPick["Pick (rung 2)<br/>Priority cascade, pre-activation"]
 A workflow whose diagram is all `action` and `success` nodes with no decisions is usually a
 workflow that pushed nothing down and left every decision to the model.
 
+## Lifecycle versus Actions graph
+
+GitHub's visualization renders `needs:` edges. It is useful for debugging execution ordering,
+but it is not the user-facing lifecycle. A final reporting job commonly depends on every job,
+and mutually exclusive jobs can appear beside each other. Read those edges as "waits for", not
+as "business state flows to".
+
+The Mermaid diagram must show the lifecycle instead:
+
+```text
+command label or authorised reply → validate → reserve → agent → outcome
+questions → keep command label and wait for reply → trigger again
+complete → update item and transition terminal labels
+```
+
+Show response loops as a named back-edge from the question state to the trigger. Show mutually
+exclusive terminal paths as branches from one outcome decision. Do not copy every generated
+`activation`, `safe_outputs`, or `conclusion` edge into a lifecycle diagram unless it changes a
+human-visible state.
+
 ---
 
 ## Class definitions

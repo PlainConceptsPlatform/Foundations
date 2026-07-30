@@ -80,8 +80,14 @@ steps: (gh CLI → /tmp/gh-aw/agent/)  →  agent reads files  →  safe-outputs
 
 ### MonitorOps
 
-A workflow triggered by another workflow's completion. `agent-merge-gate` (CI finished) and
-`agent-report-cost` (any agent run finished) are both this.
+A workflow triggered by another workflow's completion. `agent-merge-gate` (CI finished) is
+this pattern.
+
+Do not use a separate MonitorOps workflow for cost reporting. Token usage is available as
+`needs.agent.outputs.effective_tokens` in every conclude/incomplete job. Inline it into the
+deterministic completion comment alongside the run link. A separate `workflow_run` workflow
+that downloads artifacts and parses JSONL to post the same comment is a script doing what the
+lifecycle job already does.
 
 The trap is the `name:` match, and it is silent. `workflows: ["App: CI"]` must equal the
 target's `name:` exactly.
@@ -91,6 +97,47 @@ target's `name:` exactly.
 Labels as both command and state. See `references/triggers.md` for `label_command` versus
 `names:` filtering. The rule: a label that a later workflow reads is state; a label that means
 "go" and should be re-appliable is a command.
+
+### LifecycleOps
+
+Use this shape when a human can answer an agent's questions and resume the same work. Split the
+work into small deterministic stages and make each reusable across workflows:
+
+```text
+trigger → select/validate → reserve → preload issue context + facts → agent → Safe Outputs → terminal state
+```
+
+`select/validate`, `reserve`, issue context loading, and fixed lifecycle comments are
+deterministic. Implement them as parameterised local composite actions, not prompt
+instructions or copied shell fragments. The workflow supplies labels, marker, issue number,
+comment body and output paths.
+
+**Issue context is mandatory** on every workflow that implements, verifies, or gates work.
+Load it with the `load-issue-context` action to `/tmp/gh-aw/agent/issue-context.json`. The
+prompt must tell the agent to read it and that its acceptance criteria define what
+`/plan-goal` produces and what `/repo-verify` must pass. A merge gate that fixes CI without
+reading the issue's acceptance criteria cannot tell whether it broke the implementation's
+intent.
+
+Every fixed lifecycle comment should link to its run. The workflow owns the dynamic value while
+the generic comment action remains reusable:
+
+```yaml
+body: |
+  Automated work has started.
+  [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+```
+
+For an issue waiting on an answer, keep its command label (`refine`) so an authorised comment
+can trigger the response pass. Add a separate state label (`review`) to tell people input is
+needed. Remove the working label before asking questions. On successful completion remove all
+transient labels and add the terminal label (`refined`). `concurrency`, not `bot-working`, is
+the lock.
+
+The generated Actions graph is a dependency graph, not a lifecycle picture. A reporting job may
+need every prior job so it can inspect their results; its multiple incoming edges do not mean
+that each job is a business transition. Keep a separate Mermaid lifecycle diagram in the prompt
+documentation.
 
 ### ChatOps
 
@@ -141,12 +188,11 @@ once the fleet has enough history to compare against.
 | Workflow | Shape | Trigger | Rung-2 work |
 |---|---|---|---|
 | `agent-refine` | IssueOps | `refine` label, or an author comment | Priority cascade |
-| `agent-implement` | IssueOps + DeterministicOps | `implement` label, or the gate finishing | Cascade + in-flight check |
-| `agent-merge-gate` | MonitorOps | CI completing | Identify the PR and its issue |
-| `agent-apply-review` | IssueOps | A review comment or submitted review | Confirm ownership |
+| `agent-implement` | IssueOps + DeterministicOps | `implement` label, or the gate finishing | Cascade + in-flight check + issue context |
+| `agent-merge-gate` | MonitorOps | CI completing | Identify the PR and its issue + issue context |
+| `agent-apply-review` | IssueOps | A review comment or submitted review | Confirm ownership + issue context |
 | `agent-audit` | DeterministicOps | Schedule | `skip-if-match` on an open report |
 | `agent-audit-close` | DeterministicOps | Schedule | Resolve every report's references |
-| `agent-report-cost` | MonitorOps | Any agent workflow completing | Locate the run and its target |
 
 Two of these are worth studying as examples of the ladder paying off.
 
@@ -155,23 +201,25 @@ references, check each one's state, decide. All four steps are shell commands. M
 rung 2 leaves the agent with nothing to judge, which is the signal that this workflow barely
 needs an agent at all — and on a day when nothing is closeable, it does not run.
 
-**`agent-report-cost`** has no judgement in it whatsoever. Download an artifact, parse JSONL,
-multiply by a price table, format a comment. Every part of that is deterministic, and the only
-reason it is an agentic workflow is that the artifact may be absent and the target must be
-inferred. Push the arithmetic to rung 3 and the agent's job shrinks to writing one comment.
+**`agent-report-cost`** had no judgement in it whatsoever. Downloading an artifact, parsing
+JSONL, multiplying by a price table, formatting a comment: every part was deterministic, and
+the only reason it was an agentic workflow was that the artifact might be absent and the
+target had to be inferred. It was deleted entirely: `needs.agent.outputs.effective_tokens`
+in each workflow's conclusion comment already reports the aggregate inline, with better
+attribution and no separate workflow run.
 
-When a workflow's honest rung-5 content approaches zero, **do not write an agentic workflow at
-all.** Saying so in the `description:` is not enough; that was the mistake this section used to
-recommend.
+When a workflow's honest rung-5 content approaches zero, **do not write an agentic workflow
+at all.** The deleted cost workflow is the canonical example: it was a script doing what the
+lifecycle job already does.
 
-Both of the examples above were rewritten as plain YAML Actions workflows. The test to apply:
+Both of the examples above were rewritten as plain YAML Actions workflows (and `agentics-cost.yml`
+was later deleted entirely in favour of inline token reporting). The test to apply:
 
 > Strike out every prompt step that a shell command could do exactly. If what remains would
 > not be worth a model call on its own, the workflow is a script.
 
 What you gain: no tokens, no `threat-detection` job, no engine setup, exactly reproducible
-output, and a file a fifth of the size. `agentics-cost.yml` went from 265 lines to about 60,
-`agentics-audit-close.yml` from 240 to about 80.
+output, and a file a fifth of the size. `agentics-audit-close.yml` went from 240 to about 80.
 
 What you give up, and when it matters: prose a human will read. `agentics-audit-close.yml`
 templates its closure comment instead of composing one. That is a fair trade for a maintenance

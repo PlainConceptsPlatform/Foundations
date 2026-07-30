@@ -42,6 +42,7 @@ See `references/triggers.md` for the full trigger surface. The frontmatter-level
 | `runs-on:` | **Platform: `ubuntu-latest`.** The agent job |
 | `runs-on-slim:` | **Platform: `ubuntu-latest`.** The framework jobs (activation, pre-activation, safe outputs, conclusion). Defaults to `ubuntu-slim` if omitted, which quietly moves them off your runner |
 | `timeout-minutes:` | **Platform: always set.** Default 20, which is too short for anything that builds |
+| `env:` | Top-level key-value pairs available to agent `steps:` and interpolated into the prompt. Use for labels, markers, paths, comment templates, and `ISSUE_CONTEXT_PATH` |
 | `concurrency:` | String or object. `group:`, `cancel-in-progress:`, `queue: single \| max`, `job-discriminator:` |
 | `container:` / `services:` | Available; unused on Platform |
 | `environment:` | Ties the run to an Actions environment, so protection rules and approvals apply |
@@ -95,7 +96,7 @@ in arrival order. `queue: single` keeps only the newest pending run.
 | `mcp-servers:` | Custom MCP servers. Also ignored under opencode |
 | `checkout:` | Overrides the default shallow checkout. `fetch-depth`, `fetch`, `repository`, `path`, `sparse-checkout`, `submodules`, `lfs`, `current`. Accepts a list for multi-repo |
 | `cache:` | Standard Actions cache. Point `path:` at `/tmp/gh-aw/agent/` when caching precomputed data |
-| `secrets:` | Maps repo secrets into the run. Not needed for the Forge setup |
+| `secrets:` | Maps repo secrets into the run. **Platform:** map `OPENAI_API_KEY` here for Forge; do not put it in `engine.env` |
 | `env:` | Environment variables for the agent job |
 
 ### The `tools:` trap
@@ -141,8 +142,7 @@ Full surface in `references/safe-outputs.md`. The frontmatter shape:
 
 ```yaml
 safe-outputs:
-  threat-detection:          # Platform: pin runs-on
-    runs-on: ubuntu-latest
+  threat-detection: false    # Platform agent workflow policy; declare locally, never in shared defaults
   create-pull-request:
     draft: false
   add-comment:

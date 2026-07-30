@@ -335,6 +335,12 @@ model decided to ask for, none of it reproducible or visible after the fact.
 
 ```yaml
 steps:
+  - name: Load the issue context
+    uses: ./.github/actions/load-issue-context
+    with:
+      token: ${{ github.token }}
+      issue-number: ${{ needs.pick.outputs.number }}
+      output-path: ${{ env.ISSUE_CONTEXT_PATH }}
   - name: Collect the review context
     env:
       GH_TOKEN: ${{ github.token }}
@@ -350,13 +356,18 @@ steps:
 ```
 
 ```
-2. Read `/tmp/gh-aw/agent/pr.json` and `/tmp/gh-aw/agent/review-comments.json`.
-   Everything you need about this pull request is already there.
-3. Read the diff at `/tmp/gh-aw/agent/diff.patch`.
+2. Read `${{ env.ISSUE_CONTEXT_PATH }}`. It contains the issue body, labels, and full
+   comment stream. Its acceptance criteria define what `/plan-goal` produces and what
+   `/repo-verify` must pass.
+3. Read `/tmp/gh-aw/agent/pr.json` and `/tmp/gh-aw/agent/review-comments.json`.
+4. Read the diff at `/tmp/gh-aw/agent/diff.patch`.
 ```
 
 Same information, one deterministic fetch, and the artifact survives the run so a human can
 see exactly what the model was looking at when it decided.
+
+The issue context step is not optional for implementation, merge-gate, or review-feedback
+workflows. The agent cannot verify work against acceptance criteria it has never read.
 
 ### When to precompute
 

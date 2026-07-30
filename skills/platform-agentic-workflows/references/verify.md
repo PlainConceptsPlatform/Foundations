@@ -107,13 +107,19 @@ The expected job graph for a Platform workflow:
 ```
 pre_activation   rung 2, if on.steps present
 activation       roles, reactions, label removal
-<custom jobs>    rung 4
+<custom jobs>    rung 4 (pick, reserve)
 agent            rung 3 steps + the model
 detection        threat-detection
 safe_outputs     rung 6
 <custom safe jobs>
-conclusion       reporting
+conclude         rung 6 terminal: processed_count != 0
+incomplete       rung 6 terminal: processed_count == 0
+conclusion       gh-aw reporting
 ```
+
+`conclude` and `incomplete` are mutually exclusive lifecycle terminators. Both depend on
+`pick`, `agent`, and `safe_outputs`. `conclude` fires when output was processed; `incomplete`
+fires when the agent produced nothing and releases the issue for retry.
 
 If a job you expected is missing, the field that should have produced it was dropped.
 
@@ -206,7 +212,7 @@ exercise a write path for the first time.
 
 ### Rolling out safely
 
-Four stages, in order. Skipping straight to the last is how a fleet gets a reputation.
+Five stages, in order. Skipping straight to the last is how a fleet gets a reputation.
 
 1. **`safe-outputs.staged: true`.** The run happens, the reasoning happens, nothing is written.
    The step summary shows what would have been. This catches bad judgement.
@@ -214,7 +220,9 @@ Four stages, in order. Skipping straight to the last is how a fleet gets a reput
    path, which staged mode cannot see.
 3. **Real events, narrow scope.** Add `stop-after: "+7d"` so the trial expires instead of being
    forgotten, and keep `status-comment: true` while you are watching.
-4. **Production.** Remove `stop-after`, turn off `status-comment`, keep `threat-detection`.
+4. **Issue context preload check.** Verify `/tmp/gh-aw/agent/issue-context.json` exists in the
+   agent artifact and the prompt references it for acceptance criteria.
+5. **Production.** Remove `stop-after`, turn off `status-comment`, keep `threat-detection`.
 
 ---
 
@@ -233,6 +241,28 @@ gh aw outcomes <run-id>                 # what the safe outputs actually achieve
 `gh aw audit` shows the firewall verdict per domain, token usage, turn count, and the agent's
 tool calls. It is the first thing to run when a workflow "did nothing".
 
+### Test deterministic lifecycle stages
+
+Strict compilation proves syntax, not that a local action can run on a clean hosted runner.
+Before relying on a new lifecycle path, test every stage in order with one controlled issue:
+
+1. Trigger with the command label and verify selection, validation and reservation.
+3. Verify every job using `./.github/actions/...` checked out the repository and has
+   `contents: read` permissions.
+4. Verify output-writing actions create their destination parent directory.
+5. Verify the agent can read a normal repository file without a permission prompt.
+6. Verify issue context is preloaded to `/tmp/gh-aw/agent/issue-context.json` before the agent
+   starts on implement, merge-gate, and apply-review workflows.
+7. Verify questions remove `bot-working`, preserve the command label, and add the
+   human-input label when configured.
+8. Reply as an authorised user and verify the response pass updates the original issue body,
+   transitions labels, and posts no duplicate lifecycle comments.
+
+Use `gh run view <run-id> --json jobs` to locate the first failing stage. Do not infer an
+agent failure from a successful workflow conclusion: inspect `safe_outputs` processed count and
+the selected terminal job. A successful agent with zero processed outputs is an incomplete
+outcome, not a completed refinement.
+
 ### Symptoms
 
 | Symptom | Look at |
@@ -240,7 +270,9 @@ tool calls. It is the first thing to run when a workflow "did nothing".
 | Workflow never fires | `workflow_run.workflows` versus the target's `name:`. Then rung-1 filters: `roles:`, `names:`, `skip-if-*` |
 | Run skipped, not failed | A pre-activation step exited non-zero, or a gate output was false. That is the designed behaviour for "no work" |
 | Prompt says `issue #` with no number | A `needs.pre_activation.outputs.*` reference. Move the producer to a custom job |
-| `fatal: not a git repository` in a custom job | A `gh issue`/`pr`/`run` call without `--repo`. Custom jobs are not checked out |
+| `fatal: not a git repository` in a custom job | A `gh issue`/`pr`/`run` call without `--repo`. Custom jobs are not checked out. Or: a job using `./.github/actions/...` without `actions/checkout` first |
+| `ENOENT: no such file or directory` on a context file | Output path parent directory did not exist. The `load-issue-context` action handles this; raw `gh api` scripts do not unless they `mkdir -p` |
+| Agent output manifest empty despite successful run | Agent produced no Safe Outputs items. Check `process_safe_outputs_processed_count` — if 0, `incomplete` job should fire, not `conclude` |
 | A `gh api` state comparison never matches | `gh api` returns lowercase (`open`), `gh issue view` returns uppercase (`OPEN`) |
 | A bot's PR is treated as a human's | A `*[bot]` login match. `gh pr list` reports an App as `app/name`; use `.author.is_bot` |
 | Agent stalls, then times out | `network.allowed` missing `forge.plainconcepts.com`. Confirm in `gh aw audit`'s firewall section |

@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 2.1.0
+version: 2.4.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -28,11 +28,77 @@ slow, expensive, and non-reproducible, because a model was asked to do arithmeti
 `gh` command answers exactly.
 
 A good agentic workflow is mostly **not** agentic. It is a GitHub Actions workflow that has
-an agent in the middle of it. Everything a script can decide, a script decides — before the
-agent starts, deterministically, for free. The agent is reserved for the part that genuinely
-needs judgement: reading code, weighing risk, writing prose, deciding what a human meant.
+an agent in the middle of it. Everything a script can decide, collect or validate, a script
+does — before the agent starts, deterministically, for free. The agent is reserved for the
+small part that genuinely needs judgement: reading the prepared code context, weighing risk,
+writing prose, deciding what a human meant.
+
+Treat model turns and input tokens as a constrained budget. Do not make the agent rediscover
+event data, enumerate GitHub state, parse command output, or perform lifecycle bookkeeping.
+Precompute the smallest useful context, give it a bounded task, and require one complete final
+Safe Outputs payload. This is a correctness rule as well as a cost rule.
 
 That principle has a mechanical form, and it is the core of this skill.
+
+## Non-negotiable workflow design
+
+Build workflows as short, named stages. Each stage has one responsibility, explicit inputs and
+outputs, and can fail independently. Prefer a graph of small jobs and reusable local composite
+actions over one large job or a long inline script.
+
+- Put generic, deterministic operations in `.github/actions/<verb-noun>/action.yml`: selecting
+  an event item, validating labels and state, loading comments, writing a context file, adding
+  labels, removing labels, or posting a fixed comment.
+- Keep domain policy in the workflow. Pass labels, markers, required state, bodies, paths and
+  modes as action inputs. A local action must not embed a repository's workflow policy.
+- A job that calls `./.github/actions/...` must run `actions/checkout` first. If checkout uses
+  `github.token`, its job needs `contents: read`; `persist-credentials: false` is the default
+  for lifecycle jobs that do not need git writes.
+- Any action that writes an input path creates its parent directory first. Do not assume a
+  temporary directory exists merely because its parent exists.
+- Declare runtime permissions explicitly in tracked CI configuration. An unattended workflow
+  cannot answer a tool permission prompt. Repository reads needed by the agent must be allowed;
+  secrets and write tokens remain unavailable to the agent.
+- Lifecycle labels describe state, not locking. Use `concurrency` for exclusivity. Reserve with
+  one idempotent deterministic job before the agent, then release or transition labels on every
+  terminal path.
+- Make the lifecycle visible to people: a start marker, one complete question/outcome comment,
+  and unambiguous labels. Keep a command label when an authorised reply must retrigger work;
+  add a separate human-attention label such as `review` when a response is required.
+- Put a deterministic link to the current Actions run in every fixed lifecycle comment. Use
+  `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` in the
+  workflow-supplied comment body. The generic local comment action stays policy-free, and a
+  person can open logs without searching Actions.
+- Inline token usage in conclusion comments via `${{ needs.agent.outputs.effective_tokens || 'not reported' }}`.
+  Do not run a separate cost-reporting workflow: the agent job already exposes token counts,
+  and a `workflow_run` consumer that downloads artifacts and re-parses JSONL does what the
+  lifecycle job already does, with worse attribution.
+- **Preload issue context on every workflow that implements, verifies, or gates work.** Use
+  the reusable `load-issue-context` action to write the issue body, labels, and comment stream
+  to `/tmp/gh-aw/agent/issue-context.json` before the agent starts. The agent reads the file
+  and the prompt tells it that acceptance criteria there define what `/plan-goal` produces
+  and what `/repo-verify` must pass. Without this, the agent cannot judge whether the work
+  satisfies the issue.
+
+For an issue refinement workflow, the normal shape is:
+
+```text
+label added or authorised reply
+  → select and validate
+  → reserve (`bot-working` + fixed start comment with run link)
+  → preload issue context to /tmp/gh-aw/agent/issue-context.json
+  → agent judgement (reads context, runs /plan-goal or /plan-story)
+  → Safe Outputs
+  → completed: remove `refine`, `review`, `bot-working`; add `refined`; post run link + tokens
+  → questions: remove `bot-working`; keep `refine`; add `review`; post one question comment
+  → incomplete: remove `bot-working`; keep `refine`; post one retry comment
+```
+
+For an implementation, merge-gate, or review-feedback workflow, the same lifecycle applies.
+The issue context is always loaded so the agent can verify work against acceptance criteria.
+
+The agent never performs this bookkeeping. It decides only whether it has enough information and
+produces one complete final Safe Outputs payload.
 
 ## The determinism ladder
 
@@ -46,7 +112,7 @@ RUNG                       COSTS          DECIDES                        PROMPT 
 1  Trigger filters         nothing        Is this event even ours?        n/a
 2  Pre-activation steps    ~10s runner    Is there work? (gate only)      NO
 3  Precompute steps        ~30s runner    What are the facts?             via /tmp/gh-aw/agent/
-4  Custom jobs             a job          Which item? Facts + outputs     YES
+4  Custom jobs             a job          Which item? Facts + reservation YES
 5  The agent               model tokens   Judgement                       n/a
 6  Safe outputs            a job          Writing, validated              n/a
 ```
@@ -54,9 +120,11 @@ RUNG                       COSTS          DECIDES                        PROMPT 
 Mind the last column. Rung 2 gates but its outputs cannot reach the prompt; rung 4 both gates
 and hands values over. Getting that backwards fails silently.
 
-Rungs 0 to 2 can end a run without ever starting the model. Rung 6 is the only rung allowed
-to write. **A decision on rung 5 that belonged on rung 2 is the defining error of this
-format.**
+Rungs 0 to 2 can end a run without ever starting the model. Rung 6 is the only place an
+**agent-directed** write belongs. A custom job may perform a small, idempotent lifecycle
+reservation before the agent starts (for example, add `bot-working`); it must never make an
+agent's judgement call or replace Safe Outputs for the agent's final changes. **A decision on
+rung 5 that belonged on rung 2 is the defining error of this format.**
 
 ### Rung 0 — The trigger
 
@@ -192,11 +260,21 @@ What must never be here: counting, sorting, label arithmetic, "find the lowest-n
 open issue", "check whether all referenced issues are closed", parsing JSON you could have
 had `jq` parse on rung 3.
 
+Keep its work deliberately narrow:
+
+- Read the preloaded event context and only the repository files needed to form a judgement.
+- Do not repeat deterministic checks that already selected, reserved, or supplied the item.
+- Do not probe tools, install tooling, or inspect external GitHub state that a step could have
+  supplied.
+- End as soon as the judgement is formed with the complete allowed Safe Outputs payload; no
+  progress comments, draft payloads, or exploratory output writes.
+
 ### Rung 6 — Safe outputs
 
 The agent proposes; the framework writes, in a separate job, with validation, sanitisation
-and an audit trail. **Never grant a write permission to do by hand what a safe output
-does.** `permissions: read-all` and let `safe-outputs:` do every write.
+and an audit trail. **Never grant the agent a write permission to do by hand what a safe output
+does.** Keep `permissions: read-all`; use Safe Outputs for all final writes. The only exception
+is a deterministic, pre-agent custom-job reservation such as `bot-working`.
 
 See `references/determinism.md` for worked before-and-after migrations of each rung.
 
@@ -211,19 +289,23 @@ See `references/determinism.md` for worked before-and-after migrations of each r
    filter or select; every such decision has a `gh` command behind it on rung 1–4; and every
    value the prompt interpolates comes from a custom job, never from `pre_activation`.
 
-3. **Wire the frontmatter contract.** *Done when:* every row of the contract below is
+3. **Preload issue context.** *Done when:* every workflow that implements, verifies, or gates
+   work has a `load-issue-context` step writing to `/tmp/gh-aw/agent/issue-context.json`, and
+   the prompt names the file and its acceptance criteria.
+
+4. **Wire the frontmatter contract.** *Done when:* every row of the contract below is
    present, or absent with a comment saying why.
 
-4. **Write the prompt body.** Numbered, sequential, imperative, second person. *Done when:*
+5. **Write the prompt body.** Numbered, sequential, imperative, second person. *Done when:*
    a reader can follow it without reading the YAML, and the last numbered step carries the
    `## Diagram` exclusion line verbatim.
 
-5. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
+6. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
 
-6. **Compile and verify.** *Done when:* `gh aw compile` reports zero errors, you have read
+7. **Compile and verify.** *Done when:* `gh aw compile` reports zero errors, you have read
    every warning, and the generated job graph contains the jobs you intended.
 
-7. **Test the shell before a run.** *Done when:* every rung-2/rung-4 script has been executed
+8. **Test the shell before a run.** *Done when:* every rung-2/rung-4 script has been executed
    from a directory with no `.git`, and its `$GITHUB_OUTPUT` asserted. See
    `references/verify.md`.
 
@@ -266,11 +348,16 @@ runs-on-slim: ubuntu-latest  # sends framework jobs to a GitHub-hosted ubuntu-sl
 
 engine:                      # Platform standard: opencode via Forge.
   id: opencode
+  version: 1.1.58
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-  args: ["--model", "awf-proxy/glm-5-2"]
 
 model: openai/glm-5-2        # The provider segment must be `openai`. See references/opencode.md.
+secrets:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+max-turns: 30                 # Platform ceiling: enough to finish, low enough to stop loops.
+max-turn-cache-misses: 30     # Must not be lower than legitimate Forge cache misses.
 
 network:                     # Explicit. Forge is not in `defaults`.
   allowed: [defaults, forge.plainconcepts.com]
@@ -278,8 +365,7 @@ network:                     # Explicit. Forge is not in `defaults`.
 permissions: read-all        # Read-only. Every write goes through safe-outputs.
 
 safe-outputs:                # Rung 6.
-  threat-detection:
-    runs-on: ubuntu-latest
+  threat-detection: false     # Set on every agent workflow; imports do not own this policy.
   add-comment:
 
 concurrency:                 # Wherever two runs must not overlap.
@@ -302,8 +388,7 @@ which the compiler validates but never compiles on its own:
 
 ```yaml
 imports:
-  - shared/platform-defaults.md   # network.allowed, pinned threat-detection runner
-  - shared/opencode-ci.md         # merges the CI-only engine config
+  - shared/platform-defaults.md   # network.allowed only
 ```
 
 **Only some fields merge.** `network`, `safe-outputs`, `steps`, `pre-agent-steps`, `post-steps`,
@@ -368,7 +453,13 @@ The body is the **prompt**. Not a README, not a description of the workflow.
 - Numbered, sequential, imperative, second person. One decision per step.
 - State the stop conditions first. A workflow that should not act must stop before it
   labels, comments or writes anything.
-- Name the facts already on disk: "Read `/tmp/gh-aw/agent/diff.patch`", not "fetch the diff".
+- Name the facts already on disk: "Read `/tmp/gh-aw/agent/issue-context.json`", not "fetch the issue".
+- Tell the agent that acceptance criteria in the issue context define what `/plan-goal` produces
+  and what `/repo-verify` must pass. Without this, the agent cannot verify work against intent.
+- Keep the prompt short. Do not restate event fields or facts already interpolated into it, and
+  do not ask the model to verify deterministic work done by jobs.
+- Require complete final Safe Outputs items. For example, one `add_comment` item contains the
+  entire response, not a greeting followed by a second item with the questions.
 - Say what not to do where the model would plausibly do it: do not weaken a test, do not
   merge, do not read outside the repository root.
 - Where a fact came from rung 2–4, interpolate it: `${{ needs.pre_activation.outputs.pick }}`.
@@ -400,6 +491,10 @@ All must pass before the workflow is committed.
 - [ ] No prompt step asks the model to count, sort, filter or select
 - [ ] Every gate that can fail cheaply is on rung 1 or 2, not in the prompt
 - [ ] Facts the agent needs are precomputed to `/tmp/gh-aw/agent/` where a `gh` command yields them
+- [ ] Issue context is preloaded to `/tmp/gh-aw/agent/issue-context.json` on every workflow
+      that implements, verifies, or gates work — the agent must not re-fetch the issue
+- [ ] The prompt tells the agent to read the issue context and that its acceptance criteria
+      define what `/plan-goal` produces and what `/repo-verify` must pass
 - [ ] Every `${{ needs.*.outputs.* }}` in the prompt or in `steps:` names a **custom job**,
       never `pre_activation` — verify with `awk '/^  agent:/{f=1} f&&/needs:/{...}'` on the
       `.lock.yml` that the job appears in the agent's `needs`
@@ -412,23 +507,31 @@ All must pass before the workflow is committed.
       — `names:` only gates activation, so otherwise the job runs on *every* label added
 - [ ] Any rung-2/rung-4 script was tested from a directory with no `.git`, not from a clone
 - [ ] Every write goes through `safe-outputs`, none through granted write permissions
+      (except an idempotent, pre-agent custom-job lifecycle reservation such as `bot-working`)
 
 **Wiring**
 - [ ] `name:` is set explicitly, and every `workflow_run.workflows` entry matches a real `name:`
 - [ ] `on:` uses an event, or a comment states why a schedule was unavoidable
 - [ ] `workflow_run` triggers carry `branches:`
 - [ ] Both `runs-on` and `runs-on-slim` are set
-- [ ] `engine.id` is `opencode` with `OPENAI_BASE_URL` on Forge, and `model:` starts `openai/`
+- [ ] `engine.id` is `opencode`, `engine.version` is pinned, `OPENAI_BASE_URL` targets Forge,
+      root `secrets.OPENAI_API_KEY` is mapped, and `model:` starts `openai/`
+- [ ] `max-turns: 30` and `max-turn-cache-misses: 30` are explicitly set
 - [ ] No `tools:` block (it is ignored under opencode)
 - [ ] `network.allowed` lists `forge.plainconcepts.com`
 - [ ] `permissions: read-all`
-- [ ] `safe-outputs.threat-detection.runs-on` is pinned
+- [ ] Each `agent-*.md` declares `safe-outputs.threat-detection: false`; do not rely on a
+      shared import. This avoids an additional model run.
 - [ ] `timeout-minutes` is set, and generously enough for the slowest honest run
 - [ ] A `concurrency` group exists wherever two runs must not overlap
 - [ ] `push-to-pull-request-branch` with `target: "*"` also sets `checkout.fetch: ["*"]` and `fetch-depth: 0`
 
 **Prose**
 - [ ] The body is numbered and imperative, and stop conditions come first
+- [ ] The prompt asks only for judgement and implementation; selection, GitHub reads, parsing,
+      label lifecycle, and validation are deterministic steps or jobs
+- [ ] Final Safe Outputs items are complete and bounded; label items use `item_number` and
+      `labels`, never invented field names such as `label_names`
 - [ ] The final numbered step contains the `## Diagram` exclusion line verbatim
 - [ ] Human-only explanation lives in `description:`, not the body
 
