@@ -20,8 +20,7 @@ skills/
 **Next.js (App Router) + React + TypeScript (strict)**, **shadcn/ui** on **Radix** + **Tailwind v4**,
 themed by **`@plainconceptsplatform/ui-theme`**, shared components from
 **`@plainconceptsplatform/ui-components`** (Plain logo, ...), icons from **Lucide**. DI via
-**inversify-hooks** (mandatory). Translations: **react-i18next + i18next** (mandatory, the only translation library — zero magic strings). Package manager: **pnpm**. Lint/format **Biome**; tests
-**Vitest + Playwright**. Full list: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+**inversify-hooks** (mandatory). Translations: **react-i18next + i18next** (mandatory, the only translation library — zero magic strings). Package manager: **pnpm**. Lint/format **Biome**. Full list: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Read these first
 

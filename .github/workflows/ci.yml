@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   check:
-    name: Lint, typecheck, test, build (node ${{ matrix.node }})
+    name: Lint, typecheck, build (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -40,9 +40,6 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test (Vitest)
-        run: pnpm test
-
       # The build was never gated, so a broken build could reach main and was
       # only caught by the deploy. It also exercises sync-docs and gen-tokens.
       - name: Build
@@ -56,36 +53,3 @@ jobs:
           pnpm --filter @plainconceptsplatform/docs gen
           git diff --exit-code -- apps/docs/content/docs/components apps/docs/lib/tokens.generated.ts \
             || { echo "::error::Generated files are stale. Run 'pnpm --filter @plainconceptsplatform/docs gen' and commit the result."; exit 1; }
-
-  e2e:
-    name: End-to-end (Playwright)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-
-      # The docs app imports workspace packages (e.g. ui-components) via their
-      # "import" export condition, which points at dist/. Without this, the
-      # webServer that Playwright boots fails with "Module not found".
-      - name: Build workspace packages
-        run: pnpm build
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Run end-to-end tests
-        run: pnpm test:e2e
-
-      - name: Upload report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7

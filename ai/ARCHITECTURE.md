@@ -77,8 +77,9 @@ Foundations/
 │   ├── theme/                 # @plainconceptsplatform/ui-theme (design tokens, CSS only)
 │   └── ui-components/         # @plainconceptsplatform/ui-components (shared React components)
 ├── ai/                        # ARCHITECTURE.md (incl. Stack), DESIGN.md, AGENTS.md (source of truth)
+│   └── workflows/             # Copyable GitHub Agentic Workflows examples
 ├── biome.json · tsconfig.base.json · pnpm-workspace.yaml · package.json
-└── .github/workflows/         # CI (Biome + Vitest) and deploy (Fumadocs → Azure App Service)
+└── .github/workflows/         # CI (Biome) and deploy (Fumadocs → Azure App Service)
 ```
 
 ## Foundation repo internals
@@ -234,10 +235,7 @@ runtime, not only in type-checking.
 
 ## Testing conventions
 
-- **Vitest + Testing Library** for unit/component tests, co-located as `*.test.ts(x)` next to the
-  code. Test behavior via the public API of a slice, not internals.
-- **Playwright** for end-to-end flows, in a top-level `e2e/`.
-- Every `feature`/`entity` with logic ships tests; UI-only wrappers need not.
+- UI-only wrappers need not ship tests. Logic belongs in apps, not in this foundation repo.
 
 ## Naming conventions
 

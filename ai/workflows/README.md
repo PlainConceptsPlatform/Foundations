@@ -12,7 +12,7 @@ the parts that only mean something inside one repository removed.
 | `shared/opencode-ci.md` | Imported, never compiled | Merges `opencode.ci.json` into `opencode.jsonc` before the agent starts |
 | `opencode.ci.json` | Read at runtime | Declares the `plainconcepts` provider and the CI agent |
 
-The full contract is the [`platform-agentic-workflows`](../skills/platform-agentic-workflows)
+The full contract is the [`platform-agentic-workflows`](../../skills/platform-agentic-workflows)
 skill, and the reasoning behind each choice is in
 [the AI docs](https://foundations.plainconcepts.com/docs/ai/workflows).
 
@@ -64,4 +64,4 @@ every workflow at once.
 
 The other three workflows in the set — the merge gate, applying review feedback, and the
 scheduled audit — because two examples show the pattern and five are a dump. The
-[skill](../skills/platform-agentic-workflows) describes all of them.
+[skill](../../skills/platform-agentic-workflows) describes all of them.

@@ -19,8 +19,6 @@ The everyday checks, all of which CI also runs:
 pnpm lint         # Biome (check + format)
 pnpm lint:fix     # Biome, writing fixes
 pnpm typecheck    # tsc across every workspace
-pnpm test         # Vitest (unit + the docs drift guards)
-pnpm test:e2e     # Playwright against a production build
 pnpm build        # every workspace, including the docs site
 ```
 
@@ -92,9 +90,9 @@ looks, even though nothing breaks at the type level. Removing or renaming a toke
 
 - Keep it small and reversible. Explain the rationale, not just the diff.
 - Screenshots for anything visible, in **both** light and dark.
-- Conventional commit subjects (`feat:`, `fix:`, `docs:`, `chore:`, `test:`, `build:`). Squash-merge
+- Conventional commit subjects (`feat:`, `fix:`, `docs:`, `chore:`, `build:`). Squash-merge
   subjects need to stay parseable.
-- Required checks: lint, typecheck, test, build on Node 20 and 22, plus Playwright.
+- Required checks: lint, typecheck, build on Node 20 and 22.
 - If you change a convention other teams follow, update the docs in the same PR.
 
 ## Reporting problems

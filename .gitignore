@@ -5,8 +5,6 @@ dist/
 build/
 .source/
 coverage/
-playwright-report/
-test-results/
 *.log
 *.tsbuildinfo
 .DS_Store
@@ -17,6 +15,3 @@ test-results/
 
 # generated: docs site reference pages synced from repo markdown
 apps/docs/content/docs/reference/
-
-# superseded by the Playwright suite in e2e/
-.evidence/
