@@ -23,7 +23,7 @@ local composite action:
 - uses: actions/create-github-app-token@v3.2.0
   id: app-token
   with:
-    app-id: ${{ secrets.BOT_APP_ID }}
+    client-id: ${{ secrets.BOT_APP_ID }}
     private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 - uses: ./.github/actions/create-issue-comment
   with:
@@ -174,7 +174,7 @@ jobs:
       - uses: actions/create-github-app-token@v3.2.0
         id: app-token
         with:
-          app-id: ${{ secrets.BOT_APP_ID }}
+          client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
       - name: Apply labels to created issues
         env:
