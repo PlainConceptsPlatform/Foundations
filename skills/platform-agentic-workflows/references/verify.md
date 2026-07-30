@@ -177,7 +177,7 @@ cat > ./.tmp/bin/gh <<SHIM
 REAL="$REALGH"
 case "\$1 \$2" in
   "issue list")
-    if printf '%s ' "\$@" | grep -q 'audit:report'; then
+    if printf '%s ' "\$@" | grep -q 'audit'; then
       echo '[{"number":900,"title":"A","body":"- #177\n- #178"}]'; exit 0
     fi
     exec "\$REAL" "\$@" ;;
@@ -253,8 +253,8 @@ Before relying on a new lifecycle path, test every stage in order with one contr
 5. Verify the agent can read a normal repository file without a permission prompt.
 6. Verify issue context is preloaded to `/tmp/gh-aw/agent/issue-context.json` before the agent
    starts on implement, merge-gate, and apply-review workflows.
-7. Verify questions remove `bot-working`, preserve the command label, and add the
-   human-input label when configured.
+7. Verify questions remove `bot-working`, preserve the command label, add the
+   human-input label (`review`), and that a subsequent successful pass removes `review`.
 8. Reply as an authorised user and verify the response pass updates the original issue body,
    transitions labels, and posts no duplicate lifecycle comments.
 

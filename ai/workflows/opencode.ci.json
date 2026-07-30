@@ -1,5 +1,5 @@
 {
-  "model": "plainconcepts/glm-5-2",
+  "model": "openai/glm-5-2",
   "plugin": [],
   "default_agent": "ci-workflow-agent",
   "agent": {
@@ -12,19 +12,6 @@
   "permission": {
     "external_directory": {
       "/tmp/**": "allow"
-    }
-  },
-  "provider": {
-    "plainconcepts": {
-      "api": "http://172.30.0.30:10000",
-      "options": {
-        "apiKey": "awf-openai-proxy"
-      },
-      "models": {
-        "glm-5-2": {
-          "name": "GLM 5.2"
-        }
-      }
     }
   }
 }

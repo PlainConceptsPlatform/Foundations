@@ -9,8 +9,7 @@ the parts that only mean something inside one repository removed.
 | `refine.md` | `refine` label added, or the author replies | Rewrites the issue as a user story, or asks questions |
 | `implement.md` | `implement` label added, or the merge gate finishes | Implements, verifies, opens a pull request |
 | `shared/platform-defaults.md` | Imported, never compiled | `network.allowed`, and threat detection turned off with the reasoning |
-| `shared/opencode-ci.md` | Imported, never compiled | Merges `opencode.ci.json` into `opencode.jsonc` before the agent starts |
-| `opencode.ci.json` | Read at runtime | Declares the `plainconcepts` provider and the CI agent |
+| `opencode.ci.json` | Read at runtime | Declares the CI agent and repository read permissions |
 
 The full contract is the [`platform-agentic-workflows`](../../skills/platform-agentic-workflows)
 skill, and the reasoning behind each choice is in
@@ -18,13 +17,13 @@ skill, and the reasoning behind each choice is in
 
 ## Installing
 
-Copy the four files, keeping `shared/` a sibling of the workflow, and put `opencode.ci.json` at
+Copy the three files, keeping `shared/` a sibling of the workflow, and put `opencode.ci.json` at
 the repository root:
 
 ```bash
 mkdir -p .github/workflows/shared
 cp refine.md implement.md .github/workflows/
-cp shared/*.md .github/workflows/shared/
+cp shared/platform-defaults.md .github/workflows/shared/
 cp opencode.ci.json .
 gh aw compile
 ```
@@ -36,10 +35,10 @@ it. The markdown alone does nothing.
 
 Three things, none of them optional:
 
-1. **A secret named `CODEX_API_KEY`** holding the Forge key. gh-aw's opencode engine looks for
-   `CODEX_API_KEY` or `OPENAI_API_KEY` by fixed name and validates that one exists before the
-   agent starts. The name is a variable name, not a destination: `OPENAI_BASE_URL` sends the
-   traffic to `forge.plainconcepts.com`.
+1. **A secret named `OPENAI_API_KEY`** holding the Forge key. The workflow maps it through root
+   `secrets:` — do not put it in `engine.env`, strict compilation rejects it. The name is a
+   variable name, not a destination: `OPENAI_BASE_URL` sends the traffic to
+   `forge.plainconcepts.com`.
 2. **The labels** the workflows read and write: `refine`, `refined`, `implement`, `bot-working`,
    `review`, `priority`, `bug`. `gh aw` can create them:
    `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
@@ -50,15 +49,14 @@ Three things, none of them optional:
 
 ## Two things that will bite
 
-**The model name is three names.** `model: openai/glm-5-2` exists only to pass gh-aw's
-validation, which rejects any provider outside a fixed list. `engine.args` asks for
-`plainconcepts/glm-5-2`, a provider that `opencode.ci.json` defines pointing at gh-aw's own
-firewall proxy, which forwards to `OPENAI_BASE_URL`. Nothing reaches OpenAI.
+**Do not put `OPENAI_API_KEY` in `engine.env`.** Strict compilation rejects it. Map it through
+root `secrets:` instead: `secrets: { OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} }`. The key
+never reaches the agent's environment, and the workflow compiles clean.
 
-**`opencode.ci.json` hardcodes that proxy's address**, `http://172.30.0.30:10000`. It is gh-aw's
-container network, not ours, so a gh-aw upgrade can move it. The failure looks like a model
-timeout rather than a connection error, so check this file first when a version bump breaks
-every workflow at once.
+**`max-turn-cache-misses` defaults to 5.** Forge caching can miss more than five consecutive
+times on a healthy run. Without `max-turn-cache-misses: 30` set explicitly, an otherwise healthy
+agent run fails at the compiler default. Always set both `max-turns: 30` and
+`max-turn-cache-misses: 30`.
 
 ## What is deliberately not here
 

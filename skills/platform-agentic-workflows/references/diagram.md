@@ -155,9 +155,9 @@ flowchart TD
     implPr("PR<br/>Open against main, Closes #N") -->|✓| implHandoff
     implPr -.->|✗| implFail
     implHandoff(("Handed off<br/>bot-working removed, gate decides"))
-    implUnclear(("Unclear<br/>Labels removed, detail requested"))
+    implUnclear(("Unclear<br/>review added, detail requested"))
     implIdle(("Idle<br/>Nothing eligible"))
-    implFail(("Fail<br/>Labels removed, output reported"))
+    implFail(("Fail<br/>review added, implement removed"))
     classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
     classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
     classDef decision fill:#fff8e8,stroke:#c75b00,stroke-width:2px,color:#172033

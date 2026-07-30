@@ -131,8 +131,15 @@ body: |
 For an issue waiting on an answer, keep its command label (`refine`) so an authorised comment
 can trigger the response pass. Add a separate state label (`review`) to tell people input is
 needed. Remove the working label before asking questions. On successful completion remove all
-transient labels and add the terminal label (`refined`). `concurrency`, not `bot-working`, is
-the lock.
+transient labels including `review` and add the terminal label (`refined`). `concurrency`,
+not `bot-working`, is the lock.
+
+`review` must be in both `add-labels.allowed` and `remove-labels.allowed` on every workflow
+that can stop for human input. A workflow that adds `review` on questions but cannot remove
+it on the next success leaves the issue looking like it still needs a human. Implement's
+picker must exclude issues with `review` (via `excluded-labels`), because a human is still
+working on them. Refine must **not** exclude `review` — a refine issue with `review` is
+waiting for the author's reply, and the rerefine pass clears it on completion.
 
 The generated Actions graph is a dependency graph, not a lifecycle picture. A reporting job may
 need every prior job so it can inspect their results; its multiple incoming edges do not mean
@@ -188,7 +195,7 @@ once the fleet has enough history to compare against.
 | Workflow | Shape | Trigger | Rung-2 work |
 |---|---|---|---|
 | `agent-refine` | IssueOps | `refine` label, or an author comment | Priority cascade |
-| `agent-implement` | IssueOps + DeterministicOps | `implement` label, or the gate finishing | Cascade + in-flight check + issue context |
+| `agent-implement` | IssueOps + DeterministicOps | `implement` label, or the gate finishing | Cascade + issue context |
 | `agent-merge-gate` | MonitorOps | CI completing | Identify the PR and its issue + issue context |
 | `agent-apply-review` | IssueOps | A review comment or submitted review | Confirm ownership + issue context |
 | `agent-audit` | DeterministicOps | Schedule | `skip-if-match` on an open report |
@@ -201,19 +208,17 @@ references, check each one's state, decide. All four steps are shell commands. M
 rung 2 leaves the agent with nothing to judge, which is the signal that this workflow barely
 needs an agent at all — and on a day when nothing is closeable, it does not run.
 
-**`agent-report-cost`** had no judgement in it whatsoever. Downloading an artifact, parsing
-JSONL, multiplying by a price table, formatting a comment: every part was deterministic, and
-the only reason it was an agentic workflow was that the artifact might be absent and the
-target had to be inferred. It was deleted entirely: `needs.agent.outputs.effective_tokens`
-in each workflow's conclusion comment already reports the aggregate inline, with better
-attribution and no separate workflow run.
+**`agent-report-cost`** was deleted entirely. Token usage is tracked automatically by gh-aw's
+AI Credits system (visible in the Actions run summary and in the `effective_tokens` output).
+`needs.agent.outputs.effective_tokens` is available in every `conclude`/`incomplete` job if
+you ever need it, but do not report tokens in issue comments — that was duplication.
 
 When a workflow's honest rung-5 content approaches zero, **do not write an agentic workflow
 at all.** The deleted cost workflow is the canonical example: it was a script doing what the
 lifecycle job already does.
 
 Both of the examples above were rewritten as plain YAML Actions workflows (and `agentics-cost.yml`
-was later deleted entirely in favour of inline token reporting). The test to apply:
+was later deleted entirely in favour of the AIC system). The test to apply:
 
 > Strike out every prompt step that a shell command could do exactly. If what remains would
 > not be worth a model call on its own, the workflow is a script.

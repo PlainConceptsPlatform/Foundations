@@ -64,15 +64,16 @@ actions over one large job or a long inline script.
   terminal path.
 - Make the lifecycle visible to people: a start marker, one complete question/outcome comment,
   and unambiguous labels. Keep a command label when an authorised reply must retrigger work;
-  add a separate human-attention label such as `review` when a response is required.
+  add a separate human-attention label such as `review` when a response is required. Every
+  workflow that can stop for human input must add `review` via `add-labels` safe-outputs, and
+  must include `review` in `remove-labels.allowed` so the next successful cycle can clear it.
+  If `review` is missing from `remove-labels.allowed`, the bot silently fails to clean it up.
 - Put a deterministic link to the current Actions run in every fixed lifecycle comment. Use
   `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` in the
   workflow-supplied comment body. The generic local comment action stays policy-free, and a
   person can open logs without searching Actions.
-- Inline token usage in conclusion comments via `${{ needs.agent.outputs.effective_tokens || 'not reported' }}`.
-  Do not run a separate cost-reporting workflow: the agent job already exposes token counts,
-  and a `workflow_run` consumer that downloads artifacts and re-parses JSONL does what the
-  lifecycle job already does, with worse attribution.
+- Token usage is tracked automatically by gh-aw's AI Credits system (visible in the Actions
+  run summary and in the `effective_tokens` output). Do not report tokens in issue comments.
 - **Preload issue context on every workflow that implements, verifies, or gates work.** Use
   the reusable `load-issue-context` action to write the issue body, labels, and comment stream
   to `/tmp/gh-aw/agent/issue-context.json` before the agent starts. The agent reads the file
@@ -89,8 +90,9 @@ label added or authorised reply
   → preload issue context to /tmp/gh-aw/agent/issue-context.json
   → agent judgement (reads context, runs /plan-goal or /plan-story)
   → Safe Outputs
-  → completed: remove `refine`, `review`, `bot-working`; add `refined`; post run link + tokens
+  → completed: remove `refine`, `review`, `bot-working`; add `refined`; post run link
   → questions: remove `bot-working`; keep `refine`; add `review`; post one question comment
+  → blocked: remove `bot-working`; keep `refine`; add `review`; post blocking reason
   → incomplete: remove `bot-working`; keep `refine`; post one retry comment
 ```
 
@@ -508,6 +510,13 @@ All must pass before the workflow is committed.
 - [ ] Any rung-2/rung-4 script was tested from a directory with no `.git`, not from a clone
 - [ ] Every write goes through `safe-outputs`, none through granted write permissions
       (except an idempotent, pre-agent custom-job lifecycle reservation such as `bot-working`)
+- [ ] Every workflow that can stop for human input has `review` in both `add-labels.allowed`
+      and `remove-labels.allowed`
+- [ ] Implement's `excluded-labels` includes `review` (a human is still working on the issue)
+- [ ] No workflow uses `exclusive-label` for cross-workflow locking; use `concurrency` groups
+      per workflow and `excluded-labels` per issue
+- [ ] When the agent creates issues (e.g. audit), labels are applied by a `conclude` job, not
+      by the AI's `create_issue` call
 
 **Wiring**
 - [ ] `name:` is set explicitly, and every `workflow_run.workflows` entry matches a real `name:`

@@ -50,7 +50,6 @@ conclude:
 body: |
   ${{ env.MARKER }}
   ${{ env.FINISHED_COMMENT }}
-  Tokens: ${{ needs.agent.outputs.effective_tokens || 'not reported' }}
   [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 ```
 
@@ -137,8 +136,6 @@ quiet run from a broken one.
 safe-outputs:
   create-issue:
     max: 4
-    labels: [bug, implement]
-    title-prefix: "[audit] "
     deduplicate-by-title: 1       # true = exact, 0-100 = edit distance
     group: true                   # create as sub-issues of a parent
     close-older-issues: true
@@ -154,19 +151,47 @@ issue with children in one call:
 {"type": "create_issue", "parent": "aw_abc", "title": "Finding 1", "body": "…"}
 ```
 
-**Labels can be per item, not only per config.** The emitted JSON accepts a `labels` array
-(verified in the generated safe-outputs schema: `labels` is an array of sanitised strings, max
-128 chars each). That is what lets one workflow file a parent labelled `audit:report` and
-children labelled `bug` + `implement`:
+**Labels on created issues should be applied by a `conclude` job, not by the AI's
+`create_issue` call.** The agent creates issues without labels; a post-agent deterministic
+job reads `created_issue_number` from the `safe_outputs` job outputs and applies labels
+via `gh issue edit`:
 
-```json
-{"type": "create_issue", "temporary_id": "aw_x", "title": "Audit report", "labels": ["audit:report"]}
-{"type": "create_issue", "parent": "aw_x", "title": "Finding 1", "labels": ["bug", "implement"]}
+```yaml
+jobs:
+  conclude:
+    needs: [agent, safe_outputs]
+    if: >
+      needs.agent.result == 'success' &&
+      needs.safe_outputs.result == 'success' &&
+      needs.safe_outputs.outputs.process_safe_outputs_processed_count != '0' &&
+      needs.safe_outputs.outputs.created_issue_number != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/create-github-app-token@v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+      - name: Apply labels to created issues
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBERS: ${{ needs.safe_outputs.outputs.created_issue_number }}
+        run: |
+          set -euo pipefail
+          numbers=(${ISSUE_NUMBERS//,/ })
+          for n in "${numbers[@]}"; do
+            gh issue edit "$n" --repo "$REPO" --add-label "bug,implement"
+          done
 ```
 
-Config-level `labels:` still applies to everything, so omit it when the items differ. Any label
-used this way has to exist in the repository — the maintenance workflow's `create_labels`
-operation creates every label the workflows reference.
+`created_issue_number` is comma-separated when multiple issues were created. The conclude
+job is the deterministic pattern for label application — it keeps labels out of the AI's
+control and ensures they are always correct regardless of what the model decides.
 
 ### `add-comment`
 
@@ -190,12 +215,16 @@ safe-outputs:
   add-labels:
     allowed: [bot-working, review]
   remove-labels:
-    allowed: [implement, bot-working]
+    allowed: [implement, bot-working, review]
 ```
 
 `allowed:` is the real control, and it is why this beats granting `issues: write`: the
 workflow can touch exactly those labels and no others, whatever the prompt is persuaded to
 attempt. Globs work (`team-*`, `area/*`), and `blocked:` is evaluated first.
+
+`review` must be in **both** lists on any workflow that can stop for human input. If it is
+missing from `remove-labels.allowed`, the bot silently fails to clear `review` on the next
+successful cycle, and the issue looks like it still needs a human when it does not.
 
 The emitted item schema is exact. Use `item_number` and `labels`:
 

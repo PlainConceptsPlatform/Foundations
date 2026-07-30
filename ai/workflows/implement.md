@@ -8,11 +8,10 @@ description: |
 
 name: "Agent: Implement Issue"
 
-# Shared: the network and threat-detection contract, and the CI-only OpenCode provider.
+# Shared: the network and threat-detection contract.
 # permissions, engine, model and runs-on cannot be shared — see shared/platform-defaults.md.
 imports:
   - shared/platform-defaults.md
-  - shared/opencode-ci.md
 
 on:
   issues:

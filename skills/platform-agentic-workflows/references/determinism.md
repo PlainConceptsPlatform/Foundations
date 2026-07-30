@@ -156,43 +156,36 @@ jobs:
       found: ${{ steps.pick.outputs.found }}
       number: ${{ steps.pick.outputs.number }}
     steps:
-      - name: Pick the next issue by the priority cascade
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Select the next issue
         id: pick
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          # "No work" is a normal outcome, so report it as an output. Exiting non-zero
-          # would paint the run red for having correctly found nothing.
-          none() {
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "$1"
-            exit 0
-          }
-
-          # Refuse to start a second issue while one is in flight.
-          busy=$(gh issue list --label bot-working --state open --limit 1 \
-                   --json number --jq 'length')
-          [ "$busy" -eq 0 ] || none "another issue is in flight"
-
-          pick() {
-            gh issue list --label "$1" --state open --limit 1000 \
-              --json number,labels \
-              --jq '[.[] | select(any(.labels[].name; . == "bot-working") | not)]
-                    | sort_by(.number) | .[0].number // empty'
-          }
-
-          number=$(pick "priority,bug,implement")
-          [ -n "$number" ] || number=$(pick "priority,implement")
-          [ -n "$number" ] || number=$(pick "bug,implement")
-          [ -n "$number" ] || number=$(pick "implement")
-          [ -n "$number" ] || none "nothing eligible"
-
-          { echo "found=true"; echo "number=$number"; } >> "$GITHUB_OUTPUT"
+        uses: ./.github/actions/select-eligible-issue
+        with:
+          token: ${{ github.token }}
+          candidate-label-groups: |
+            priority,bug,implement
+            priority,implement
+            bug,implement
+            implement
+          excluded-labels: |
+            bot-working
+            review
 
 if: needs.pick.outputs.found == 'true'
 ```
+
+`excluded-labels` serves two purposes: `bot-working` prevents picking an issue that is
+already in progress (being refined or implemented), and `review` prevents picking an issue
+that a human is still working on — the bot added `review` because it had questions, failed,
+or hit a risk flag.
+
+**Do not use `exclusive-label` for cross-workflow locking.** It blocks the entire pipeline
+whenever any issue has the label — even if a refine running on issue A has nothing to do with
+implement picking issue B. Per-workflow `concurrency` groups are the right serialization
+mechanism (`group: implement` keeps implementations serial; `group: refine-<number>` lets
+each issue refine independently). `excluded-labels` is the right per-issue guard.
 
 The prompt now reads:
 

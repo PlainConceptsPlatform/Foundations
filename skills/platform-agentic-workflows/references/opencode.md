@@ -167,19 +167,10 @@ what `loop-task` surfaced as `{{opencode.tokens}}` and `{{opencode.cost}}`.
 
 ### Inline token usage in lifecycle comments
 
-The agent job exposes `effective_tokens` as a job output, parsed from the firewall proxy log.
-Every `conclude` and `incomplete` job depends on `agent` and can interpolate it:
-
-```yaml
-body: |
-  Automated work has finished.
-  Tokens: ${{ needs.agent.outputs.effective_tokens || 'not reported' }}
-  [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-```
-
-Expect `not reported` when Forge routing skips the proxy accounting. Do not run a separate
-cost workflow to post the same comment with a `jq` breakdown: the source is the same proxy
-log, and the inline aggregate is better than a fabricated breakdown.
+Token reporting in issue comments was removed. The AI Credits system tracks usage in the
+Actions run summary, and `effective_tokens` is available as a job output if you need it for
+debugging. Do not add `Tokens: ${{ needs.agent.outputs.effective_tokens }}` to lifecycle
+comments — it was duplication, and Forge routing often produces `not reported` anyway.
 
 `gh aw logs` and `gh aw audit <run-id>` give duration, tokens, credits and turn count per run
 when the proxy did observe the traffic, and `gh aw logs --format markdown` gives a cross-run
