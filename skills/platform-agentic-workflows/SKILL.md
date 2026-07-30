@@ -359,7 +359,7 @@ secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 max-turns: 30                 # Platform ceiling: enough to finish, low enough to stop loops.
-max-turn-cache-misses: 30     # Must not be lower than legitimate Forge cache misses.
+max-turn-cache-misses: 100    # Forge has no prompt cache; every turn is a miss. Must be high.
 
 network:                     # Explicit. Forge is not in `defaults`.
   allowed: [defaults, forge.plainconcepts.com]
@@ -525,7 +525,7 @@ All must pass before the workflow is committed.
 - [ ] Both `runs-on` and `runs-on-slim` are set
 - [ ] `engine.id` is `opencode`, `engine.version` is pinned, `OPENAI_BASE_URL` targets Forge,
       root `secrets.OPENAI_API_KEY` is mapped, and `model:` starts `openai/`
-- [ ] `max-turns: 30` and `max-turn-cache-misses: 30` are explicitly set
+- [ ] `max-turns: 30` and `max-turn-cache-misses: 100` are explicitly set
 - [ ] No `tools:` block (it is ignored under opencode)
 - [ ] `network.allowed` lists `forge.plainconcepts.com`
 - [ ] `permissions: read-all`

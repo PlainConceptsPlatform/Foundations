@@ -20,7 +20,7 @@ model: openai/glm-5-2
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 max-turns: 30
-max-turn-cache-misses: 30
+max-turn-cache-misses: 100
 
 network:
   allowed:
@@ -36,8 +36,10 @@ Six parts, all load-bearing:
 3. **`model: openai/glm-5-2`.** The provider segment must be `openai` — see below.
 4. **Root `secrets.OPENAI_API_KEY`.** It supplies the model client without putting the key in
    the agent's `engine.env`; the latter is rejected by strict compilation.
-5. **Both 30-turn budgets.** `max-turns` bounds tool loops; `max-turn-cache-misses` prevents
+5. **Both turn budgets.** `max-turns` bounds tool loops; `max-turn-cache-misses` prevents
    otherwise healthy Forge runs failing at the compiler default of five consecutive misses.
+   Forge has no prompt cache, so every turn is a cache miss. Set `max-turn-cache-misses: 100`
+   to avoid the agent being killed mid-run.
 6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
    the firewall will block it otherwise. That failure looks like a model timeout, not a network
    error, which makes it expensive to diagnose.
