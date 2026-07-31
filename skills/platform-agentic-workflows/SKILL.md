@@ -317,6 +317,12 @@ max-turns: 300                 # Platform standard. The real guard against a con
 max-turn-cache-misses: 3000    # Forge has no prompt cache; every turn is a miss.
 max-ai-credits: 5000           # Generous budget for multi-phase pipelines.
 
+env:                           # Git identity for commits inside the agent container.
+  GIT_AUTHOR_NAME: "github-actions[bot]"       # Without these, `git commit` fails with
+  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"  # "unable to auto-detect email"
+  GIT_COMMITTER_NAME: "github-actions[bot]"    # See references/opencode.md — Git identity.
+  GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+
 network:                     # Explicit. Forge is not in `defaults`.
   allowed: [defaults, forge.plainconcepts.com, dotnet, node]  # dotnet/node cover NuGet & npm registries
 
@@ -348,6 +354,8 @@ nothing.** There are three ways, and none of them produces an error.
 | Dropped by the engine | `tools:` under `engine: opencode` — one warning, whole block gone |
 | Wired to a job that cannot see it | `needs.pre_activation.outputs.*` in the prompt — arrives empty |
 | Not merged from an import | `permissions: read-all` in a shared file — no warning at all |
+| CI stalls on bot PRs | `action_required` with zero jobs — see references/opencode.md — Bot PRs |
+| Merge gate never fires | `workflow_run` after an approved `action_required` CI run — same reference |
 
 So for anything this skill does not explicitly confirm: **probe it, then grep the `.lock.yml` to
 confirm it produced something.** `references/verify.md` has the procedure.
@@ -371,6 +379,10 @@ The body is the **prompt**. Not a README, not a description of the workflow.
   entire response, not a greeting followed by a second item with the questions.
 - Say what not to do where the model would plausibly do it: do not weaken a test, do not
   merge, do not read outside the repository root.
+- For audit/triage workflows, use the **score-then-select** pattern: ask the agent to find N
+  problems, score each 1–10 (severity × likelihood × blast radius), create a parent issue
+  listing all findings, then create only the top 3 as sub-issues. This bounds output and
+  produces a ranked audit record. See Numa's `agent-audit.md` for the reference prompt.
 - Where a fact came from rung 2–4, interpolate it: `${{ needs.pick.outputs.number }}`.
 - The last numbered step is always, verbatim:
 

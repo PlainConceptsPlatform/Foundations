@@ -100,6 +100,66 @@ problem, not as a model or Safe Outputs failure.
 
 ---
 
+## Git identity inside the agent container
+
+The agent runs inside a chroot with a host filesystem. The framework's
+`configure_git_credentials.sh` step sets up HTTP auth (the Authorization header for GitHub),
+but it does **not** set `user.name` or `user.email`. Any `git commit` inside the agent will fail:
+
+```
+fatal: unable to auto-detect email address (got 'runner@3360f280c5cf.(none)')
+```
+
+The guardrails say "NEVER update the git config", and `git config --global` would violate that.
+The fix is **environment variables**, which git respects natively without touching config:
+
+```yaml
+env:
+  GIT_AUTHOR_NAME: "github-actions[bot]"
+  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
+  GIT_COMMITTER_NAME: "github-actions[bot]"
+  GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+```
+
+Add these to every workflow's top-level `env:` block. The agent can then commit (OpenSpec
+proposals, branch switches) without identity errors and without modifying git config.
+
+---
+
+## Bot PRs: CI approval and `workflow_run` trigger
+
+Two related traps when the implement workflow creates PRs as `github-actions[bot]`:
+
+### Trap 1: CI stalls at `action_required`
+
+When a bot opens a PR, GitHub may require manual approval before CI workflows can start. The
+`App: CI` run shows `status: completed`, `conclusion: action_required`, `jobs: []` — zero jobs
+created. The CI never runs until someone approves it.
+
+The repo setting that controls this is **Settings → Actions → General → Workflow permissions →
+"Allow GitHub Actions to create and approve pull requests"**. This is UI-only; it cannot be
+verified or set via API. It must be enabled once by a repo admin.
+
+Even with that enabled, the **first** bot PR for a workflow may still require one-time approval.
+Subsequent PRs should start CI without `action_required`.
+
+### Trap 2: `workflow_run` does not fire for approved runs
+
+Even after approving the `action_required` CI run, the merge gate (which triggers on
+`workflow_run: [completed]` for "App: CI") may not fire. GitHub docs state:
+
+> `workflow_run` events are NOT triggered for workflow runs that were initially pending
+> approval and then approved.
+
+This means the merge gate's `workflow_run` trigger silently does nothing. The CI passed, but
+nobody told the gate. The PR sits open with no gate action.
+
+**Mitigation:** Ensure the repo setting above is enabled so CI starts without
+`action_required`. If a bot PR still goes through that path, the merge gate won't auto-trigger —
+trigger it manually via `workflow_dispatch` with the PR number.
+
+---
+
 ## Log noise: the agent narrates between tool calls
 
 gh-aw runs `opencode run --print-logs --log-level ERROR "$(cat …/prompt.txt)"`. The
