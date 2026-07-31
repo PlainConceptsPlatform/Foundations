@@ -284,8 +284,8 @@ concurrency:
 | `engine:` | `id`, `model`, `version`, `command`, `args`, `env`, `permission-mode`, `agent`, `api-target`, `bare`. **Platform: `opencode` via Forge** — see `references/opencode.md` |
 | `model:` | Top-level alias. Provider segment must be one of `copilot`, `anthropic`, `openai`, `codex` |
 | `max-turns:` | **Platform: `300`.** Tool-loop budget. The real guard against a confused agent looping |
-| `max-turn-cache-misses:` | **Platform: `100`.** Forge has no prompt cache; every turn is a miss |
-| `max-ai-credits:` | Default 1000. Only engages when traffic passes gh-aw's proxy accounting |
+| `max-turn-cache-misses:` | **Platform: `3000`.** Forge has no prompt cache; every turn is a miss |
+| `max-ai-credits:` | **Platform: `5000`.** Generous budget for multi-phase pipelines. Only engages when traffic passes gh-aw's proxy accounting |
 | `models:` | `allowed:` / `blocked:` model globs, plus pricing overrides |
 
 ---

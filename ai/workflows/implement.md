@@ -204,7 +204,8 @@ engine:
 model: openai/glm-5-2
 
 max-turns: 300
-max-turn-cache-misses: 100
+max-turn-cache-misses: 3000
+max-ai-credits: 5000
 
 env:
   IMPLEMENT_LABEL: implement

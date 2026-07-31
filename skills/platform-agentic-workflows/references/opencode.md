@@ -20,7 +20,8 @@ model: openai/glm-5-2
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 max-turns: 300
-max-turn-cache-misses: 100
+max-turn-cache-misses: 3000
+max-ai-credits: 5000
 
 network:
   allowed:
@@ -38,9 +39,10 @@ All parts are load-bearing:
 3. **`model: openai/glm-5-2`.** The provider segment must be `openai` — see below.
 4. **Root `secrets.OPENAI_API_KEY`.** It supplies the model client without putting the key in
    the agent's `engine.env`; the latter is rejected by strict compilation.
-5. **Both turn budgets.** `max-turns: 300` bounds tool loops; `max-turn-cache-misses: 100`
+5. **All three budgets.** `max-turns: 300` bounds tool loops; `max-turn-cache-misses: 3000`
    prevents otherwise healthy Forge runs failing at the compiler default of five consecutive
-   misses. Forge has no prompt cache, so every turn is a miss.
+   misses. Forge has no prompt cache, so every turn is a miss. `max-ai-credits: 5000` gives
+   multi-phase pipelines (like `/plan-goal`) room to finish.
 6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
    the firewall will block it otherwise. That failure looks like a model timeout, not a network
    error, which makes it expensive to diagnose.
@@ -145,8 +147,8 @@ Prefer the first: GitHub is already the database, and state stored there is visi
 |---|---|---|
 | `timeout-minutes:` | yes | Job wall clock. Set generously; an implement agent needs 60–120 |
 | `max-turns:` | yes | Tool-loop budget. **Platform standard: `300`.** The real guard against a confused agent looping |
-| `max-turn-cache-misses:` | yes | **Platform standard: `100`.** Forge has no cache, so every turn is a miss |
-| `max-ai-credits:` | unreliable | Only engages when traffic passes gh-aw's proxy accounting |
+| `max-turn-cache-misses:` | yes | **Platform standard: `3000`.** Forge has no cache, so every turn is a miss |
+| `max-ai-credits:` | unreliable | **Platform standard: `5000`.** Only engages when traffic passes gh-aw's proxy accounting |
 | `tools.timeout:` | no | Inside the dropped block |
 
 ---

@@ -64,10 +64,10 @@ Three things, none of them optional:
 root `secrets:` instead: `secrets: { OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} }`. The key
 never reaches the agent's environment, and the workflow compiles clean.
 
-**`max-turns: 300` and `max-turn-cache-misses: 100`.** Forge caching can miss more than five
-consecutive times on a healthy run (every turn is a miss — Forge has no prompt cache). Without
-`max-turns: 300` and `max-turn-cache-misses: 100` set explicitly, an otherwise healthy agent
-run fails at the compiler default of 5.
+**`max-turns: 300`, `max-turn-cache-misses: 3000`, and `max-ai-credits: 5000`.** Forge caching
+can miss more than five consecutive times on a healthy run (every turn is a miss — Forge has
+no prompt cache). Without `max-turn-cache-misses: 3000` set explicitly, an otherwise healthy
+agent run fails at the compiler default of 5.
 
 ## What is deliberately not here
 

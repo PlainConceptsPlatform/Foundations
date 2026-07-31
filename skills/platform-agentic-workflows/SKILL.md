@@ -314,7 +314,8 @@ secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 max-turns: 300                 # Platform standard. The real guard against a confused agent looping.
-max-turn-cache-misses: 100    # Forge has no prompt cache; every turn is a miss.
+max-turn-cache-misses: 3000    # Forge has no prompt cache; every turn is a miss.
+max-ai-credits: 5000           # Generous budget for multi-phase pipelines.
 
 network:                     # Explicit. Forge is not in `defaults`.
   allowed: [defaults, forge.plainconcepts.com, dotnet, node]  # dotnet/node cover NuGet & npm registries
