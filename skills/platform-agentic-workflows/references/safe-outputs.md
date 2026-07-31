@@ -222,6 +222,36 @@ issue with children in one call:
 reads `created_issue_number` from the `safe_outputs` job outputs and applies labels via
 `gh issue edit`. See the LifecycleOps skeleton in `references/determinism.md`.
 
+**When creating a parent + children (audit pattern), label them differently.** The parent issue
+gets a category label only (e.g. `audit`); the children get action labels (e.g. `bug` +
+`implement`). The conclude job must know which issue is the parent — if the prompt creates the
+parent first, the first number is the parent; if last, the last number is. Pin the order in the
+prompt ("create parent first, then children") and match it in the script. As a safety guard,
+explicitly remove action labels from the parent:
+
+```bash
+# Parent: first issue created. Gets ONLY the audit label — never bug or implement.
+parent="${arr[0]}"
+gh issue edit "$parent" --repo "$REPO" --add-label "audit" \
+  --remove-label "bug,implement" 2>/dev/null || \
+  gh issue edit "$parent" --repo "$REPO" --add-label "audit"
+
+# Children: everything after the parent.
+for i in $(seq 1 $((total - 1))); do
+  gh issue edit "${arr[$i]}" --repo "$REPO" --add-label "bug,implement"
+done
+```
+
+Also set `max:` on `create-issue` to match the expected count (parent + children), because the
+gh-aw default is `max: 1` — the agent will silently fail to create the children if this is not
+raised.
+
+```yaml
+safe-outputs:
+  create-issue:
+    max: 4   # 1 parent + 3 children for the audit pattern
+```
+
 ### `add-comment`
 
 ```yaml
