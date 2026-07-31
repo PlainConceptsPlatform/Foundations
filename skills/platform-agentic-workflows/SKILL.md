@@ -191,6 +191,8 @@ embed a repository's workflow policy.
 | `update-agent-issues` / `apply-agent-comments` / `apply-agent-labels` | Apply agent output items |
 | `create-agent-pr` / `merge-agent-pr` / `push-agent-branch` | PR lifecycle from agent output |
 | `create-agent-issues` / `link-agent-sub-issues` / `close-agent-issues` | Issue lifecycle from agent output |
+| `label-audit-issues` | Label parent as `audit`, children as `bug`+`implement` (audit pattern) |
+| `list-open-issues` | Write all open issues to JSON for duplicate-checking (audit pattern) |
 
 A job that calls `./.github/actions/...` must run `actions/checkout` first. If checkout uses
 `github.token`, its job needs `contents: read`; `persist-credentials: false` is the default for
