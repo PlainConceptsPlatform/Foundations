@@ -364,6 +364,9 @@ The body is the **prompt**. Not a README, not a description of the workflow.
   and what `/repo-verify` must pass.
 - Keep the prompt short. Do not restate event fields or facts already interpolated into it, and
   do not ask the model to verify deterministic work done by jobs.
+- Suppress narration. In the CI agent prompt (`opencode.ci.json`), end with an output-discipline
+  directive: "Do not narrate. Do not write prose between tool calls. Call tools silently."
+  See `references/opencode.md` — Log noise.
 - Require complete final Safe Outputs items. For example, one `add_comment` item contains the
   entire response, not a greeting followed by a second item with the questions.
 - Say what not to do where the model would plausibly do it: do not weaken a test, do not

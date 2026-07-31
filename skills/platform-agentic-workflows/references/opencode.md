@@ -100,6 +100,40 @@ problem, not as a model or Safe Outputs failure.
 
 ---
 
+## Log noise: the agent narrates between tool calls
+
+gh-aw runs `opencode run --print-logs --log-level ERROR "$(cat …/prompt.txt)"`. The
+`--log-level ERROR` suppresses opencode's own diagnostics. What remains in the Actions log is
+the model's **intermediate prose** — the narration it emits between tool calls: "Let me check…",
+"Now I'll…", "I have enough context…". That prose is not work; it is tokens spent talking about
+work, and on long pipelines it floods the log with hundreds of lines that obscure real output.
+
+There is no `--quiet` flag that suppresses model prose. The only knob is the **system prompt**.
+
+### The output-discipline directive
+
+Add this (or a trimmed equivalent) to the CI agent prompt in `opencode.ci.json`:
+
+```text
+OUTPUT DISCIPLINE: Do not narrate. Do not explain what you are about to do before doing it.
+Do not write prose between tool calls. Call tools silently. The only prose you produce is the
+final result or a brief error explanation when something fails. Never output sentences like
+"Let me check…", "Now I will…", "I have enough context…", or "Next I need to…". If you must
+think, use the todowrite tool, not prose.
+```
+
+Place it at the **end** of the agent `prompt` string. It applies to every workflow that uses the
+shared CI agent — no per-workfile change needed. The model still reasons internally; it just
+stops emitting the reasoning as text.
+
+### Where this does not apply
+
+Local interactive sessions do not need the directive: narration is useful when a human is reading
+along. The directive is specifically for the headless `--print-logs` path, where the log is a
+record, not a conversation.
+
+---
+
 ## The trap: `tools:` is ignored
 
 ```
