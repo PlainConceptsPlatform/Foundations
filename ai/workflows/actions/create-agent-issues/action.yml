@@ -1,0 +1,31 @@
+name: Create agent issues
+description: Read create_issue items from agent_output.json and create each via gh.
+inputs:
+  output-file:
+    description: Path to agent_output.json.
+    required: true
+  token:
+    description: GitHub token with issues:write.
+    required: true
+  repo:
+    description: Target repository in owner/name format.
+    required: false
+    default: ${{ github.repository }}
+runs:
+  using: composite
+  steps:
+    - name: Create issues
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
+        REPO: ${{ inputs.repo }}
+      run: |
+        set -euo pipefail
+        [ -f "$OUTPUT_FILE" ] || exit 0
+
+        jq -c '.items[] | select(.type == "create_issue")' "$OUTPUT_FILE" | while read -r item; do
+          TITLE=$(echo "$item" | jq -r '.title')
+          BODY=$(echo "$item" | jq -r '.body')
+          gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY"
+        done

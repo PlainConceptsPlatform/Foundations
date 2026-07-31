@@ -30,10 +30,8 @@ gh aw fix --write          # apply codemods for deprecated fields
 
 ### Read the warnings
 
-Zero errors is not the bar. The compiler's warnings are where the real problems live, because
-every one of them describes something that will fail at runtime rather than at compile time.
-
-Warnings seen on Platform workflows and what they mean:
+Zero errors is not the bar. The compiler's warnings describe things that will fail at runtime
+rather than at compile time.
 
 | Warning | Meaning |
 |---|---|
@@ -55,16 +53,14 @@ not credential exfiltration or a supply-chain swap, then:
 gh aw compile --approve
 ```
 
-and record the new secret in the pull request description. Do not reach for `--approve` as a
-reflex; the whole value of the gate is that someone looked.
+Do not reach for `--approve` as a reflex; the whole value of the gate is that someone looked.
 
 ---
 
 ## Probing an unfamiliar field
 
-The published docs run ahead of the installed compiler. `on.workflow_run.conclusion` is
-documented and rejected by v0.83.4. Do not guess, and do not teach a field you have not seen
-compile: probe it, which takes about three minutes.
+The published docs run ahead of the installed compiler. Do not guess, and do not teach a field
+you have not seen compile: probe it, which takes about three minutes.
 
 1. Write `.github/workflows/zz-probe.md` with the smallest frontmatter that exercises the
    field, plus a two-line body.
@@ -146,13 +142,10 @@ PY
 bash -n ./.tmp/*.sh          # syntax
 ```
 
-On Windows, note that Python's `/tmp` and Git Bash's `/tmp` are different directories. Use a
-relative path both agree on.
-
 ### Run it from a directory with no `.git`
 
 A custom job is not checked out. Reproduce that, or `gh`'s repo inference will paper over a
-missing `--repo` and the bug only appears in CI:
+missing `--repo`:
 
 ```bash
 mkdir -p /tmp/nogit && cd /tmp/nogit
@@ -167,8 +160,7 @@ Assert on `$GITHUB_OUTPUT`, not just the exit code. A script that exits 0 having
 
 To test the paths that need data you do not have, or writes you must not perform, put a fake
 `gh` earlier on `PATH` that returns synthetic data for the queries you want to control,
-intercepts writes, and delegates everything else to the real binary. Real state lookups stay
-real, so the test is honest about API shapes.
+intercepts writes, and delegates everything else to the real binary:
 
 ```bash
 REALGH=$(command -v gh); mkdir -p ./.tmp/bin
@@ -190,12 +182,8 @@ chmod +x ./.tmp/bin/gh
 PATH="$PWD/.tmp/bin:$PATH" bash ./.tmp/audit-close.sh
 ```
 
-One caveat learned the hard way: a lazy shim that ignores `--jq` will hand raw JSON to a
-variable the real `gh` would have reduced to a number. If output looks structurally wrong,
-suspect the shim before the script.
-
-This is also how to check a destructive path safely — every write prints `[WOULD] …` instead of
-happening.
+A lazy shim that ignores `--jq` will hand raw JSON to a variable the real `gh` would have
+reduced to a number. If output looks structurally wrong, suspect the shim before the script.
 
 ## Running it
 
@@ -243,19 +231,18 @@ tool calls. It is the first thing to run when a workflow "did nothing".
 
 ### Test deterministic lifecycle stages
 
-Strict compilation proves syntax, not that a local action can run on a clean hosted runner.
 Before relying on a new lifecycle path, test every stage in order with one controlled issue:
 
 1. Trigger with the command label and verify selection, validation and reservation.
-3. Verify every job using `./.github/actions/...` checked out the repository and has
+2. Verify every job using `./.github/actions/...` checked out the repository and has
    `contents: read` permissions.
-4. Verify output-writing actions create their destination parent directory.
-5. Verify the agent can read a normal repository file without a permission prompt.
-6. Verify issue context is preloaded to `/tmp/gh-aw/agent/issue-context.json` before the agent
+3. Verify output-writing actions create their destination parent directory.
+4. Verify the agent can read a normal repository file without a permission prompt.
+5. Verify issue context is preloaded to `/tmp/gh-aw/agent/issue-context.json` before the agent
    starts on implement, merge-gate, and apply-review workflows.
-7. Verify questions remove `bot-working`, preserve the command label, add the
+6. Verify questions remove `bot-working`, preserve the command label, add the
    human-input label (`review`), and that a subsequent successful pass removes `review`.
-8. Reply as an authorised user and verify the response pass updates the original issue body,
+7. Reply as an authorised user and verify the response pass updates the original issue body,
    transitions labels, and posts no duplicate lifecycle comments.
 
 Use `gh run view <run-id> --json jobs` to locate the first failing stage. Do not infer an
@@ -290,63 +277,43 @@ values and any `{{#if}}` blocks resolved. Two recurring causes:
 
 - **Documentation leaked into the prompt.** A `## Diagram` section without the exclusion line,
   or explanation that belonged in `description:`.
-- **The model was asked to decide something it could not know.** "Stop if any open issue already
-  carries `bot-working`" requires a query it may not have made. Push it to rung 2.
+- **The model was asked to decide something it could not know.** "Stop if any open issue
+  already carries `bot-working`" requires a query it may not have made. Push it to rung 2.
 
 ---
 
 ## Before deleting a workflow
 
-A `.github/workflows/` directory grows and starts to look padded. Two things make a live
-workflow look dead, so audit reachability before removing anything.
+Two things make a live workflow look dead, so audit reachability before removing anything.
 
-**A `workflow_call`-only workflow never appears in the Actions tab** as a runnable entry or a
-standalone run. It looks abandoned and may be the deployment path. Find its callers:
+**A `workflow_call`-only workflow never appears in the Actions tab.** Find its callers:
 
 ```bash
 grep -rn 'uses: \./\.github/workflows/' .github/workflows/*.yml
 ```
 
-**A `workflow_run` consumer is referenced by workflow *name*, not filename**, so grepping for the
-filename finds nothing. Compare against `name:` values:
+**A `workflow_run` consumer is referenced by workflow *name*, not filename:**
 
 ```bash
 grep -rn -A4 'workflow_run:' .github/workflows/*.yml .github/workflows/*.md
 ```
 
-Dump every trigger at once to see what is genuinely unreachable:
+A workflow with no trigger, no caller and no `workflow_run` consumer is dead.
 
-```bash
-for f in .github/workflows/*.yml; do
-  printf '%-30s ' "$f"
-  python -c "
-import yaml
-d = yaml.safe_load(open('$f'))
-on = d.get(True, d.get('on'))
-print(', '.join(on) if isinstance(on, dict) else on)"
-done
-```
-
-A workflow with no trigger, no caller and no `workflow_run` consumer is dead. Anything else is
-load-bearing.
-
-Also: `.lock.yml` files are compiled artifacts, not workflows. They inflate the directory listing
-and account for most of the perceived clutter. Handle that at the display layer rather than by
-deleting things:
+`.lock.yml` files are compiled artifacts, not workflows. Handle them at the display layer:
 
 ```gitattributes
 .github/workflows/*.lock.yml linguist-generated=true merge=ours
 ```
 
 ```jsonc
-// .vscode/settings.json — nest each lock under its markdown and open it read-only
+// .vscode/settings.json
 "explorer.fileNesting.patterns": { "*.md": "${capture}.lock.yml" }
 ```
 
 ## Repository maintenance
 
-`gh aw compile` generates `agentics-maintenance.yml`. Do not hand-edit it. It gives you a daily
-job closing expired items, and a `workflow_dispatch` with operations worth knowing:
+`gh aw compile` generates `agentics-maintenance.yml`. Do not hand-edit it. It gives you:
 
 | Operation | Does |
 |---|---|
@@ -355,7 +322,6 @@ job closing expired items, and a `workflow_dispatch` with operations worth knowi
 | `activity_report` | 24-hour, weekly or monthly activity |
 | `forecast` | Token-usage projection |
 | `safe_outputs` | Replays safe outputs from a specific run |
-| `clean_cache_memories` | Removes stale cache entries |
 
 Configure its runner in `.github/workflows/aw.json`:
 
@@ -366,8 +332,6 @@ Configure its runner in `.github/workflows/aw.json`:
 `gh aw compile --dependabot` generates a `dependabot.yml`. Platform repositories do not use
 Dependabot, so do not pass that flag.
 
----
-
 ## Keeping it honest in CI
 
 A lock file that drifts from its source is a workflow nobody is running. Check it:
@@ -376,15 +340,14 @@ A lock file that drifts from its source is a workflow nobody is running. Check i
 gh aw compile && git diff --exit-code -- .github/workflows/
 ```
 
-One caveat: compilation is not fully reproducible. `gh aw compile` embeds model prices at
-compile time in `GH_AW_INFO_MODEL_COSTS`, and those figures move — within a single CI run, one
-workflow was compiled with an input cost of `1.2e-06` and another with `1.4e-06`. A drift check
-therefore has to ignore that line:
+Compilation is not fully reproducible: `gh aw compile` embeds model prices at compile time in
+`GH_AW_INFO_MODEL_COSTS`, and those figures move. A drift check therefore has to ignore that
+line:
 
 ```bash
 diff -I 'GH_AW_INFO_MODEL_COSTS' expected.lock.yml actual.lock.yml
 ```
 
-Everything else in the lock must match, and that is the part worth enforcing. Also worth
-asserting in CI: that every `workflow_run.workflows` entry resolves to a real `name:`, since
-that failure is otherwise silent.
+Everything else in the lock must match. Also worth asserting in CI: that every
+`workflow_run.workflows` entry resolves to a real `name:`, since that failure is otherwise
+silent.

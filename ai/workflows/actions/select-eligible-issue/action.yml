@@ -1,0 +1,122 @@
+name: Select eligible issue
+description: Select the lowest-numbered open issue matching ordered label groups.
+inputs:
+  token:
+    description: GitHub token used by github-script.
+    required: true
+  candidate-label-groups:
+    description: Newline-delimited comma-separated label groups in priority order.
+    required: true
+  excluded-labels:
+    description: Newline-delimited labels that make an issue ineligible.
+    required: false
+    default: ''
+  exclusive-label:
+    description: When present on any open issue, prevent selecting another issue.
+    required: false
+    default: ''
+  issue-number:
+    description: When set, use this issue number directly instead of the label cascade.
+    required: false
+    default: ''
+  skip-if-open-pr:
+    description: When true, skip issues that already have an open PR closing them.
+    required: false
+    default: 'false'
+outputs:
+  found:
+    description: Whether an eligible issue was selected.
+    value: ${{ steps.select.outputs.found }}
+  number:
+    description: Selected issue number, when found.
+    value: ${{ steps.select.outputs.number }}
+  reason:
+    description: Why no issue was selected.
+    value: ${{ steps.select.outputs.reason }}
+runs:
+  using: composite
+  steps:
+    - name: Select eligible issue
+      id: select
+      uses: actions/github-script@v9
+      env:
+        CANDIDATE_LABEL_GROUPS: ${{ inputs.candidate-label-groups }}
+        EXCLUDED_LABELS: ${{ inputs.excluded-labels }}
+        EXCLUSIVE_LABEL: ${{ inputs.exclusive-label }}
+        ISSUE_NUMBER_OVERRIDE: ${{ inputs.issue-number }}
+        SKIP_IF_OPEN_PR: ${{ inputs.skip-if-open-pr }}
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          none = (reason) => {
+            core.setOutput('found', 'false');
+            core.setOutput('reason', reason);
+            return;
+          };
+
+          const hasOpenPR = async (issueNum) => {
+            if (process.env.SKIP_IF_OPEN_PR !== 'true') return false;
+            const { data } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:pr is:open Closes #${issueNum}`,
+              per_page: 1,
+            });
+            return data.total_count > 0;
+          };
+
+          const checkLabels = (issue) => {
+            const labels = new Set(issue.labels.map(({ name }) => name));
+            const excluded = new Set(process.env.EXCLUDED_LABELS.split(/\r?\n/).filter(Boolean));
+            return ![...excluded].some((label) => labels.has(label));
+          };
+
+          // Manual override: use the passed issue number directly
+          if (process.env.ISSUE_NUMBER_OVERRIDE) {
+            const num = Number(process.env.ISSUE_NUMBER_OVERRIDE);
+            try {
+              const { data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: num });
+              if (issue.state !== 'open') return none(`issue #${num} is not open`);
+              if (!checkLabels(issue)) return none(`issue #${num} has a blocked label`);
+              if (await hasOpenPR(num)) return none(`issue #${num} already has an open PR`);
+              core.setOutput('found', 'true');
+              core.setOutput('number', String(num));
+              core.setOutput('reason', '');
+              return;
+            } catch (e) {
+              return none(`issue #${num} not found`);
+            }
+          }
+
+          // Cascade selection by label groups
+          const labelGroups = process.env.CANDIDATE_LABEL_GROUPS
+            .split(/\r?\n/)
+            .filter(Boolean)
+            .map((group) => group.split(',').map((label) => label.trim()).filter(Boolean));
+
+          const issues = await github.paginate(github.rest.issues.listForRepo, {
+            ...context.repo,
+            state: 'open',
+            per_page: 100,
+          });
+          const openIssues = issues.filter((issue) => !issue.pull_request);
+
+          if (process.env.EXCLUSIVE_LABEL && openIssues.some((issue) =>
+            issue.labels.some(({ name }) => name === process.env.EXCLUSIVE_LABEL))) {
+            return none('another issue is already in flight');
+          }
+
+          for (const labelGroup of labelGroups) {
+            for (const issue of openIssues
+              .filter((issue) => {
+                const labels = new Set(issue.labels.map(({ name }) => name));
+                return labelGroup.every((label) => labels.has(label)) && checkLabels(issue);
+              })
+              .sort((left, right) => left.number - right.number)) {
+              if (await hasOpenPR(issue.number)) continue;
+              core.setOutput('found', 'true');
+              core.setOutput('number', String(issue.number));
+              core.setOutput('reason', '');
+              return;
+            }
+          }
+
+          none('no eligible issue');

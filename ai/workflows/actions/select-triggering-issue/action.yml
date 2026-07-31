@@ -1,0 +1,27 @@
+name: Select triggering issue
+description: Read the issue number from the triggering GitHub event.
+inputs:
+  token:
+    description: GitHub token used by github-script.
+    required: true
+outputs:
+  number:
+    description: Triggering issue number.
+    value: ${{ steps.select.outputs.number }}
+runs:
+  using: composite
+  steps:
+    - name: Read issue number
+      id: select
+      uses: actions/github-script@v9
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const issueNumber = context.payload.issue?.number;
+
+          if (!issueNumber) {
+            core.setFailed('The event does not contain an issue number.');
+            return;
+          }
+
+          core.setOutput('number', String(issueNumber));

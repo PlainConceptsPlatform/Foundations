@@ -12,12 +12,16 @@ cannot reach further than the types you declared.
 
 **The rule: `permissions: read-all`, and every final agent decision writes through
 `safe-outputs`.** Granting the agent `issues: write` so it can run `gh issue edit` throws all
-of the above away. A deterministic custom job may make a minimal, idempotent pre-agent
-lifecycle reservation (such as adding `bot-working`); it must not make judgement-based writes.
+of that away. A deterministic custom job may make a minimal, idempotent pre-agent lifecycle
+reservation (such as adding `bot-working`); it must not make judgement-based writes.
 
-When that lifecycle write must be attributed to the Platform GitHub App rather than
-`github-actions[bot]`, mint an installation token in the custom job and pass it only to the
-local composite action:
+---
+
+## GitHub App token for lifecycle writes
+
+When a lifecycle write must be attributed to the Platform GitHub App rather than
+`github-actions[bot]`, mint an installation token in a custom job and pass it only to the
+local composite action. Every `reserve`, `conclude`, and `incomplete` job does this:
 
 ```yaml
 - uses: actions/create-github-app-token@v3.2.0
@@ -34,26 +38,88 @@ local composite action:
       [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 ```
 
-Always include a run link and token usage in the deterministic completion comment in the
-`conclude` job that depends on both `agent` and `safe_outputs`:
+Never expose the app token to the agent job. `BOT_APP_ID` and `BOT_PRIVATE_KEY` are the
+standard Platform secret names.
+
+---
+
+## The conclude/incomplete lifecycle
+
+Every LifecycleOps workflow has three terminal jobs that depend on `[pick, agent, safe_outputs]`:
 
 ```yaml
 conclude:
   needs: [pick, agent, safe_outputs]
   if: >
     needs.agent.result == 'success' &&
-    needs.safe_outputs.result == 'success' &&
-    needs.safe_outputs.outputs.process_safe_outputs_processed_count != '0'
+    needs.safe_outputs.result == 'success'
+  runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    issues: write
+  steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - uses: actions/create-github-app-token@v3.2.0
+      id: app-token
+      with:
+        client-id: ${{ secrets.BOT_APP_ID }}
+        private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+    - uses: ./.github/actions/download-agent-output
+      id: agent-output
+    # ... apply safe-output items via composite actions ...
+    - uses: ./.github/actions/create-issue-comment
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        issue-number: ${{ needs.pick.outputs.number }}
+        body: |
+          ${{ env.MARKER }}
+          ${{ env.FINISHED_COMMENT }}
+          [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+incomplete:
+  needs: [pick, agent, safe_outputs]
+  if: >
+    always() &&
+    needs.pick.outputs.found == 'true' &&
+    needs.agent.result != 'success'
+  runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    issues: write
+  steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+    - uses: actions/create-github-app-token@v3.2.0
+      id: app-token
+      with:
+        client-id: ${{ secrets.BOT_APP_ID }}
+        private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+    - uses: ./.github/actions/remove-issue-labels
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        issue-number: ${{ needs.pick.outputs.number }}
+        labels: ${{ env.WORKING_LABEL }}
+    - uses: ./.github/actions/add-issue-labels
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        issue-number: ${{ needs.pick.outputs.number }}
+        labels: ${{ env.REVIEW_LABEL }}
+    - uses: ./.github/actions/create-issue-comment
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        issue-number: ${{ needs.pick.outputs.number }}
+        body: |
+          ${{ env.MARKER }}
+          ${{ env.INCOMPLETE_COMMENT }}
+          [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 ```
 
-```yaml
-body: |
-  ${{ env.MARKER }}
-  ${{ env.FINISHED_COMMENT }}
-  [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-```
-
-Never expose the app token to the agent job.
+`conclude` fires when the agent produced output; `incomplete` fires when it did not and
+releases the issue for retry. Both depend on `pick`, `agent`, and `safe_outputs`. The
+`always()` on `incomplete` ensures it runs when `agent` failed.
 
 ---
 
@@ -123,8 +189,8 @@ Default `max` in brackets.
 ### System types
 
 `noop`, `missing-tool`, `missing-data` are enabled automatically. `noop` is how a run records
-"I looked and there was correctly nothing to do", which is worth having: it distinguishes a
-quiet run from a broken one.
+"I looked and there was correctly nothing to do", which distinguishes a quiet run from a
+broken one.
 
 ---
 
@@ -152,46 +218,9 @@ issue with children in one call:
 ```
 
 **Labels on created issues should be applied by a `conclude` job, not by the AI's
-`create_issue` call.** The agent creates issues without labels; a post-agent deterministic
-job reads `created_issue_number` from the `safe_outputs` job outputs and applies labels
-via `gh issue edit`:
-
-```yaml
-jobs:
-  conclude:
-    needs: [agent, safe_outputs]
-    if: >
-      needs.agent.result == 'success' &&
-      needs.safe_outputs.result == 'success' &&
-      needs.safe_outputs.outputs.process_safe_outputs_processed_count != '0' &&
-      needs.safe_outputs.outputs.created_issue_number != ''
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/create-github-app-token@v3.2.0
-        id: app-token
-        with:
-          client-id: ${{ secrets.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Apply labels to created issues
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPO: ${{ github.repository }}
-          ISSUE_NUMBERS: ${{ needs.safe_outputs.outputs.created_issue_number }}
-        run: |
-          set -euo pipefail
-          numbers=(${ISSUE_NUMBERS//,/ })
-          for n in "${numbers[@]}"; do
-            gh issue edit "$n" --repo "$REPO" --add-label "bug,implement"
-          done
-```
-
-`created_issue_number` is comma-separated when multiple issues were created. The conclude
-job is the deterministic pattern for label application — it keeps labels out of the AI's
-control and ensures they are always correct regardless of what the model decides.
+`create_issue` call.** The agent creates issues without labels; a post-agent deterministic job
+reads `created_issue_number` from the `safe_outputs` job outputs and applies labels via
+`gh issue edit`. See the LifecycleOps skeleton in `references/determinism.md`.
 
 ### `add-comment`
 
@@ -218,9 +247,9 @@ safe-outputs:
     allowed: [implement, bot-working, review]
 ```
 
-`allowed:` is the real control, and it is why this beats granting `issues: write`: the
-workflow can touch exactly those labels and no others, whatever the prompt is persuaded to
-attempt. Globs work (`team-*`, `area/*`), and `blocked:` is evaluated first.
+`allowed:` is the real control, and it is why this beats granting `issues: write`: the workflow
+can touch exactly those labels and no others, whatever the prompt is persuaded to attempt.
+Globs work (`team-*`, `area/*`), and `blocked:` is evaluated first.
 
 `review` must be in **both** lists on any workflow that can stop for human input. If it is
 missing from `remove-labels.allowed`, the bot silently fails to clear `review` on the next
@@ -241,7 +270,7 @@ the prompt whenever labels are allowed; an incorrect Safe Outputs schema wastes 
 Safe Outputs are terminal, not a conversational transport. Ask the agent to emit a complete
 payload once its judgement is done. For example, an issue-refinement workflow that needs to ask
 three questions emits **one** `add_comment` item containing the introduction and all questions,
-not a progress comment and later follow-ups. This minimizes turns, prevents duplicate comments,
+not a progress comment and later follow-ups. This minimises turns, prevents duplicate comments,
 and makes the output job atomic from the user's point of view.
 
 ### `create-pull-request`
@@ -266,7 +295,6 @@ Mechanics worth knowing:
 - `draft: true` is policy, not a suggestion: the agent cannot override it.
 - `if-no-changes:` is `warn` by default. Set it to `error` where producing nothing means the
   run failed, so a silent no-op does not read as success.
-- Branch names get a random suffix unless `preserve-branch-name: true`.
 - `protected-files:` defaults to `request_review`, which is why an agent touching
   `.github/workflows/` or a lockfile gets a `REQUEST_CHANGES` review rather than a clean PR.
   That default is correct; do not set it to `allowed` to make a run look tidier.
@@ -285,16 +313,8 @@ checkout:
 ```
 
 **`target: "*"` requires the wildcard fetch.** Without it the branch is not in the shallow
-clone and the push fails at the end of an otherwise successful run. The compiler warns:
-
-```
-⚠ push-to-pull-request-branch: target: "*" requires that all PR branches
-  are fetched at checkout.
-```
-
-It also warns that `target: "*"` with no constraints lets the workflow push to any PR. Add
-`required-labels:` or `required-title-prefix:` so it can only push to branches it is
-supposed to own.
+clone and the push fails at the end of an otherwise successful run. Add `required-labels:` or
+`required-title-prefix:` so it can only push to branches it is supposed to own.
 
 ### `merge-pull-request`
 
@@ -315,13 +335,12 @@ safe-outputs:
 ```
 
 **Platform: always pin `runs-on`.** Otherwise this job goes to a GitHub-hosted runner
-independently of `runs-on-slim`. It has its own AI credit budget (default 400), separate from
-the agent's.
+independently of `runs-on-slim`.
 
 Platform `agent-*.md` workflows set `threat-detection: false` explicitly in their own
-frontmatter to avoid an additional model call. Retain the narrow Safe Outputs surface, read-only
-agent permissions, network allowlist, and deterministic preconditions. Do not hide the setting
-in a shared import: the workflow must make its own security/cost trade-off visible.
+frontmatter to avoid an additional model call. Retain the narrow Safe Outputs surface,
+read-only agent permissions, network allowlist, and deterministic preconditions. Do not hide the
+setting in a shared import: the workflow must make its own security/cost trade-off visible.
 
 ---
 
@@ -356,10 +375,9 @@ Use the language of proposal:
 Not "create a PR" or "run `gh issue close`". The agent has no such command, and asking for one
 sends it hunting for a tool it does not have, which burns turns and ends in `missing-tool`.
 
-Three more habits:
+Three habits:
 
-- **Declare only what the workflow needs.** Every extra type widens the blast radius. A
-  workflow that comments does not need `update-issue`.
+- **Declare only what the workflow needs.** Every extra type widens the blast radius.
 - **Say what not to write.** "Do not merge", "do not change any label other than
   `bot-working`", "do not close anything". The `allowed:` lists enforce it; the prompt stops
   the agent wasting turns trying.

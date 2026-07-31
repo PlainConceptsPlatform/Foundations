@@ -12,14 +12,14 @@ and one significant trap, and neither is discoverable from the gh-aw docs.
 ```yaml
 engine:
   id: opencode
-  version: 1.1.58
+  version: 1.2.14
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
 
 model: openai/glm-5-2
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-max-turns: 30
+max-turns: 300
 max-turn-cache-misses: 100
 
 network:
@@ -30,40 +30,23 @@ network:
     - node     # npm/pnpm: registry.npmjs.org, npmjs.com, nodejs.org, get.pnpm.io, etc.
 ```
 
-Six parts, all load-bearing:
+All parts are load-bearing:
 
-1. **`id: opencode` and pinned `version`.** Experimental in gh-aw; the compiler says so on every compile. That
-   warning is expected and is not a problem to fix.
+1. **`id: opencode` and pinned `version: 1.2.14`.** Experimental in gh-aw; the compiler says so
+   on every compile. That warning is expected and is not a problem to fix.
 2. **`OPENAI_BASE_URL`** points the OpenAI-compatible client at Forge.
 3. **`model: openai/glm-5-2`.** The provider segment must be `openai` — see below.
 4. **Root `secrets.OPENAI_API_KEY`.** It supplies the model client without putting the key in
    the agent's `engine.env`; the latter is rejected by strict compilation.
-5. **Both turn budgets.** `max-turns` bounds tool loops; `max-turn-cache-misses` prevents
-   otherwise healthy Forge runs failing at the compiler default of five consecutive misses.
-   Forge has no prompt cache, so every turn is a cache miss. Set `max-turn-cache-misses: 100`
-   to avoid the agent being killed mid-run.
+5. **Both turn budgets.** `max-turns: 300` bounds tool loops; `max-turn-cache-misses: 100`
+   prevents otherwise healthy Forge runs failing at the compiler default of five consecutive
+   misses. Forge has no prompt cache, so every turn is a miss.
 6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
    the firewall will block it otherwise. That failure looks like a model timeout, not a network
    error, which makes it expensive to diagnose.
-7. **`network.allowed` includes package-ecosystem identifiers.** The agent must restore
-   packages during `/repo-verify` or build steps. Listing each registry hostname individually
-   (`api.nuget.org`, `nuget.org`, `registry.npmjs.org`, …) works but is brittle and incomplete —
-   the compiler's `dotnet` identifier expands to 20+ NuGet-related domains, and `node` to 30+
-   npm/Node domains. Use the ecosystem identifiers instead. Verified by compiling against Numa:
-   the generated firewall domain list covers every registry, CDN, and OCSP endpoint the
-   package managers contact.
-
-   ```yaml
-   network:
-     allowed:
-       - defaults
-       - forge.plainconcepts.com
-       - dotnet   # covers nuget.org, api.nuget.org, packages.microsoft.com, dotnetcli.blob.core.windows.net, etc.
-       - node     # covers registry.npmjs.org, npmjs.com, nodejs.org, get.pnpm.io, yarnpkg.com, etc.
-   ```
-
-   These go in `shared/platform-defaults.md` because `network` merges from imports — every
-   workflow that imports the shared file gets them.
+7. **`network.allowed` includes package-ecosystem identifiers** (`dotnet`, `node`). The agent
+   must restore packages during `/repo-verify` or build steps. Use ecosystem identifiers, not
+   individual hostnames — the compiler's expansion covers every registry, CDN, and OCSP endpoint.
 
 ### Why the provider segment is `openai`
 
@@ -124,7 +107,8 @@ problem, not as a model or Safe Outputs failure.
 
 The compiler prints that once and drops the **entire** `tools:` block. Verified by compiling a
 workflow with `tools.cache-memory` configured and finding zero references to it in the
-resulting 114KB lock file.
+resulting 114KB lock file. This entry is the sole source of truth for this trap —
+`references/frontmatter.md` and `SKILL.md` point here.
 
 What that means:
 
@@ -137,7 +121,7 @@ What that means:
 | `tools: web-fetch:` | Dropped |
 | `mcp-servers:` | Dropped |
 
-Three consequences to act on:
+Three consequences:
 
 **Do not write a `tools:` block.** It is dead configuration that reads like a control, which is
 worse than absent: the next reader will believe the workflow is constrained when it is not.
@@ -150,7 +134,7 @@ Those are enforced outside the agent, so they hold regardless of what the engine
 **Persistence needs another mechanism.** No `cache-memory` means the CI-doctor pattern of
 "remember which runs you already investigated" does not work as written. The options are
 `safe-outputs` (write state where GitHub already stores it: a label, a comment, an issue body),
-or an explicit `actions/cache` step at rung 3, or a `repo-memory`-shaped custom job at rung 6.
+an explicit `actions/cache` step at rung 3, or a `repo-memory`-shaped custom job at rung 6.
 Prefer the first: GitHub is already the database, and state stored there is visible to humans.
 
 ---
@@ -159,45 +143,27 @@ Prefer the first: GitHub is already the database, and state stored there is visi
 
 | Field | Works under opencode | Notes |
 |---|---|---|
-| `timeout-minutes:` | yes | Job wall clock. Set generously; a build-and-test agent needs 60–90 |
-| `max-turns:` | yes | Tool-loop budget. The real guard against a confused agent looping |
+| `timeout-minutes:` | yes | Job wall clock. Set generously; an implement agent needs 60–120 |
+| `max-turns:` | yes | Tool-loop budget. **Platform standard: `300`.** The real guard against a confused agent looping |
+| `max-turn-cache-misses:` | yes | **Platform standard: `100`.** Forge has no cache, so every turn is a miss |
 | `max-ai-credits:` | unreliable | Only engages when traffic passes gh-aw's proxy accounting |
 | `tools.timeout:` | no | Inside the dropped block |
-
-`max-turns` is the one to lean on. Set it where an honest run finishes comfortably and a
-confused one stops.
 
 ---
 
 ## Cost telemetry
 
-Two sources, and they are not equally reliable.
-
-**gh-aw's proxy log** at `sandbox/firewall/logs/api-proxy-logs/token-usage.jsonl` in the run's
-artifacts. One JSON object per line with model and token counts:
-
-```json
-{"model":"glm-5-2","input_tokens":1200,"output_tokens":340,
- "cache_read_input_tokens":500,"cache_creation_input_tokens":100}
-```
-
-**Expect it to be missing.** Routing through Forge means requests may not pass through gh-aw's
-API proxy accounting at all. Absence is an expected outcome, not an error, and a cost workflow
-must treat it that way rather than reporting a failure.
-
-**The agent's own output** in the run log, which reports its token counts directly. This is
-what `loop-task` surfaced as `{{opencode.tokens}}` and `{{opencode.cost}}`.
-
-### Inline token usage in lifecycle comments
-
-Token reporting in issue comments was removed. The AI Credits system tracks usage in the
-Actions run summary, and `effective_tokens` is available as a job output if you need it for
-debugging. Do not add `Tokens: ${{ needs.agent.outputs.effective_tokens }}` to lifecycle
-comments — it was duplication, and Forge routing often produces `not reported` anyway.
+gh-aw's AI Credits system tracks usage automatically, visible in the Actions run summary and
+in the `effective_tokens` job output. Do not report tokens in issue comments — it was
+duplication, and Forge routing often produces `not reported` anyway.
 
 `gh aw logs` and `gh aw audit <run-id>` give duration, tokens, credits and turn count per run
 when the proxy did observe the traffic, and `gh aw logs --format markdown` gives a cross-run
 report with anomaly detection.
+
+The proxy log at `sandbox/firewall/logs/api-proxy-logs/token-usage.jsonl` in the run's artifacts
+has one JSON object per line with model and token counts. Expect it to be missing: routing
+through Forge means requests may not pass through gh-aw's API proxy accounting at all.
 
 ---
 
@@ -207,8 +173,7 @@ Platform workflows currently target `ubuntu-latest`, switched from `[self-hosted
 agents]` in `0fc7b08`. If a repository moves back to the self-hosted runner, these apply.
 
 **Never on a public repository.** A pull request from a fork would execute arbitrary code on a
-machine holding your credentials. Private and internal only. On GitHub-hosted runners a public
-repository is fine.
+machine holding your credentials. Private and internal only.
 
 Both runner keys must be set, or the framework jobs go to a GitHub-hosted `ubuntu-slim`:
 
@@ -229,15 +194,7 @@ A persistent machine breaks two assumptions a hosted runner lets you make:
   default and fails on permissions. Set `DOTNET_INSTALL_DIR` to
   `${{ runner.tool_cache }}/dotnet`.
 
-Write transient state to `$RUNNER_TEMP`, never a hardcoded path. Do not assume root, and do not
-install into shared system paths.
-
-One runner means everything queues behind everything else: a PR check can wait on an agent run.
-That is an argument for keeping the agent's work short and moving waits onto `workflow_run`
-rather than polling inside a run.
-
-Known upstream issue: `runs-on` can revert to defaults after `gh aw upgrade` or
-`gh aw compile`. Re-check both runner keys after either command.
+Write transient state to `$RUNNER_TEMP`, never a hardcoded path.
 
 ---
 

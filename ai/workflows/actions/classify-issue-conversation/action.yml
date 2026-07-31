@@ -1,0 +1,71 @@
+name: Classify issue conversation
+description: Classify initial work or an authorized response after a marked workflow comment.
+inputs:
+  token:
+    description: GitHub token used by github-script.
+    required: true
+  issue-path:
+    description: Absolute path to saved issue JSON.
+    required: true
+  comments-path:
+    description: Absolute path to saved comments JSON.
+    required: true
+  marker:
+    description: Stable marker written by the workflow's comments.
+    required: true
+  initial-mode:
+    description: Mode returned when no marker exists.
+    required: true
+  response-mode:
+    description: Mode returned for an authorized triggering comment.
+    required: true
+outputs:
+  found:
+    description: Whether work should proceed.
+    value: ${{ steps.classify.outputs.found }}
+  mode:
+    description: Configured mode for this conversation state.
+    value: ${{ steps.classify.outputs.mode }}
+runs:
+  using: composite
+  steps:
+    - name: Classify conversation state
+      id: classify
+      uses: actions/github-script@v9
+      env:
+        ISSUE_PATH: ${{ inputs.issue-path }}
+        COMMENTS_PATH: ${{ inputs.comments-path }}
+        MARKER: ${{ inputs.marker }}
+        INITIAL_MODE: ${{ inputs.initial-mode }}
+        RESPONSE_MODE: ${{ inputs.response-mode }}
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          core.setOutput('found', 'false');
+
+          const fs = require('fs');
+          const issue = JSON.parse(fs.readFileSync(process.env.ISSUE_PATH, 'utf8'));
+          const comments = JSON.parse(fs.readFileSync(process.env.COMMENTS_PATH, 'utf8'));
+          const hasMarker = comments.some(({ body }) => body?.includes(process.env.MARKER));
+
+          if (!hasMarker) {
+            core.setOutput('found', 'true');
+            core.setOutput('mode', process.env.INITIAL_MODE);
+            return;
+          }
+
+          if (context.eventName === 'issues' && context.payload.action === 'labeled') {
+            core.setOutput('found', 'true');
+            core.setOutput('mode', process.env.INITIAL_MODE);
+            return;
+          }
+
+          const comment = context.payload.comment;
+          const allowedLogins = new Set([issue.user.login, ...issue.assignees.map(({ login }) => login)]);
+          const isAuthorizedResponse = context.eventName === 'issue_comment' &&
+            comment?.user?.type !== 'Bot' && allowedLogins.has(comment?.user?.login);
+
+          if (!isAuthorizedResponse) return;
+
+          core.setOutput('found', 'true');
+          core.setOutput('mode', process.env.RESPONSE_MODE);

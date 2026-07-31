@@ -1,0 +1,37 @@
+name: Apply agent labels
+description: Read add_labels and remove_labels items from agent_output.json and apply each via gh.
+inputs:
+  output-file:
+    description: Path to agent_output.json.
+    required: true
+  token:
+    description: GitHub token with issues:write.
+    required: true
+  repo:
+    description: Target repository in owner/name format.
+    required: false
+    default: ${{ github.repository }}
+runs:
+  using: composite
+  steps:
+    - name: Apply label changes
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
+        REPO: ${{ inputs.repo }}
+      run: |
+        set -euo pipefail
+        [ -f "$OUTPUT_FILE" ] || exit 0
+        jq -c '.items[] | select(.type == "add_labels" or .type == "remove_labels")' "$OUTPUT_FILE" | while read -r item; do
+          TYPE=$(echo "$item" | jq -r '.type')
+          NUM=$(echo "$item" | jq -r '.item_number')
+          LABELS=$(echo "$item" | jq -r '[.labels[].name] | join(",")')
+          if [ -n "$LABELS" ]; then
+            if [ "$TYPE" = "add_labels" ]; then
+              gh issue edit "$NUM" --repo "$REPO" --add-label "$LABELS"
+            else
+              gh issue edit "$NUM" --repo "$REPO" --remove-label "$LABELS"
+            fi
+          fi
+        done

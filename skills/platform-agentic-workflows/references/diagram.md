@@ -8,7 +8,7 @@ as `.loops/recipes/*.yaml`, so a reader moving between them sees one convention.
 ## The prompt must exclude it
 
 The body is the prompt, so a diagram in the body is read as instructions. Two things are
-required, and neither is optional.
+required:
 
 **One.** The diagram lives under a final `## Diagram` heading, after every numbered step.
 
@@ -27,32 +27,31 @@ Nodes are classified by role, not by appearance. Pick the role first, then the s
 ROLE          SHAPE            CLASS      FILL        WHEN
 ─────         ──────           ─────      ────        ────
 Trigger       ("label")        start      white       Exactly one per diagram. The `on:`
-                                                      event. No edges in.
+                                                       event. No edges in.
 
 Decision      ["label"]        decision   orange      A step with both a pass and a fail
-                                                      path: a gate, a check, a filter.
+                                                       path: a gate, a check, a filter.
 
 Action        ("label")        action     purple      A linear step: a precompute, the
-                                                      agent run, a verification.
+                                                       agent run, a verification.
 
 Safe output   (("label"))      success    green       A terminal that writes: comment
-                                                      posted, branch pushed, PR merged.
+                                                       posted, branch pushed, PR merged.
 
 Failure end   (("label"))      failure    red         A terminal failure path: labels
-                                                      removed, the failure reported.
+                                                       removed, the failure reported.
 
 Idle end      (("label"))      idle       dark grey   A terminal no-op: the filter did
-                                                      not match, nothing to do.
+                                                       not match, nothing to do.
 ```
 
-An idle end and a failure end are different things, and the distinction is worth keeping. A
-filter that correctly declined to act is idle. A run that tried and could not finish is a
-failure. Colouring "nothing to do" red trains people to ignore red.
+An idle end and a failure end are different things. A filter that correctly declined to act
+is idle. A run that tried and could not finish is a failure. Colouring "nothing to do" red
+trains people to ignore red.
 
 ## Showing the ladder
 
-Where a decision was pushed down the ladder, the diagram should show where it now lives, so a
-reader can see the deterministic part without opening the YAML. Mark rung-1 and rung-2 nodes:
+Where a decision was pushed down the ladder, the diagram should show where it now lives:
 
 ```
 implPick["Pick (rung 2)<br/>Priority cascade, pre-activation"]
@@ -64,29 +63,19 @@ workflow that pushed nothing down and left every decision to the model.
 ## Lifecycle versus Actions graph
 
 GitHub's visualization renders `needs:` edges. It is useful for debugging execution ordering,
-but it is not the user-facing lifecycle. A final reporting job commonly depends on every job,
-and mutually exclusive jobs can appear beside each other. Read those edges as "waits for", not
-as "business state flows to".
+but it is not the user-facing lifecycle. Read those edges as "waits for", not as "business
+state flows to".
 
-The Mermaid diagram must show the lifecycle instead:
-
-```text
-command label or authorised reply → validate → reserve → agent → outcome
-questions → keep command label and wait for reply → trigger again
-complete → update item and transition terminal labels
-```
-
-Show response loops as a named back-edge from the question state to the trigger. Show mutually
-exclusive terminal paths as branches from one outcome decision. Do not copy every generated
-`activation`, `safe_outputs`, or `conclusion` edge into a lifecycle diagram unless it changes a
-human-visible state.
+The Mermaid diagram must show the lifecycle instead. Show response loops as a named back-edge
+from the question state to the trigger. Show mutually exclusive terminal paths as branches from
+one outcome decision.
 
 ---
 
 ## Class definitions
 
-Copy these six lines verbatim. Do not retype them from memory, and do not adjust the colours
-to taste: they are shared with `loop-task-diagram` and both conventions must stay identical.
+Copy these six lines verbatim. Do not retype them from memory, and do not adjust the colours:
+they are shared with `loop-task-diagram` and both conventions must stay identical.
 
 ```
 classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
@@ -97,9 +86,8 @@ classDef failure fill:#fff0f0,stroke:#ef2929,stroke-width:2px,color:#8b1a1a
 classDef success fill:#e8f8ec,stroke:#18883c,stroke-width:2px,color:#145a32
 ```
 
-All six must be present even when the diagram does not use all six classes. A reader
-comparing two diagrams should not have to work out whether a missing class means "unused" or
-"forgotten".
+All six must be present even when the diagram does not use all six classes. A reader comparing
+two diagrams should not have to work out whether a missing class means "unused" or "forgotten".
 
 ---
 
@@ -117,26 +105,24 @@ Pass path              -->|✓| target                        solid arrow
 Fail path              -.->|✗| target                       dashed arrow
 
 Named path             -->|success| target                  when ✓/✗ is ambiguous, e.g.
-                                                            a three-way CI conclusion
+                                                             a three-way CI conclusion
 
 Retry / back-edge      ↻ or ↻N in the node label            only on the node the cycle
-                                                            returns to
+                                                             returns to
 
 Node IDs               camelCase                            Mermaid rejects hyphens.
-                                                            `impl-verify` becomes
-                                                            `implVerify`. Never `end`.
+                                                             `impl-verify` becomes
+                                                             `implVerify`. Never `end`.
 
 Labels                 id["Short name<br/>Purpose"]         two lines, each under 40
-                                                            characters, `<br/>` to break
+                                                             characters, `<br/>` to break
 ```
 
-Prefix every node ID with a short workflow tag (`impl`, `ref`, `gate`, `cost`) so that nodes
-copied between diagrams do not collide and a reader can tell at a glance which workflow a
-snippet came from.
+Prefix every node ID with a short workflow tag (`impl`, `ref`, `gate`, `audit`) so that nodes
+copied between diagrams do not collide.
 
-Use named paths rather than ✓/✗ where a branch is genuinely not pass/fail. A CI conclusion has
-three outcomes and labelling `cancelled` as ✗ misrepresents it: a cancelled run is not
-evidence of anything.
+Use named paths rather than ✓/✗ where a branch is genuinely not pass/fail. A CI conclusion
+has three outcomes and labelling `cancelled` as ✗ misrepresents it.
 
 ---
 

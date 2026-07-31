@@ -1,0 +1,69 @@
+name: Create agent pull request
+description: Read create_pull_request from agent_output.json, apply the git bundle, push, and open a PR.
+inputs:
+  output-file:
+    description: Path to agent_output.json.
+    required: true
+  bundle-file:
+    description: Path to the git bundle from the agent artifact.
+    required: false
+    default: ''
+  base-branch:
+    description: Base branch for the pull request.
+    required: false
+    default: main
+  token:
+    description: GitHub token with contents:write and pull-requests:write.
+    required: true
+  repo:
+    description: Target repository in owner/name format.
+    required: false
+    default: ${{ github.repository }}
+outputs:
+  pr-number:
+    description: Created pull request number.
+    value: ${{ steps.create.outputs.pr-number }}
+runs:
+  using: composite
+  steps:
+    - name: Configure git credentials
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+    - name: Create pull request
+      id: create
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
+        BUNDLE_FILE: ${{ inputs.bundle-file }}
+        BASE_BRANCH: ${{ inputs.base-branch }}
+        REPO: ${{ inputs.repo }}
+      run: |
+        set -euo pipefail
+        [ -f "$OUTPUT_FILE" ] || exit 0
+
+        ITEM=$(jq -c '.items[] | select(.type == "create_pull_request")' "$OUTPUT_FILE")
+        [ -n "$ITEM" ] || { echo "No create_pull_request item found"; exit 0; }
+
+        TITLE=$(echo "$ITEM" | jq -r '.title')
+        BODY=$(echo "$ITEM" | jq -r '.body')
+        BRANCH=$(echo "$ITEM" | jq -r '.branch')
+
+        if [ -n "$BUNDLE_FILE" ] && [ -f "$BUNDLE_FILE" ]; then
+          git fetch origin "$BASE_BRANCH"
+          git checkout -b "$BRANCH" "origin/$BASE_BRANCH"
+          git am "$BUNDLE_FILE" || git apply "$BUNDLE_FILE"
+          git push origin "$BRANCH"
+        fi
+
+        PR_URL=$(gh pr create \
+          --repo "$REPO" \
+          --base "$BASE_BRANCH" \
+          --head "$BRANCH" \
+          --title "$TITLE" \
+          --body "$BODY")
+
+        echo "pr-number=$(echo "$PR_URL" | grep -oE '[0-9]+$')" >> "$GITHUB_OUTPUT"

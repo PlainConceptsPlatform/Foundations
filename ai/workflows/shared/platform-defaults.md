@@ -1,7 +1,7 @@
 ---
 description: |
   The parts of the Platform agentic-workflow contract that gh-aw will actually merge from an
-  import. Import it from every agentic workflow in the repository.
+  import. Imported by every agentic workflow in this repository.
 
   Verified against gh-aw v0.83.4 by compiling and reading the generated lock file. What can
   and cannot live here is not obvious, so it is recorded rather than guessed:
@@ -22,29 +22,27 @@ description: |
   `contents: read`. Every workflow therefore keeps its own `permissions: read-all`, and so do
   `engine`, `model`, `runs-on` and `runs-on-slim`.
 
+  The full merge table is in the `platform-agentic-workflows` skill at
+  `references/frontmatter.md`.
+
 network:
   allowed:
     - defaults
-    # The model gateway. Not in `defaults`, and the firewall blocking it presents as a model
+    # Our model gateway. Not in `defaults`, and the firewall blocking it presents as a model
     # timeout rather than a network error, which is expensive to diagnose.
     - forge.plainconcepts.com
+    # .NET package restore
+    - dotnet
+    - api.nuget.org
+    - nuget.org
+    # Node.js package install (pnpm/npm)
+    - node
+    # Google Fonts
+    - fonts
+    # GitHub release assets (RTK, codegraph binary downloads)
+    - releaseassets.githubusercontent.com
+    - objects.githubusercontent.com
 
 safe-outputs:
-  # Off, and this is a costed decision rather than a shortcut.
-  #
-  # Threat detection is itself a model call: it asks a model to inspect the agent's output for
-  # prompt injection, leaked secrets and malicious patches before any safe output is applied.
-  # That is a second full model run per workflow run, looking for what the deterministic
-  # scanners on a pull request already find — TruffleHog for secrets, Semgrep for the patch,
-  # Trivy for dependencies. Paying tokens to repeat them is duplicated spend, so each project
-  # owns this in CI instead.
-  #
-  # What bounds a hijacked agent is unchanged: `permissions: read-all` so it writes nothing
-  # directly, an allowlist per safe output so it cannot reach a capability it was not granted,
-  # an unauthenticated `gh`, and untrusted text arriving inside a marked boundary.
-  #
-  # Turn it on if the repository has no secret scanning or SAST on pull requests. It then needs
-  # its own `engine`, or the one job reading the agent's output is the one job not using our
-  # gateway.
   threat-detection: false
 ---

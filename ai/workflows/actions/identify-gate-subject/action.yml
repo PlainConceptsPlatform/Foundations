@@ -1,0 +1,112 @@
+name: Identify gate subject
+description: Identify the bot-authored PR, its closing issue, and the CI verdict from either a workflow_run event or a manual dispatch.
+inputs:
+  token:
+    description: GitHub token with issues, pull-requests, and actions read.
+    required: true
+  pr-number:
+    description: PR number for manual dispatch. When empty, derives from workflow_run event.
+    required: false
+    default: ''
+  branch:
+    description: Branch from workflow_run event. Ignored when pr-number is set.
+    required: false
+    default: ''
+  ci-conclusion:
+    description: CI conclusion from workflow_run event. Ignored when pr-number is set.
+    required: false
+    default: ''
+  require-label:
+    description: Label that must be present on the closing issue (e.g. 'implement').
+    required: false
+    default: ''
+outputs:
+  found:
+    description: Whether a valid gate subject was found.
+    value: ${{ steps.identify.outputs.found }}
+  pr:
+    description: Pull request number.
+    value: ${{ steps.identify.outputs.pr }}
+  issue:
+    description: Issue number the PR closes.
+    value: ${{ steps.identify.outputs.issue }}
+  conclusion:
+    description: CI conclusion.
+    value: ${{ steps.identify.outputs.conclusion }}
+runs:
+  using: composite
+  steps:
+    - name: Identify PR, issue, and CI verdict
+      id: identify
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ github.repository }}
+        DISPATCH_PR: ${{ inputs.pr-number }}
+        BRANCH: ${{ inputs.branch }}
+        CONCLUSION: ${{ inputs.ci-conclusion }}
+        REQUIRE_LABEL: ${{ inputs.require-label }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        none() { echo "found=false" >> "$GITHUB_OUTPUT"; echo "$1"; exit 0; }
+
+        if [ -n "$DISPATCH_PR" ]; then
+          pr=$(gh pr view "$DISPATCH_PR" --repo "$REPO" --json number,author,title,body,state)
+          [ "$(printf '%s' "$pr" | jq -r '.state')" = "OPEN" ] || none "PR #$DISPATCH_PR is not open"
+
+          is_bot=$(printf '%s' "$pr" | jq -r '.author.is_bot')
+          [ "$is_bot" = "true" ] || none "PR #$DISPATCH_PR was authored by a human."
+
+          pr_number=$(printf '%s' "$pr" | jq -r '.number')
+
+          issue=$(printf '%s' "$pr" | jq -r '.body // ""' \
+                  | grep -oiE '(close[sd]?|fixe?[sd]?|resolve[sd]?) +#[0-9]+' \
+                  | grep -oE '[0-9]+' | head -n 1 || true)
+          [ -n "$issue" ] || none "PR #$pr_number does not close a numbered issue"
+
+          CI_CONCLUSION=$(gh pr checks "$pr_number" --repo "$REPO" --json conclusion \
+            --jq '[.[] | select(.conclusion != null)] | if length > 0 then .[0].conclusion else "unknown" end' 2>/dev/null || echo "unknown")
+
+          {
+            echo "found=true"
+            echo "pr=$pr_number"
+            echo "issue=$issue"
+            echo "conclusion=$CI_CONCLUSION"
+          } >> "$GITHUB_OUTPUT"
+          echo "PR #$pr_number closes #$issue; CI concluded $CI_CONCLUSION"
+          exit 0
+        fi
+
+        [ "$BRANCH" != "main" ] || none "CI ran on main; nothing to gate"
+
+        pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open \
+               --json number,author,title,body --jq '.[0] // empty')
+        [ -n "$pr" ] || none "no open pull request for branch $BRANCH"
+
+        is_bot=$(printf '%s' "$pr" | jq -r '.author.is_bot')
+        [ "$is_bot" = "true" ] || \
+          none "PR on $BRANCH was authored by a human. Never gate a human's pull request."
+
+        pr_number=$(printf '%s' "$pr" | jq -r '.number')
+
+        issue=$(printf '%s' "$pr" | jq -r '.body // ""' \
+                  | grep -oiE '(close[sd]?|fixe?[sd]?|resolve[sd]?) +#[0-9]+' \
+                  | grep -oE '[0-9]+' | head -n 1 || true)
+        [ -n "$issue" ] || none "PR #$pr_number does not close a numbered issue"
+
+        if [ -n "$REQUIRE_LABEL" ]; then
+          labels=$(gh issue view "$issue" --repo "$REPO" --json labels \
+                     --jq '[.labels[].name] | join(",")')
+          case ",$labels," in
+            *,"$REQUIRE_LABEL",*) : ;;
+            *) none "issue #$issue does not carry $REQUIRE_LABEL (has: $labels)" ;;
+          esac
+        fi
+
+        {
+          echo "found=true"
+          echo "pr=$pr_number"
+          echo "issue=$issue"
+          echo "conclusion=$CONCLUSION"
+         } >> "$GITHUB_OUTPUT"
+         echo "PR #$pr_number closes #$issue; CI concluded $CONCLUSION"
