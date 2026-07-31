@@ -362,7 +362,7 @@ max-turns: 30                 # Platform ceiling: enough to finish, low enough t
 max-turn-cache-misses: 100    # Forge has no prompt cache; every turn is a miss. Must be high.
 
 network:                     # Explicit. Forge is not in `defaults`.
-  allowed: [defaults, forge.plainconcepts.com]
+  allowed: [defaults, forge.plainconcepts.com, dotnet, node]  # dotnet/node cover NuGet & npm registries
 
 permissions: read-all        # Read-only. Every write goes through safe-outputs.
 
@@ -528,6 +528,9 @@ All must pass before the workflow is committed.
 - [ ] `max-turns: 30` and `max-turn-cache-misses: 100` are explicitly set
 - [ ] No `tools:` block (it is ignored under opencode)
 - [ ] `network.allowed` lists `forge.plainconcepts.com`
+- [ ] `network.allowed` includes the ecosystem identifiers for every package registry the
+      agent must restore from (`dotnet` for NuGet, `node` for npm/pnpm) — not individual
+      hostnames, which the compiler accepts but cannot expand
 - [ ] `permissions: read-all`
 - [ ] Each `agent-*.md` declares `safe-outputs.threat-detection: false`; do not rely on a
       shared import. This avoids an additional model run.

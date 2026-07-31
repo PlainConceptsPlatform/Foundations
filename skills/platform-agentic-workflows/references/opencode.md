@@ -26,6 +26,8 @@ network:
   allowed:
     - defaults
     - forge.plainconcepts.com
+    - dotnet   # NuGet: api.nuget.org, packages.microsoft.com, azuresearch-*.nuget.org, etc.
+    - node     # npm/pnpm: registry.npmjs.org, npmjs.com, nodejs.org, get.pnpm.io, etc.
 ```
 
 Six parts, all load-bearing:
@@ -43,6 +45,25 @@ Six parts, all load-bearing:
 6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
    the firewall will block it otherwise. That failure looks like a model timeout, not a network
    error, which makes it expensive to diagnose.
+7. **`network.allowed` includes package-ecosystem identifiers.** The agent must restore
+   packages during `/repo-verify` or build steps. Listing each registry hostname individually
+   (`api.nuget.org`, `nuget.org`, `registry.npmjs.org`, …) works but is brittle and incomplete —
+   the compiler's `dotnet` identifier expands to 20+ NuGet-related domains, and `node` to 30+
+   npm/Node domains. Use the ecosystem identifiers instead. Verified by compiling against Numa:
+   the generated firewall domain list covers every registry, CDN, and OCSP endpoint the
+   package managers contact.
+
+   ```yaml
+   network:
+     allowed:
+       - defaults
+       - forge.plainconcepts.com
+       - dotnet   # covers nuget.org, api.nuget.org, packages.microsoft.com, dotnetcli.blob.core.windows.net, etc.
+       - node     # covers registry.npmjs.org, npmjs.com, nodejs.org, get.pnpm.io, yarnpkg.com, etc.
+   ```
+
+   These go in `shared/platform-defaults.md` because `network` merges from imports — every
+   workflow that imports the shared file gets them.
 
 ### Why the provider segment is `openai`
 

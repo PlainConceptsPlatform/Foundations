@@ -134,6 +134,14 @@ bare hostname already covers its subdomains. URLs from domains outside the allow
 replaced with `(redacted)` in agent output, which is a data-exfiltration control as much as
 an egress one.
 
+**Prefer ecosystem identifiers over individual hostnames for package registries.** The
+`dotnet` identifier expands to every NuGet-related domain the firewall needs (nuget.org,
+api.nuget.org, azuresearch-*.nuget.org, packages.microsoft.com, dotnetcli.blob.core.windows.net,
+etc.), and `node` does the same for the npm/pnpm/yarn ecosystem (registry.npmjs.org, npmjs.com,
+nodejs.org, get.pnpm.io, yarnpkg.com, etc.). Listing these individually is brittle and almost
+always incomplete — the compiler's expansion is the authoritative list. Put them in
+`shared/platform-defaults.md` so every importing workflow inherits them.
+
 ---
 
 ## What it may write
