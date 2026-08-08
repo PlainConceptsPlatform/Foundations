@@ -58,7 +58,7 @@ one of them decides anything.
 | gh-aw `model:` | `openai/glm-5-2` | **Satisfies the compiler's provider validation. Nothing else.** |
 | `opencode.ci.json` `model` | `plainconcepts/glm-5-2` | The model opencode actually loads |
 | `opencode.ci.json` `provider.plainconcepts.api` | `http://172.30.0.30:10000` | Where the request goes: gh-aw's firewall proxy, which forwards to Forge |
-| `engine.args: ["--model", ...]` | optional | A CLI override on top of the config |
+| `engine.args: ["--model", ...]` | **discarded** | The compiler drops it. See below |
 
 The gh-aw provider segment **must** be one of `copilot`, `anthropic`, `openai`, `codex`.
 Naming our own gateway is rejected at compile time:
@@ -76,16 +76,16 @@ So a Platform repository **does** need a `plainconcepts` provider and **does** n
 merge step that installs it. An earlier version of this reference said the opposite; it was
 written before the provider block existed and is wrong.
 
-### Keep the model named once
+### `engine.args` is discarded, so do not reach for it
 
-`engine.args: ["--model", "plainconcepts/glm-5-2"]` is a CLI override that gh-aw passes through
-without validating. It works, and it is redundant with `opencode.ci.json`'s top-level `model`.
-Numa currently sets it on one worker out of five, which is exactly the state to avoid: five
-workers, two of which would change model if you edited the config, and nobody able to tell
-which without reading each file.
+Adding `args: ["--model", "plainconcepts/glm-5-2"]` to be explicit is a reasonable instinct and
+it does nothing. Verified on v0.83.4 by compiling two workers that differ only in that block:
+neither lock file contains `--model` anywhere, and both set
+`OPENCODE_MODEL: awf-proxy/glm-5-2`.
 
-Pin the model in `opencode.ci.json` and leave `engine.args` out, or set it on every worker.
-Not one.
+So the model comes from `model:` plus `opencode.ci.json`, and the provider gh-aw hands the CLI
+is its own. A worker carrying `engine.args` is dead configuration that reads like a control,
+which is worse than absent. Delete it.
 
 ### The CI config merge
 

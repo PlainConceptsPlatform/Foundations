@@ -1,15 +1,16 @@
 ---
 title: How to
-description: "How Platform runs AI agents: GitHub Agentic Workflows on a self-hosted runner is the recommendation, with opencode-onboard, loop-task, and orbion around it."
+description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway is the recommendation, with opencode-onboard, loop-task, and orbion around it."
 ---
 
 <Callout type="info" title="The recommendation, up front">
   To run an agent against a repository, use
-  [**GitHub Agentic Workflows**](https://github.github.io/gh-aw/) on a self-hosted runner with
-  `engine: opencode`. That is the Platform default, and it is not one of our tools.
+  [**GitHub Agentic Workflows**](https://github.github.io/gh-aw/) on `ubuntu-latest` with
+  `engine: opencode` against the Forge gateway. That is the Platform default, and it is not one of
+  our tools.
 
-  **`loop-task` is the fallback**, for work that has no repository event to react to or cannot run
-  on a runner. Reaching for it first is the wrong instinct.
+  **`loop-task` is the fallback**, for work that has no repository event to react to. Reaching for
+  it first is the wrong instinct.
 </Callout>
 
 Alongside that recommendation, Platform maintains three open-source tools. They prepare a codebase
@@ -25,14 +26,15 @@ for agents, and cover the cases Actions cannot.
 
 Read this before picking a tool, because the default is not one of ours.
 
-### Recommended: Agentic Workflows on a self-hosted runner
+### Recommended: Agentic Workflows on `ubuntu-latest`
 
 For work that lives in a GitHub repository, the recommended practice is
-[GitHub Agentic Workflows](https://github.github.io/gh-aw/) running on a **self-hosted runner with
-an authenticated `opencode`**. Workflows are markdown in `.github/workflows/`, compiled to Actions
-YAML.
+[GitHub Agentic Workflows](https://github.github.io/gh-aw/) on **`ubuntu-latest`, with
+`engine: opencode` pointed at the Forge gateway**. Workflows are markdown in
+`.github/workflows/`, compiled to Actions YAML.
 
-The self-hosted runner is what makes this work for us rather than a compromise:
+The shape is [one router that owns every trigger and workers that have none](/docs/ai/workflows).
+Four things make this work for us rather than a compromise:
 
 - **Event triggers instead of polling.** A workflow fires on the issue comment or review that
   should have started it. A 20-minute interval means up to 20 minutes of latency and a run every
@@ -55,35 +57,33 @@ The self-hosted runner is what makes this work for us rather than a compromise:
   gh-aw's own proxy. [The workflows section](/docs/ai/workflows) explains the chain.
 - **A fresh checkout per run.** Most of the recovery machinery in a long-lived local loop exists
   only because state persists between runs on one machine. It disappears here.
-- **Local context stays available.** VPN-only resources, a local database, licensed tooling.
-- **One runner is a mutex.** It processes one job at a time, which is the exclusivity that
-  interval loops otherwise have to coordinate by hand.
+- **Concurrency is a declared group,** not a hand-rolled mutex. The router keys one group per
+  issue, so implement and the merge gate never operate on the same issue at once.
 - **Guardrails.** Safe Outputs, staged approval, changes arriving as pull requests, and an audit
   trail in Actions.
+
+#### If you run self-hosted instead
+
+A self-hosted runner is still supported, and was the earlier default. The model comes from Forge
+either way, so the runner was only ever providing a queue of one. Choosing it brings costs the
+hosted path does not have.
 
 <Callout type="warn" title="Never attach a self-hosted runner to a public repository">
   A pull request from a fork would execute arbitrary code on your runner, with whatever credentials
   it holds. Private and internal repositories only.
 </Callout>
 
-Being the recommendation does not make it free. Three requirements, learned by breaking each one:
-
 - **Disk, more than you would guess.** Every agentic run pulls gh-aw's firewall containers, every
   CI run writes a tool cache, and scanners pull their own images. A 29 GB disk running both hit
-  100% and the runner's worker was killed mid-job, which presents as a workflow that hangs rather
-  than one that fails. Budget 64 GB and alert on free space.
+  100% and the worker was killed mid-job, which presents as a workflow that hangs rather than one
+  that fails. Budget 64 GB and alert on free space.
 - **More than one runner instance.** One runner serialises everything, so a pull-request check
-  waits behind a 90-minute agent run. Two instances on the same machine is usually enough.
+  waits behind a 90-minute agent run.
 - **An alert for the runner going offline.** Cancelling a job can leave a stale session
   (`A session for this runner already exists`), and the symptom is every job queuing forever with
-  nothing marked failed. Re-registering the runner clears it; noticing is the hard part.
-
-Start on GitHub-hosted runners if none of that is in place yet. A hosted runner with our gateway
-still gives you event triggers, safe outputs and the audit trail — it costs Actions minutes and
-loses access to anything VPN-only.
-
-Once it is running, [**the workflows section**](/docs/ai/workflows) has the label state machine,
-the determinism ladder, and two complete workflows you can copy.
+  nothing failing.
+- **The workspace persists between runs.** A `.npmrc` written with a token stays, and a build
+  output directory from a previous run is still there to be mistaken for this run's.
 
 ### The alternative: loop-task
 
@@ -93,8 +93,8 @@ not a preference:
 - **The work is not repository-shaped.** Health checks, data syncs, deploy polls, report
   generation. There is no repository event to hang them off.
 - **You are not on GitHub Actions.** Azure DevOps, GitLab, or no CI at all.
-- **A self-hosted runner is not an option**, and API-key billing for a loop that fires every
-  20 minutes is not acceptable.
+- **The work needs a cadence, not an event.** Something genuinely driven by a clock rather than
+  by anything happening in the repository.
 - **The work needs a specific machine.** Anything a runner cannot reach or cannot be trusted with.
 - **You need to watch it run.** Live logs, pause and resume mid-flight, one board across several
   machines. Actions gives you logs after the fact.

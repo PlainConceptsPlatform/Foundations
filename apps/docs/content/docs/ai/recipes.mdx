@@ -5,9 +5,10 @@ description: "Production-grade loop-task recipes with Mermaid diagrams. From sim
 
 <Callout type="warn" title="Check the recommendation first">
   Recipes are for [loop-task, which is the fallback](/docs/ai). If the work reacts to a repository
-  event, the Platform default is [Agentic Workflows](/docs/ai/workflows) on a self-hosted runner,
-  and these patterns translate to event triggers rather than intervals. The label scheme is
-  simpler there: an event carries the transition, so the states do not need namespacing.
+  event, the Platform default is [Agentic Workflows](/docs/ai/workflows) on `ubuntu-latest`, and
+  these patterns translate to event triggers rather than intervals. Two things get simpler there:
+  an event carries the transition, so states do not need namespacing, and it carries the item, so
+  the priority cascade below has nothing left to select.
 </Callout>
 
 Recipes are the fastest way to learn loop-task. Each recipe is a YAML file with a task chain, a cadence, and an embedded Mermaid diagram that documents the flow. Install the loop-task skills so your agent understands the recipe schema:

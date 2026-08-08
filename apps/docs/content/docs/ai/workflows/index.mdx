@@ -1,12 +1,12 @@
 ---
 title: Agentic workflows
-description: "Working GitHub Agentic Workflows with Mermaid diagrams: the label state machine, the determinism ladder, the frontmatter contract, the two traps that cost us an afternoon each, and two complete workflow walkthroughs."
+description: "Working GitHub Agentic Workflows with Mermaid diagrams: one router and many workers, the label state machine, the determinism ladder, the frontmatter contract, the ways a workflow goes green and dead, and two complete workflow walkthroughs."
 ---
 
 <Callout type="info" title="This is the recommendation">
-  For work that reacts to a repository event, Agentic Workflows on a self-hosted runner is the
-  Platform default. [`loop-task` is the fallback](/docs/ai), for work with no event to react to
-  or no runner to run on.
+  For work that reacts to a repository event, Agentic Workflows on `ubuntu-latest` with
+  `engine: opencode` against the Forge gateway is the Platform default. [`loop-task` is the
+  fallback](/docs/ai), for work with no event to react to.
 </Callout>
 
 A workflow is a single markdown file in `.github/workflows/`. **The body is the prompt** and the
@@ -29,6 +29,49 @@ in this repository. Two are documented below:
 | [**Refine**](#refine) | Turns an issue into a user story, or asks the author questions |
 | [**Implement**](#implement) | Implements an issue, verifies it, opens a pull request |
 
+## One router, many workers
+
+The shape that matters more than any single workflow: **one conventional YAML workflow owns
+every trigger the repository has**, and the agentic workflows have none.
+
+```text
+work-router.yml       every on: the repository has
+  └── classify        one event in, exactly one route out
+        ├── call-refine     → refine.lock.yml       workflow_call only
+        ├── call-implement  → implement.lock.yml    workflow_call only
+        └── deterministic jobs (no model)
+```
+
+Without it, every workflow subscribed to `issues: [labeled]` starts a run on every label added
+to any issue, each burning a runner on its own selection job before activation decides it had
+nothing to do. With it, one event produces one run, and at most one thing happens inside it.
+
+Three consequences worth planning for:
+
+- **Concurrency has one owner.** Groups are keyed on the router's calling jobs; workers declare
+  none. Two layers would be two answers to the same question, and both would apply.
+- **The route table is testable.** Classification is a shell function with no network calls, so
+  a test can source it and exercise the same code the router runs.
+- **It does not reduce the number of runs.** GitHub creates a run for every matching event. The
+  router decides nothing downstream happens; those runs take about ten seconds with every job
+  skipped. To reduce the count you have to stop generating events, and the usual source is your
+  own bot: writes made with a GitHub App token fire workflow events, writes made with
+  `GITHUB_TOKEN` do not.
+
+A worker therefore exposes `workflow_call` and nothing else:
+
+```yaml
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: string
+```
+
+Adding a public trigger to a worker bypasses the router and breaks the guarantee. For a manual
+entry point, add an operation to the router's `workflow_dispatch` instead.
+
 ## The label system
 
 Labels are the state machine. They are how a human sees where an issue is, and how a workflow
@@ -42,43 +85,35 @@ because the event carries the transition.
 | `refine` | Wants refinement, or is waiting on the author's answers | Human, removed by Refine |
 | `refined` | Has a user story, ready for a human to approve | Refine |
 | `implement` | Approved for implementation | Human, removed by the merge gate |
-| `bot-working` | An agent holds this issue right now | Implement |
-| `review` | Needs a human on the pull request | The merge gate |
-| `priority` | Escalation. Changes pick order, never lifecycle | Human |
-| `bug` | A defect. Changes pick order, never lifecycle | Human |
+| `bot-working` | An agent holds this issue right now | The worker's reserve job |
+| `review` | A human is needed | Any worker that stops for a person |
+| `future` | Deliberately not automated yet | Human |
+| `priority` | Escalation | Human |
+| `bug` | A defect | Human |
 
 `bot-working` is worth a note, because it looks like a lock and is not one. The real lock is the
-`concurrency` group. The label exists because humans read it, and because a run that dies leaves
-it behind — which correctly parks the issue for a person instead of letting the next run pick it
-up.
+`concurrency` group on the router. The label exists because humans read it, and because a run
+that dies leaves it behind, which correctly parks the issue for a person instead of letting the
+next run pick it up.
 
-### Priority cascade
+**`bot-working` and `review` must never coexist.** They say opposite things: the bot owns this
+right now, and a human is needed. An issue that stopped for a question and then got an answer
+carries both unless the claim clears the other, so the job that adds `bot-working` removes
+`review` in the same job. It is a consequence of claiming, not a judgement, so it does not
+belong to the agent.
 
-Both workflows select the **lowest-numbered** eligible issue from the first non-empty tier. An
-urgent issue labelled today must still be served before an older ordinary one, which a plain
-"oldest first" query gets wrong.
+### Selection is the event, not a query
 
-1. `priority` + `bug` + the entry label
-2. `priority` + the entry label
-3. `bug` + the entry label
-4. The entry label alone
+Earlier versions of this fleet ran a priority cascade: a custom job querying every open issue,
+sorting by number, and picking the first from the highest non-empty tier of label combinations.
+That existed because a polling loop wakes up with no idea why, so it has to go and find work.
 
-```bash
-pick() {
-  gh issue list --repo "$REPO" --label "$1" --state open --limit 1000 \
-    --json number,labels \
-    --jq '[.[] | select(any(.labels[].name; . == "bot-working") | not)]
-          | sort_by(.number) | .[0].number // empty'
-}
+An event already carries the answer. The router reads which label was added to which issue and
+passes the number to the worker, so there is nothing to select and nothing to sort. The cascade,
+and the composite action that implemented it, were deleted.
 
-number=$(pick "priority,bug,implement")
-[ -n "$number" ] || number=$(pick "priority,implement")
-[ -n "$number" ] || number=$(pick "bug,implement")
-[ -n "$number" ] || number=$(pick "implement")
-```
-
-`--repo` is not optional. The cascade runs in a custom job, which has no checkout, so `gh` cannot
-infer the repository from a git remote and fails with `fatal: not a git repository`.
+Keep `priority` and `bug` as labels a human reads. They no longer change pick order, because
+there is no pick.
 
 ### Lifecycle
 
@@ -116,26 +151,43 @@ The central idea, and the thing that separates a workflow that behaves from one 
 you: **the model is the last resort, not the engine.** Every rung below the agent is deterministic,
 cheaper, and cannot hallucinate. Push work down as far as it will go.
 
-| Rung | Mechanism | Use it for |
-|---|---|---|
-| 0 | The trigger | Deciding *that* there is work |
-| 1 | Trigger filters — `names`, `roles`, `reaction` | Who may start a run at all |
-| 2 | `pre-agent-steps` | Runtime setup the agent needs but should not perform |
-| 3 | `steps` (precompute) | Facts the agent would otherwise spend turns fetching |
-| 4 | Custom `jobs` | Choices with an exact answer, like the cascade |
-| 5 | The agent | Judgement, prose, code |
-| 6 | `safe-outputs` | Every write, applied by the framework |
+| Rung | Lives in | Mechanism | Use it for |
+|---|---|---|---|
+| 0 | Router | The trigger | Deciding *that* anything runs |
+| 1 | Router | Route classification | Deciding *which one thing* runs |
+| 2 | Worker | `on.steps` | A pure gate. Its outputs cannot reach the prompt |
+| 3 | Worker | `steps` (precompute) | Facts the agent would otherwise spend turns fetching |
+| 4 | Worker | Custom `jobs` | A guard with an exact answer, plus the reservation |
+| 5 | Worker | The agent | Judgement, prose, code |
+| 6 | Worker | `safe-outputs` | Every write, validated |
 
 The full rung-by-rung contract is in the
 [`platform-agentic-workflows` skill](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-agentic-workflows).
 
-### Why the cascade is a custom job and not `on.steps`
+Note what happens to rung 1 under a router. gh-aw's own filters (`names`, `roles`, `skip-bots`)
+are compiled into the *activation* job and evaluated against a triggering event. A
+`workflow_call` worker has no triggering event, so they have nothing to filter. Their job moves
+into the router's classifier, where it is ordinary shell and can be tested.
 
-`on.steps` looks like the right rung and is not, for a mechanical reason worth knowing before you
-spend an hour on it. Its outputs land on the `pre_activation` job, which the agent job does not
-depend on, so `needs.pre_activation.outputs.*` reaches the prompt as an **empty string** — no
-error, no warning. Custom jobs are added to the agent job's `needs` by the compiler, so their
-outputs genuinely arrive.
+### A guard job in `needs` does not gate anything
+
+Two mechanical facts, each worth knowing before you spend an hour on it.
+
+`on.steps` outputs land on the `pre_activation` job, which the agent job does not depend on, so
+`needs.pre_activation.outputs.*` reaches the prompt as an **empty string**, with no error and no
+warning. Custom jobs are added to the agent job's `needs` by the compiler, so their outputs
+genuinely arrive.
+
+But arriving is not gating. A `needs` job that **succeeds** with a false output lets its
+dependents run, and a job that is **skipped** also satisfies `needs`. The guard has to appear in
+the dependent's own condition:
+
+```yaml
+if: inputs.issue-number != '' && needs.eligibility.outputs.eligible == 'true'
+```
+
+Without that second clause the guard only ever stopped the jobs that named it themselves, and
+the agent ran on everything it rejected. Everything stays green.
 
 ## The frontmatter contract
 
@@ -185,9 +237,9 @@ against gh-aw v0.83.4 by compiling and reading the lock file:
 | `safe-outputs.threat-detection` | Yes, alongside the importer's own safe outputs |
 | `steps` / `pre-agent-steps` / `post-steps` | Yes, prepended (appended for post) |
 | `tools` / `mcp-servers` / `env` / `checkout` | Yes |
-| `permissions` | **No** — validation only |
-| `engine` / `model` | **No** — silently not merged |
-| `runs-on` / `runs-on-slim` | **No** — warns about unexpected fields |
+| `permissions` | **No**, validation only |
+| `engine` / `model` | **No**, silently not merged |
+| `runs-on` / `runs-on-slim` | **No**, it warns about unexpected fields |
 | `on:` and its filters | **No**, except `skip-*` keys |
 
 `permissions` is the dangerous row. `permissions: read-all` in a shared file compiles without a
@@ -218,7 +270,62 @@ What bounds a hijacked agent is unchanged, and it is not the scanner:
 else reads the patch, and the calculation inverts. It needs its own `engine` block when you do,
 or the one job inspecting the agent runs on gh-aw's default model instead of your gateway.
 
-## Two traps worth knowing
+## Green and dead
+
+The expensive failures in this format share one shape: everything reports success and nothing
+happened. Each of these cost a real debugging session.
+
+### The caller's permissions must satisfy the worker
+
+Every agent job compiles to `permissions: read-all`, which requests read on **every** scope. A
+calling job that grants a tidier explicit map cannot satisfy it:
+
+```yaml
+permissions:          # looks like least privilege
+  contents: read      # is a startup failure
+  issues: write
+```
+
+GitHub rejects the reusable workflow call before creating any job. There is no annotation, no
+log, and no entry in the jobs list, and neither `gh aw compile` nor actionlint models permission
+satisfaction across a `workflow_call` boundary. There is no "read-all plus these writes" syntax,
+so the caller grants `write-all`. That is safe because it is not the boundary that matters: the
+worker's own `read-all` keeps the agent read-only and `safe-outputs` enumerates every write.
+
+### The artifact name gains a prefix the moment you use `workflow_call`
+
+gh-aw names the agent artifact `<prefix>agent`, where the prefix is derived from the workflow's
+inputs. An event-triggered workflow has none, so the prefix is empty and the artifact is plainly
+`agent`. Convert that workflow to a router worker and every run gets a prefix.
+
+Anything downloading it by the bare name silently finds nothing. If the download is wrapped in
+`continue-on-error: true`, the item count is zero, every apply step is skipped by its
+`!= '0'` guard, and the terminal job reports success having written nothing. Pass
+`${{ needs.activation.outputs.artifact_prefix }}agent`, depend on `activation`, and let a
+missing artifact fail.
+
+### A composite action manifest is not a document
+
+The runner evaluates `${{ }}` everywhere in an `action.yml`, including inside `description:`,
+and a composite action has no `needs`, `jobs` or `secrets` context. Writing a caller's
+expression as documentation fails the action at load time with `Unrecognized named-value` and
+kills the job in about a second. `gh aw compile` does not read those files and actionlint does
+not lint them, so lint them yourself.
+
+### A job indented one level too deep disappears
+
+```yaml
+  reserve:
+    steps:
+      - name: Claim the issue
+    conclude:            # four spaces, not two
+    needs: [agent]
+```
+
+YAML accepts it, `conclude` becomes a key inside `reserve`, and the workflow compiles with one
+fewer job. Assert the compiled job list rather than trusting a clean compile.
+
+## Other traps worth knowing
 
 ### `engine.args` is discarded
 
@@ -234,44 +341,50 @@ provider is selected by gh-aw rather than by you. Do not add `args` expecting to
 
 gh-aw title-cases a filename into a workflow name unless you set `name:` explicitly, so
 `merge-gate.md` becomes `Merge Gate`. Referencing the filename in `workflow_run.workflows` is not
-an error — the trigger simply never fires, silently, forever. Set `name:` in every workflow and
+an error: the trigger simply never fires, silently, forever. Set `name:` in every workflow and
 check the references in CI.
 
-### `names:` does not stop the run, only the agent
+### Your own bot retriggers you
 
-GitHub Actions has no native label filter for `issues: [labeled]`, so a run is created for
-**every** label added to **any** issue. `names: [refine]` is a gh-aw construct compiled into the
-activation job's condition, and activation runs *after* your custom jobs. Without a guard, adding
-an unrelated label starts a run whose cascade burns a runner before activation skips everything:
+A write made with a GitHub App installation token **fires a workflow event**; a write made with
+`GITHUB_TOKEN` does not. So a `reserve` job that posts "work has started" with an App token
+creates an `issue_comment` event, which routes straight back into the same worker, which
+reserves again. `concurrency` does not save you: with `cancel-in-progress: false` the runs queue.
 
-```yaml
-if: >
-  github.event_name != 'issues' || github.event.action != 'labeled' ||
-  github.event.label.name == 'refine'
-```
+Guard the comment route on the sender (`github.event.comment.user.type != 'Bot'`), and split
+your writes by intent. Bookkeeping that nothing keys off belongs on `GITHUB_TOKEN`. A label that
+hands work to the next route needs the App token, because the handoff depends on the event
+firing.
 
-The run still appears in the Actions tab, greyed out with every job skipped. That is the floor:
-you can remove the runner cost, not the run entry.
+The cheapest fix is usually to delete the comment. "Automated X has started" is noise the label
+already carries, and each one is a notification for everyone watching.
 
 ## Where these run
 
-A self-hosted runner is the recommendation, because the credentials and the model gateway stay on
-a machine you own. It is not free, and these are the requirements rather than nice-to-haves:
+`ubuntu-latest`, with the model coming from the Forge gateway. A self-hosted runner was the
+earlier default and is still supported, but the model comes from Forge either way, so the runner
+was only ever providing a queue of one.
 
-- **Disk, more than you think.** Each agentic run pulls gh-aw's firewall containers; each CI run
-  writes a tool cache; scanners pull their own images. A 29 GB disk running both filled to 100%
-  and the runner's worker was killed mid-job — which presents as a workflow that hangs, not as an
+Everything must target the same runner in four places, and missing any one leaves work
+elsewhere: `runs-on`, `runs-on-slim`, `safe-outputs.threat-detection.runs-on` if you enable it,
+and `maintenance.runs_on` in `.github/workflows/aw.json` for the generated maintenance workflow.
+
+If you do run self-hosted, **never attach it to a public repository**: a pull request from a
+fork would execute arbitrary code on a machine holding your credentials. Three operational
+requirements, rather than nice-to-haves:
+
+- **Disk, more than you think.** Each agentic run pulls gh-aw's firewall containers, each CI run
+  writes a tool cache, and scanners pull their own images. A 29 GB disk running both filled to
+  100% and the worker was killed mid-job, which presents as a workflow that hangs rather than an
   error. Budget 64 GB and alert on free space.
 - **More than one runner instance.** One runner serialises everything, so a pull-request check
-  waits behind a 90-minute agent run. Two instances on one machine is usually enough.
+  waits behind a 90-minute agent run.
 - **A watch on the runner being offline.** A cancelled job can leave a stale session
   (`A session for this runner already exists`), and the symptom is jobs queuing forever with
-  nothing failing. Without an alert, nobody notices.
+  nothing failing.
 
-Everything targets the runner in four places, and missing any one of them leaves work on
-GitHub-hosted machines: `runs-on`, `runs-on-slim`, `safe-outputs.threat-detection.runs-on` if you
-enable it, and
-`maintenance.runs_on` in `.github/workflows/aw.json` for the generated maintenance workflow.
+The workspace also persists between runs, which a hosted runner lets you forget: an `.npmrc`
+written with a token stays, and a build output directory from a previous run is still there.
 
 ## Compiling is not working
 
@@ -284,8 +397,26 @@ git diff --exit-code -I 'GH_AW_INFO_MODEL_COSTS' -- '.github/workflows/*.lock.ym
 ```
 
 The `-I` is not optional. gh-aw embeds the model's price at compile time, and those figures move
-between compilations — within one CI run we saw an input cost of `1.2e-06` on one workflow and
+between compilations: within one CI run we saw an input cost of `1.2e-06` on one workflow and
 `1.4e-06` on another. Without ignoring that line the check can never pass.
+
+Compiling is also not the whole check. The compiler never reads your router, your composite
+actions, or their shell, so add those:
+
+```bash
+actionlint $(git ls-files '.github/workflows/*.yml' | grep -v '\.lock\.yml$')
+find .github/actions -name '*.sh' -print0 | xargs -0 -r shellcheck -x
+bash .github/actions/verify-route-matrix/verify-route-matrix.sh
+bash .github/actions/verify-composite-actions/verify-composite-actions.sh
+```
+
+Exclude the generated lock files from actionlint. It does not model gh-aw's frontmatter
+extensions, so it reports false positives on every one of them, and the freshness check above
+already covers them properly.
+
+Even with all of that green, **watch one real event end to end before calling it done.** None of
+these checks can see a startup failure, a guard that gates nothing, or an artifact name that
+stopped resolving.
 
 ---
 
@@ -342,26 +473,41 @@ reads the comment stream instead, so there is one workflow and a `mode` output.
 
 ### Triggers
 
+The worker declares no trigger at all. It states its contract, and the router supplies it:
+
 ```yaml
 on:
-  issues:
-    types: [labeled]
-    names: [refine]
-  issue_comment:
-    types: [created]
-
-  roles: [admin, maintainer, write]
-  reaction: eyes
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: string
+      mode:
+        required: false
+        type: string
+        default: first
 ```
 
-`issue_comment` has no filter, deliberately: the workflow cannot know in advance which comment
-is the author answering its questions, so it starts on all of them and the `pick` job decides in
-shell. That is cheap. What is not cheap is a model reading every comment in the repository, which
-is why the decision sits at rung 4.
+The router owns both entry points. A `refine` label starts a first pass; a comment on an issue
+that already carries `refine` starts a response pass, and `mode` is how the worker tells them
+apart without asking the model.
 
-`roles` is the first line of defence — a run does not start at all for anyone without write
-access. `reaction: eyes` puts eyes on the triggering comment, so a human knows they were heard
-before the agent has finished thinking.
+The comment route carries two guards, and both are load-bearing:
+
+```bash
+elif [ "${COMMENT_SENDER_TYPE:-}" = "Bot" ]; then
+  error="comment authored by a bot"
+elif ! has_label refine; then
+  error="issue does not carry the refine label"
+```
+
+Without the bot check, the comment the worker itself posts re-enters the route and it triggers
+itself. Without the label check, a comment on any issue in the repository starts a model run
+that rewrites that issue.
+
+This is where gh-aw's `roles:` filter used to sit. It does not apply to a `workflow_call`
+worker, because there is no triggering event to filter, so authorisation belongs in the
+classifier where it is ordinary shell and a test can exercise it.
 
 ### Which pass is this?
 
@@ -434,8 +580,8 @@ safe-outputs:
 
 `update-issue` is scoped to `body: true`, so a prompt injection cannot retitle or close the issue.
 The label lists are exactly what the prompt proposes and nothing else. `bot-working` is absent on
-purpose: this workflow reads that label in the cascade but never writes it, because `concurrency`
-is the lock.
+purpose: the deterministic reserve job writes it before the agent starts, and `concurrency` on
+the router is the actual lock.
 
 With `permissions: read-all`, the agent itself can write nothing at all. It *requests* these
 mutations and the framework applies them, each one checked against the allowlist above.
@@ -476,9 +622,9 @@ workflow, and the reason is the interesting part.
 
 ```mermaid
 flowchart TD
-    implStart("Trigger<br/>implement label, or the gate finished") --> implPick
-    implPick["Pick (rung 4)<br/>In-flight check + priority cascade"] -->|picked| implFacts
-    implPick -.->|busy, or nothing eligible| implIdle
+    implStart("Work Router<br/>implement route") --> implPick
+    implPick["Eligibility (rung 4)<br/>Skip issues labelled future"] -->|eligible| implFacts
+    implPick -.->|not eligible| implIdle
     implFacts("Facts (rung 3)<br/>Issue and comments to disk") --> implReserve
     implReserve("Reserve<br/>Propose bot-working") -->|✓| implCode
     implCode["Implement<br/>/plan-goal, only what was asked"] -->|✓| implVerify
@@ -512,8 +658,8 @@ flowchart TD
 The recipe this replaces had one chain that implemented, waited for CI, classified the result,
 fixed it if red, assessed risk, and merged. Rewriting that as one workflow is possible and wrong:
 waiting for CI inside the run means an agent job sitting idle, holding a runner, for as long as
-the test suite takes. On a single self-hosted runner that is worse than wasteful — the CI run it
-is waiting for may be queued behind it.
+the test suite takes. That is worse than wasteful: on a constrained runner pool the CI run it is
+waiting for may be queued behind it.
 
 Splitting it also removes two whole tasks. `impl-await-ci` and `impl-ci-classify` existed to poll
 for a result; a `workflow_run` trigger delivers the result as an event, so the polling and the
@@ -521,21 +667,23 @@ classification have nothing left to do.
 
 ### Draining a queue without polling
 
+Both entry points live on the router, not here:
+
 ```yaml
+# work-router.yml
 on:
   issues:
-    types: [labeled]
-    names: [implement]
+    types: [labeled]          # a human, or Refine, adds `implement`
   workflow_run:
-    workflows: ["Agent: Merge Gate"]
+    workflows: ["App: CI"]    # CI finished, which may free the next issue
     types: [completed]
-    branches: [main]
-  workflow_dispatch:
+    branches: ["fix/*", "bot/*", "feature/*"]
+  workflow_dispatch:          # the manual entry point, with an `operation` input
 ```
 
-The second trigger is what replaces an interval. When the merge gate finishes, this workflow runs
-again and takes the next labelled issue, so a backlog drains at the speed of the work rather than
-the speed of a cron expression.
+The `workflow_run` route is what replaces an interval. When CI completes and the gate merges, the
+issue closes and the next labelled issue is already waiting on its own event, so a backlog drains
+at the speed of the work rather than the speed of a cron expression.
 
 Three details in that block, each of which has bitten someone:
 
@@ -556,7 +704,7 @@ busy=$(gh issue list --repo "$REPO" --label bot-working --state open --limit 1 \
 `concurrency: implement` already prevents two runs overlapping. This check is a different
 guarantee: it stops a run that *could* legally start from starting when a previous attempt died
 and left `bot-working` behind. That leftover label parks the issue for a human, which is the
-behaviour you want after a crash — the alternative is a bot retrying a broken attempt forever.
+behaviour you want after a crash, because the alternative is a bot retrying a broken attempt forever.
 
 ### Facts before turns
 
@@ -592,7 +740,7 @@ table component, and reviewing that costs more than the fix was worth.
 
 The second bounds *how* it gets to green, and it is the one to keep if you keep only one. An agent
 told to make the build pass will make the build pass, and deleting the assertion is a valid way to
-do that. Naming the three specific cheats — weaken, lower, skip — works better than a general
+do that. Naming the three specific cheats (weaken, lower, skip) works better than a general
 instruction to be honest.
 
 ### Failure leaves the issue visibly unfinished
@@ -607,7 +755,7 @@ instruction to be honest.
 
 `implement` survives a successful run and is removed by the gate once the pull request merges. So
 an issue that got a pull request but never merged still carries `implement`, and reads as
-outstanding work — which it is.
+outstanding work, which it is.
 
 On failure both labels come off and a human has to re-add `implement` to retry. That is a
 deliberate choice against automatic retries: a bot that retries a broken attempt burns tokens
