@@ -1,7 +1,7 @@
 # The `## Diagram` section
 
-Every Platform agentic workflow ends with a Mermaid flowchart, using the same visual language
-as `.loops/recipes/*.yaml`, so a reader moving between them sees one convention.
+Every Platform agentic workflow ends with a Mermaid flowchart, sharing one visual language
+with the `loop-task-diagram` convention, so a reader moving between them sees one scheme.
 
 ---
 
@@ -54,11 +54,17 @@ trains people to ignore red.
 Where a decision was pushed down the ladder, the diagram should show where it now lives:
 
 ```
-implPick["Pick (rung 2)<br/>Priority cascade, pre-activation"]
+implElig["Eligibility (rung 4)<br/>Skip issues labelled future"]
 ```
 
 A workflow whose diagram is all `action` and `success` nodes with no decisions is usually a
 workflow that pushed nothing down and left every decision to the model.
+
+The trigger node names the **route**, not the event, because the router owns the event:
+
+```
+implStart("Work Router<br/>implement route")
+```
 
 ## Lifecycle versus Actions graph
 
@@ -130,9 +136,9 @@ has three outcomes and labelling `cancelled` as ✗ misrepresents it.
 
 ```mermaid
 flowchart TD
-    implStart("Trigger<br/>implement label, or gate finished") --> implPick
-    implPick["Pick (rung 2)<br/>Cascade + in-flight check"] -->|✓| implReserve
-    implPick -.->|nothing eligible| implIdle
+    implStart("Work Router<br/>implement route") --> implPick
+    implPick["Eligibility (rung 4)<br/>Skip issues labelled future"] -->|✓| implReserve
+    implPick -.->|not eligible| implIdle
     implReserve("Reserve<br/>Add bot-working") -->|✓| implCode
     implCode["Implement<br/>/plan-goal"] -->|✓| implVerify
     implCode -.->|too unclear| implUnclear

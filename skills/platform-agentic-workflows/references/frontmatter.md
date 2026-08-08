@@ -3,8 +3,8 @@
 Verified against gh-aw **v0.83.4**. Where the published docs and the installed compiler
 disagree, the compiler wins and the disagreement is noted.
 
-Fields are grouped by what they decide. Anything marked **Platform** is part of the contract
-in `SKILL.md`; anything marked *avoid* has a reason attached.
+Anything marked **Platform** is part of the contract in `SKILL.md`; anything marked *avoid*
+has a reason attached.
 
 ---
 
@@ -14,232 +14,175 @@ in `SKILL.md`; anything marked *avoid* has a reason attached.
 |---|---|
 | `name:` | **Platform: required.** The display name in Actions, and the string `workflow_run.workflows` matches. Not the filename |
 | `description:` | **Platform: required.** Free prose, compiled into a comment in the `.lock.yml`. Kept out of the prompt, so this is where the human explanation belongs |
-| `emoji:` | Cosmetic |
-| `labels:` | Categorises the workflow itself for `gh aw list --label`. Not issue labels |
+| `emoji:` / `labels:` / `metadata:` | Cosmetic or categorising |
 | `source:` | `owner/repo/path@ref`. Set by `gh aw add`; enables `gh aw update` |
-| `tracker-id:` | Min 8 chars. Tags every asset the workflow creates so they can be found later |
-| `metadata:` | Arbitrary key-value pairs |
+| `tracker-id:` | Min 8 chars. Tags every asset the workflow creates |
 
 ---
 
-## When it fires
+## The worker contract
 
-The trigger is rung 0 and the filters are rung 1. Together they decide whether a run happens
-at all, and they do it before a runner is claimed. Work spent here is free; the same decision
-made in the prompt costs a model call and can be argued with.
+A Platform agentic workflow is a **router-only worker**: it exposes `workflow_call` and
+nothing else.
 
-### Choosing the trigger
+```yaml
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        description: Issue number to refine.
+        required: true
+        type: string
+      mode:
+        description: Refinement pass mode (first or rerefine).
+        required: false
+        type: string
+        default: first
+```
+
+Rules the compiler will not enforce for you:
+
+- **The router must pass exactly the declared inputs.** Passing an undeclared input, or
+  omitting a required one, is a **startup failure** with no jobs and no annotation.
+- **A worker declares no `concurrency:`.** The router owns it. Both layers apply if you set
+  both, and the narrower one silently wins.
+- **A worker declares no public trigger.** Adding one bypasses the router and breaks the
+  one-route-per-event guarantee. For a manual entry point, add an operation to the router's
+  `workflow_dispatch`.
+
+### The caller job
+
+```yaml
+call-refine:
+  needs: classify
+  if: needs.classify.outputs.route == 'refine'
+  uses: ./.github/workflows/agent-refine.lock.yml
+  concurrency:
+    group: refine-${{ needs.classify.outputs.issue-number }}
+    cancel-in-progress: false
+  permissions: write-all
+  with:
+    issue-number: ${{ needs.classify.outputs.issue-number }}
+    mode: ${{ needs.classify.outputs.refine-mode }}
+  secrets: inherit
+```
+
+**`permissions: write-all` is mandatory, and the reason is not obvious.** Every gh-aw agent
+job compiles to `permissions: read-all`, which requests read on *every* scope. A caller
+granting a tidier explicit map cannot satisfy that, and GitHub rejects the reusable workflow
+call before creating any job:
+
+```yaml
+permissions:          # looks like least privilege
+  contents: read      # is a startup failure: zero jobs, no annotation, no log
+  issues: write
+  actions: write
+```
+
+There is no `read-all plus these writes` syntax. `write-all` at the caller is correct because
+it is not the boundary that matters: the worker's own `permissions: read-all` keeps the agent
+read-only and `safe-outputs.allowed` enumerates every write. Put the reason in a comment next
+to the grant, or the next reader will tidy it away.
+
+Keys allowed on a job that calls a reusable workflow: `name`, `needs`, `if`, `permissions`,
+`uses`, `with`, `secrets`, `strategy`, `concurrency`. Anything else, including `runs-on`,
+`env`, `steps` and `timeout-minutes`, is a syntax error.
+
+`secrets: inherit` passes everything the repository has. Some SAST rules flag it; the
+alternative is naming the three that are actually used
+(`OPENAI_API_KEY`, `BOT_APP_ID`, `BOT_PRIVATE_KEY`).
+
+### What stops applying without a public trigger
+
+gh-aw's rung-1 filters are compiled into the *activation* job's condition and evaluated
+against a triggering event. A `workflow_call` worker has no triggering event, so `names:`,
+`roles:`, `bots:`, `skip-bots:`, `skip-author-associations:`, `forks:` and `skip-if-*` have
+nothing to filter. Their job moves to the router's classifier, where it is ordinary shell and
+can be tested.
+
+`pre_activation` and `activation` jobs are still generated, and a top-level `if:` is still
+folded into the activation condition, so rung 2 remains available.
+
+---
+
+## Router triggers
+
+The router is plain YAML, so this is the standard Actions surface.
 
 | The work starts when | Trigger |
 |---|---|
-| A label is added | `issues: [labeled]` with `names:` |
-| A label means "do this once, now" | `label_command:` |
+| A label is added | `issues: [labeled]` |
 | An issue is opened | `issues: [opened]` |
-| Someone comments on an issue | `issue_comment: [created]` |
+| Someone comments on an issue or PR | `issue_comment: [created]` |
 | Someone comments on a PR's code | `pull_request_review_comment: [created]` |
 | Someone submits a review | `pull_request_review: [submitted]` |
 | A PR opens or gets new commits | `pull_request: [opened, synchronize]` |
-| A PR merges | `pull_request: [closed]` + `if:` on `merged` |
+| A bot opens a PR, with base-repo secrets | `pull_request_target:` |
 | A workflow finishes | `workflow_run: [completed]` |
-| A human types a command | `slash_command:` |
 | A human clicks a button | `workflow_dispatch:` |
-| An external system says so | `repository_dispatch:` |
-| A release is published | `release: [published]` |
-| A deployment fails | `deployment_status:` with `state: [error, failure]` |
 | Genuinely a clock | `schedule:` |
-
-### `label_command` versus `issues: [labeled]`
-
-```yaml
-on:
-  label_command: reaudit      # a command: fires, then removes the label
-```
-
-```yaml
-on:
-  issues:
-    types: [labeled]
-    names: [implement]        # a state: the label persists as metadata
-```
-
-Use `label_command` when the label is a button — applying it again should run it again. Use
-`names:` filtering when the label describes the issue and other things read it. `implement`
-is state, because the merge gate later removes it to mean "done".
-
-The matched label is available as `${{ needs.activation.outputs.label_command }}`.
-
-### `schedule`
-
-Prefer fuzzy syntax over cron. The compiler scatters the exact minute so that many
-repositories do not fire at once:
-
-```yaml
-on:
-  schedule: daily
-  schedule: daily around 14:00
-  schedule: daily between 9:00 and 17:00
-  schedule: weekly on friday around 5pm
-  schedule: hourly
-```
-
-Raw cron still works (`- cron: "17 1,13 * *"`) and is right when the time genuinely matters.
-Any scheduled workflow should carry `skip-if-no-match` so that a quiet day costs nothing.
 
 ### `workflow_run`
 
-The chaining trigger, and the one with the sharpest edge: **`workflows:` matches the workflow
-`name:`, not the filename.** A reference to `agent-merge-gate` when the workflow is named
-`Agent: Merge Gate` silently never fires.
+The chaining trigger, with the sharpest edge: **`workflows:` matches the workflow `name:`,
+not the filename.** Renaming either side breaks it silently.
 
 ```yaml
 on:
   workflow_run:
     workflows: ["App: CI"]
     types: [completed]
-    branches: [main]
+    branches: ["fix/*", "bugfix/*", "feature/*", "bot/*", "patch/*", "hotfix/*"]
 ```
 
-`branches:` is not optional in practice — the compiler warns without it, because otherwise
-the workflow fires for runs on every branch in the repository.
+`branches:` is not optional in practice; the compiler warns without it, because otherwise the
+workflow fires for runs on every branch.
 
-`conclusion:` is documented but **rejected in v0.83.4**. Filter in the frontmatter instead:
+`conclusion:` is documented but **rejected in v0.83.4**. Read
+`github.event.workflow_run.conclusion` and branch on it, which is reading a fact rather than
+making a judgement.
 
-```yaml
-if: github.event.workflow_run.conclusion == 'failure'
-```
+**`github.event.workflow_run.pull_requests[0].number` is frequently empty**, notably for forks
+and for heads in another repository. Guard for it and route to `none` rather than passing an
+empty number down. It is also the *pull request* number, never the issue number, so do not use
+it to key an issue-scoped concurrency group.
 
-Or, when the workflow handles several conclusions differently, let it fire for all of them and
-branch in the prompt on `${{ github.event.workflow_run.conclusion }}` — the value is known, so
-this is reading a fact rather than making a judgement.
+### `schedule`
 
-`workflow_run` is how you cross a wait without holding a runner. A workflow that opens a PR
-should stop there; a second workflow triggered by CI's completion picks the thread back up.
-
-### `slash_command`
-
-```yaml
-on:
-  slash_command:
-    name: review
-    events: [pull_request_comment]
-```
-
-Defaults to the filename as the command name and to all events. Access defaults to users with
-write permission.
-
----
-
-## Rung-1 filters
-
-All of these live under `on:` alongside the events.
-
-### `names:` — label filtering
+Prefer fuzzy syntax over cron where the exact minute does not matter; the compiler scatters it
+so many repositories do not fire at once:
 
 ```yaml
 on:
-  issues:
-    types: [labeled, unlabeled]
-    names: [bug, critical, security]
+  schedule: daily around 14:00
 ```
 
-Replaces "continue only if the label added was X". Also available on `pull_request`.
+The router uses raw cron because the classifier maps each cron string to a route, and that map
+must be exact. Keep the cron list in the `on:` block and the mapping in the classifier, and
+have the route matrix assert that every cron in the workflow selects a route.
 
-### `roles:` — who may trigger
+### `run-name`
+
+GitHub titles an issue-triggered run with the *issue* title, so every run on one issue reads
+identically. Derive it from the event:
 
 ```yaml
-on:
-  roles: [admin, maintainer, write]
+run-name: >-
+  ${{ github.event_name == 'issues'
+  && format('{0} label on #{1} by {2}', github.event.label.name, github.event.issue.number, github.actor)
+  || github.event_name == 'issue_comment'
+  && format('comment on #{0} by {1}', github.event.issue.number, github.actor)
+  || github.event_name }}
 ```
 
-Defaults to `[admin, maintainer, write]`. **Exact match, not a minimum**, so `roles: [write]`
-rejects an admin. `roles: "all"` allows any authenticated user and should be treated as a
-decision, not a convenience.
+The `A && B || C && D || E` chain is the standard idiom: `&&` binds tighter, so each pair
+yields its `format()` when the event matches and falls through otherwise.
 
-This is the correct place for an authorisation check. A prompt instruction saying "the comment
-author must be a collaborator" is a security control implemented as a request to a model that
-is reading the untrusted comment.
-
-### `bots:` and `skip-bots:`
-
-```yaml
-on:
-  bots: ["dependabot[bot]"]     # allow only these bots
-  skip-bots: true               # ignore all bots
-```
-
-`skip-bots` replaces "and the comment was not written by you". A workflow is not triggered by
-its own comment, but it can be triggered by another bot's.
-
-### `skip-author-associations:`
-
-```yaml
-on:
-  skip-author-associations:
-    issue_comment: [first_time_contributor, none]
-```
-
-Finer than `roles:` when the distinction is contribution history rather than permission.
-
-### `forks:`
-
-```yaml
-on:
-  pull_request:
-    types: [opened, synchronize]
-    forks: ["trusted-org/*"]
-```
-
-`["owner/repo"]`, `["owner/*"]`, or `["*"]`. On a self-hosted runner this is the difference
-between a fork PR running arbitrary code on your box and not.
-
-### `skip-if-match:` and `skip-if-no-match:`
-
-GitHub search queries evaluated before activation.
-
-```yaml
-on:
-  schedule: daily
-  skip-if-no-match:
-    query: "is:issue is:open label:implement"
-    min: 1
-```
-
-```yaml
-on:
-  schedule: daily
-  skip-if-match: 'is:issue is:open in:title "[daily-report]"'
-```
-
-`max:` on `skip-if-match` and `min:` on `skip-if-no-match` set the threshold. Queries are
-repo-scoped unless you set `scope: none`, which is how you search across an org.
-
-This pair replaces a recipe's `exit 75` "nothing to do" task exactly, and it does it without
-starting anything.
-
-### `lock-for-agent:`
-
-```yaml
-on:
-  issues:
-    types: [opened, edited]
-    lock-for-agent: true
-```
-
-Locks the issue while the agent works and unlocks it afterwards, so a human cannot edit under
-the agent mid-run. Ignored for pull requests, which cannot be locked.
-
----
-
-## Other `on:` keys
-
-| Field | Notes |
-|---|---|
-| `if:` | Top-level condition. Folded into the activation job's condition |
-| `stop-after:` | `"+25h"`, `"2026-09-01"`. Stops the workflow triggering after a deadline |
-| `runtime:` / `run-name:` | `run-name:` accepts expressions, e.g. `${{ github.event.issue.title }}` |
-| `reaction:` | Adds a reaction to the triggering item so a human can see the workflow noticed |
-| `status-comment:` | Posts a started/finished comment linking the run. Noisy once trusted |
-| `manual-approval:` | Requires an environment approval before the run proceeds |
+Two traps. **In a `>-` folded scalar, a continuation line indented further than the first is
+preserved literally**, newline included, so keep every line at the same indent or the
+expression arrives with newlines in it. And `run-name` is evaluated when the run is created,
+before any job exists, so it can name the trigger but never the route the classifier picks.
+Allowed contexts are `github`, `inputs` and `vars`.
 
 ---
 
@@ -248,32 +191,31 @@ the agent mid-run. Ignored for pull requests, which cannot be locked.
 | Field | Notes |
 |---|---|
 | `runs-on:` | **Platform: `ubuntu-latest`.** The agent job |
-| `runs-on-slim:` | **Platform: `ubuntu-latest`.** The framework jobs (activation, pre-activation, safe outputs, conclusion). Defaults to `ubuntu-slim` if omitted |
+| `runs-on-slim:` | **Platform: `ubuntu-latest`.** The framework jobs. Defaults to `ubuntu-slim` if omitted |
 | `timeout-minutes:` | **Platform: always set.** Default 20, which is too short |
-| `env:` | Top-level key-value pairs available to agent `steps:` and interpolated into the prompt. Use for labels, markers, paths, comment templates, and `ISSUE_CONTEXT_PATH` |
-| `concurrency:` | String or object. `group:`, `cancel-in-progress:`, `queue: single \| max`, `job-discriminator:` |
-| `environment:` | Ties the run to an Actions environment, so protection rules and approvals apply |
+| `env:` | Top-level pairs available to agent `steps:` and interpolated into the prompt. Use for labels, markers, paths, comment templates |
+| `concurrency:` | **Platform: never on a worker.** The router owns it |
+| `environment:` | Ties the run to an Actions environment, so protection rules apply |
 
-### Concurrency defaults
+### Concurrency
 
-The compiler generates a group when you do not, keyed by trigger type:
+The compiler generates a group when you do not, keyed by trigger type: per issue number for
+`issues`, per PR number for `pull_request` (**and cancels in progress**), per ref for `push`,
+per workflow otherwise.
 
-| Trigger | Group | Cancels in progress |
+For a `workflow_call` worker none of that is meaningful, which is another reason the router
+owns the key. The groups Numa uses:
+
+| Route | Group | Effect |
 |---|---|---|
-| `issues` | per issue number | no |
-| `pull_request` | per PR number or ref | **yes** |
-| `push` | per ref | no |
-| `schedule` and others | per workflow | no |
+| `refine` | `refine-<issue>` | Issues refine in parallel, one run per issue |
+| `implement` | `write-pipeline-<issue>` | One writer per issue |
+| `merge-gate` | `write-pipeline-<issue>` | Shares the group with implement, so the two never race |
+| `apply-review` | `pr-feedback-<pr>` | Pull requests take feedback in parallel |
+| `audit` | `audit` | Singleton |
 
-A PR-triggered workflow cancels its own earlier run by default, which is usually right but is
-wrong for anything that pushes. A workflow whose real constraint is "one at a time across the
-whole repository" needs an explicit group, because the default is per-item:
-
-```yaml
-concurrency:
-  group: implement
-  cancel-in-progress: false
-```
+Sharing a group only works if both sides key on the same thing, which is why the router
+resolves the gated pull request's closing issue before dispatching.
 
 ---
 
@@ -281,12 +223,12 @@ concurrency:
 
 | Field | Notes |
 |---|---|
-| `engine:` | `id`, `model`, `version`, `command`, `args`, `env`, `permission-mode`, `agent`, `api-target`, `bare`. **Platform: `opencode` via Forge** — see `references/opencode.md` |
-| `model:` | Top-level alias. Provider segment must be one of `copilot`, `anthropic`, `openai`, `codex` |
-| `max-turns:` | **Platform: `300`.** Tool-loop budget. The real guard against a confused agent looping |
+| `engine:` | `id`, `model`, `version`, `command`, `args`, `env`, `permission-mode`, `agent`, `api-target`, `bare`. **Platform: `opencode` via Forge**, see `references/opencode.md` |
+| `model:` | Provider segment must be one of `copilot`, `anthropic`, `openai`, `codex` |
+| `max-turns:` | **Platform: `300`.** Tool-loop budget, the real guard against a confused agent looping |
 | `max-turn-cache-misses:` | **Platform: `3000`.** Forge has no prompt cache; every turn is a miss |
-| `max-ai-credits:` | **Platform: `5000`.** Generous budget for multi-phase pipelines. Only engages when traffic passes gh-aw's proxy accounting |
-| `models:` | `allowed:` / `blocked:` model globs, plus pricing overrides |
+| `max-ai-credits:` | **Platform: `5000`.** Only engages when traffic passes gh-aw's proxy accounting |
+| `models:` | `allowed:` / `blocked:` globs, plus pricing overrides |
 
 ---
 
@@ -295,12 +237,12 @@ concurrency:
 | Field | Notes |
 |---|---|
 | `permissions:` | **Platform: `read-all`.** Every write goes through `safe-outputs` |
-| `network:` | **Platform: explicit.** `allowed:` list of ecosystems and hostnames, plus `blocked:` |
-| `tools:` | **Ignored under `engine: opencode`.** See `references/opencode.md` for the trap |
-| `mcp-servers:` | Custom MCP servers. Also ignored under opencode |
-| `checkout:` | Overrides the default shallow checkout. `fetch-depth`, `fetch`, `repository`, `path`, `sparse-checkout`, `submodules`, `lfs`, `current` |
-| `cache:` | Standard Actions cache. Point `path:` at `/tmp/gh-aw/agent/` when caching precomputed data |
-| `secrets:` | **Platform:** map `OPENAI_API_KEY` here for Forge; do not put it in `engine.env` |
+| `network:` | **Platform: explicit.** `allowed:` ecosystems and hostnames, plus `blocked:` |
+| `tools:` | **Ignored under `engine: opencode`.** See `references/opencode.md` |
+| `mcp-servers:` | Also ignored under opencode |
+| `checkout:` | Overrides the default shallow checkout. `fetch-depth`, `fetch`, `repository`, `path`, `sparse-checkout`, `submodules`, `lfs` |
+| `cache:` | Standard Actions cache |
+| `secrets:` | **Platform:** map `OPENAI_API_KEY` here for Forge; `engine.env` is rejected by strict compilation |
 
 ### Network
 
@@ -313,37 +255,12 @@ python  node  go  java  ruby  rust  swift  php  dart  haskell  perl
 terraform  bazel  linux-distros  dotnet
 ```
 
-One leading wildcard is allowed (`*.cdn.example.com`); more than one is a compile error. A
-bare hostname already covers its subdomains. URLs from domains outside the allowlist are
-replaced with `(redacted)` in agent output.
+Prefer ecosystem identifiers over individual hostnames. `dotnet` expands to every
+NuGet-related domain and `node` does the same for npm, pnpm and yarn. The compiler will
+suggest the swap on every compile if you list hostnames instead.
 
-Prefer ecosystem identifiers over individual hostnames for package registries. The `dotnet`
-identifier expands to every NuGet-related domain, and `node` does the same for the npm/pnpm/yarn
-ecosystem. Put them in `shared/platform-defaults.md` so every importing workflow inherits them.
-
----
-
-## What it may write
-
-Full surface in `references/safe-outputs.md`. The frontmatter shape:
-
-```yaml
-safe-outputs:
-  threat-detection: false    # Platform agent workflow policy; declare locally, never in shared defaults
-  create-pull-request:
-    draft: false
-  add-comment:
-    target: "*"
-  add-labels:
-    allowed: [bot-working]
-  jobs:                      # custom safe outputs
-    notify:
-      description: "…"
-```
-
-Global keys sit alongside the types: `staged:`, `github-token:`, `github-app:`,
-`environment:`, `allowed-domains:`, `max-patch-size:`, `report-failure-as-issue:`,
-`concurrency-group:`, `messages:`.
+One leading wildcard is allowed (`*.cdn.example.com`); more is a compile error. A bare hostname
+already covers its subdomains.
 
 ---
 
@@ -351,47 +268,59 @@ Global keys sit alongside the types: `staged:`, `github-token:`, `github-app:`,
 
 | Field | Runs | Use for |
 |---|---|---|
-| `on.steps:` | Pre-activation job, before the agent job exists | Rung 2: gate only — decide whether to run at all |
+| `on.steps:` | Pre-activation job | Rung 2: gate only |
 | `on.permissions:` | Grants scopes to that job | Whatever `on.steps` needs |
-| `on.needs:` | Makes pre-activation depend on custom jobs | Fetching credentials before activation |
 | `pre-steps:` | Agent job, before checkout | Minting a token |
 | `steps:` | Agent job, after checkout, before the model | Rung 3: precompute into `/tmp/gh-aw/agent/` |
-| `pre-agent-steps:` | Agent job, immediately before the model | Late setup that must survive base-branch restore |
+| `pre-agent-steps:` | Agent job, immediately before the model | Setup that must survive the base-branch restore |
 | `post-steps:` | Agent job, after the model | Collecting evidence |
-| `jobs:` | Separate jobs in the graph | Rung 4: selection with outputs, another runner, a matrix |
+| `jobs:` | Separate jobs in the graph | Rung 4: guards, reservation, terminal jobs |
 
 ### Which job's outputs the prompt can read
-
-Verified by compiling and reading the job graph:
 
 | Job | In the agent job's `needs` | `${{ needs.<job>.outputs.* }}` in the prompt |
 |---|---|---|
 | a custom `jobs:` entry | yes | resolves |
 | `pre_activation` (`on.steps`) | **no** | **empty string** |
-| `activation` | yes | resolves (`text`, `title`, `body`, `label_command`, …) |
+| `activation` | yes | resolves |
 
-`needs` is not transitive in GitHub Actions. `activation` depends on `pre_activation`, and
-`agent` depends on `activation`, but that does not put `pre_activation` in the agent job's
-`needs` context. The compiler will still emit
-`GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_FOO: ${{ needs.pre_activation.outputs.foo }}` into the
-agent job if your prompt references it, which makes this look supported. It is not, and the
-symptom is an empty value rather than an error.
+`needs` is not transitive. `activation` depends on `pre_activation` and `agent` depends on
+`activation`, but that does not put `pre_activation` in the agent job's `needs` context. The
+compiler still emits an env var for the reference, which makes it look supported. It is not,
+and the symptom is an empty value rather than an error.
+
+### Being in `needs` does not gate anything
+
+A custom job appearing in the agent job's `needs` means "waits for", not "is gated by". A
+guard job that **succeeds** with a false output lets the agent run, and a guard job that is
+**skipped** also satisfies `needs`.
+
+```yaml
+if: inputs.issue-number != '' && needs.eligibility.outputs.eligible == 'true'
+```
+
+The second clause is the gate. Without it the guard only ever stopped the jobs that named it
+in their own `if:`. Confirm after compiling:
+
+```bash
+awk '/^  agent:/{f=1} f&&/^    if:/{print; exit}' .github/workflows/agent-implement.lock.yml
+```
 
 ### Step ordering inside the agent job
 
 ```
 Checkout repository
-steps:                                        <- rung 3
+steps:                                         <- rung 3
 Checkout PR branch
 Restore agent config folders from base branch  <- reverts GH_AW_AGENT_FILES
-pre-agent-steps:                              <- after the restore
-Write OpenCode Config                         <- engine config generated here
+pre-agent-steps:                               <- after the restore
+Write OpenCode Config
 Execute OpenCode CLI
 ```
 
 `GH_AW_AGENT_FILES` covers `AGENTS.md`, `CLAUDE.md`, `opencode.jsonc` and friends, restored
-from the base branch on pull-request events. Anything that edits one of those files must run in
-`pre-agent-steps:`, not `steps:`, or the restore silently undoes it on PR-triggered runs only.
+from the base branch on pull-request events. Anything that edits one of those files must run
+in `pre-agent-steps:`, or the restore silently undoes it on PR-triggered runs only.
 
 ---
 
@@ -400,12 +329,9 @@ from the base branch on pull-request events. Anything that edits one of those fi
 | Field | Notes |
 |---|---|
 | `imports:` | Shared markdown. Relative, `.github/`-rooted, or `owner/repo/path@ref`. Append `#Section` for one section, `?` to make it optional |
-| `import-schema:` | Declares typed inputs for a shared file, read via `${{ github.aw.import-inputs.<key> }}` |
+| `import-schema:` | Declares typed inputs for a shared file |
 | `inlined-imports:` | Embeds imports into the lock file. Needed for cross-org `workflow_call` |
 | `skills:` | External skill references, `owner/repo@<sha>` |
-| `resources:` | Extra files fetched alongside the workflow |
-
-Only one **agent file** (from `.github/agents/`) may be imported per workflow.
 
 ### What actually merges from an import
 
@@ -420,17 +346,17 @@ failures are silent.
 | `pre-agent-steps` | yes, prepended |
 | `post-steps` | yes, appended |
 | `tools`, `mcp-servers`, `env`, `checkout` | yes |
-| `permissions` | **no** — validation only |
-| `engine`, `model` | **no** — silently ignored |
-| `runs-on`, `runs-on-slim` | **no** — warns `Ignoring unexpected frontmatter fields` |
-| `on:` and its filters (`roles`, `reaction`, `names`) | **no**, except `skip-*` keys, `github-token`, `github-app` |
+| `permissions` | **no**, validation only |
+| `engine`, `model` | **no**, silently ignored |
+| `runs-on`, `runs-on-slim` | **no**, warns `Ignoring unexpected frontmatter fields` |
+| `on:` and its filters | **no**, except `skip-*` keys, `github-token`, `github-app` |
 
 **`permissions` is the trap.** `permissions: read-all` in a shared file compiles with no
-warning at all, and the agent job silently falls back to `contents: read` — a workflow that
-looks read-all and is not. `runs-on` at least warns.
+warning at all, and the agent job silently falls back to `contents: read`. `runs-on` at least
+warns.
 
-A Platform shared component can hold the network policy, threat detection, and pre-agent
-steps; every workflow keeps its own `permissions`, `engine`, `model` and both runner keys.
+`env` merging is what makes a shared setup file able to carry its own version pins, so the
+importing workflow does not have to restate them.
 
 A file appears at most once in an import graph, and circular imports fail at compile time.
 
@@ -441,60 +367,43 @@ A file appears at most once in an import graph, and circular imports fail at com
 | Form | Notes |
 |---|---|
 | `${{ github.event.* }}` | Event payload |
-| `${{ needs.<job>.outputs.<name> }}` | Custom job (rung 4) outputs. Verified to reach the prompt |
-| `${{ needs.activation.outputs.label_command }}` | Which label fired a `label_command` |
+| `${{ inputs.* }}` | `workflow_call` inputs. The normal way a worker reads its contract |
+| `${{ needs.<job>.outputs.<name> }}` | Custom job outputs. Verified to reach the prompt |
 | `${{ steps.sanitized.outputs.text }}` | Sanitised triggering comment text. Use this, never the raw body |
-| `{{#if expr }}…{{/if}}` | Conditional block. Verified |
-| `{{#runtime-import path }}` | Inlines a file at runtime; `?` makes it optional; supports `file:45-52` line ranges |
+| `{{#if expr }}…{{/if}}` | Conditional block |
+| `{{#runtime-import path }}` | Inlines a file at runtime; supports `file:45-52` line ranges |
 
 `secrets.*`, `needs.pre_activation.outputs.*`, `env.*`, `vars.*` and `toJson()` are rejected in
 the body. That is deliberate: the body is a prompt, and a secret interpolated into a prompt is
-a leaked secret. `needs.pre_activation.outputs.*` compiles but resolves empty — use a custom job.
-
----
-
-## Behaviour under test
-
-| Field | Notes |
-|---|---|
-| `safe-outputs.staged: true` | Runs everything, writes nothing, prints what it would have done |
-| `features:` | `intentional-failure:` for testing failure paths |
-| `experiments:` | A/B variants, selected per run and readable as `${{ experiments.<name> }}` |
-| `strict:` | Stricter validation |
-
-```yaml
-experiments:
-  style: [concise, detailed]
----
-Summarise this issue in a **${{ experiments.style }}** way.
-```
-
-gh-aw balances variant usage across runs and reports the split in `gh aw audit`.
+a leaked secret.
 
 ---
 
 ## Known gaps between docs and v0.83.4
 
-| Documented | Reality in v0.83.4 |
+| Documented | Reality |
 |---|---|
-| `on.workflow_run.conclusion: [failure]` | **Rejected**: `Unknown property: conclusion`. Filter with a top-level `if:` on `github.event.workflow_run.conclusion` instead |
-| `tools:` under any engine | Dropped entirely under `engine: opencode`. See `references/opencode.md` |
-| `needs.pre_activation.outputs.*` in the prompt | Compiles, resolves **empty**. Use a custom job |
-| `github.event.workflow_run.name` in the body | **Rejected** by the expression allowlist. Read `.name` from `gh api repos/…/actions/runs/<id>` in a job and pass it as an output |
+| `on.workflow_run.conclusion: [failure]` | **Rejected**: `Unknown property: conclusion`. Branch on the payload instead |
+| `tools:` under any engine | Dropped entirely under `engine: opencode` |
+| `needs.pre_activation.outputs.*` in the prompt | Compiles, resolves **empty** |
+| `github.event.workflow_run.name` in the body | **Rejected** by the expression allowlist |
 | `merge-pull-request`, `link-sub-issue` | Valid, flagged experimental |
+| A caller job may narrow `permissions` | Only down to what the worker's `read-all` needs, which in practice means `write-all` |
+| `linkPullRequestToIssue` GraphQL mutation | Not in GitHub's public schema. Edit the pull request body |
 
 Before relying on any field this file does not confirm, probe it. `references/verify.md` has
-the three-minute procedure.
+the procedure.
 
 ---
 
 ## Safety notes
 
-- Unsafe triggers (`push`, `issues`, `pull_request`, `issue_comment`) get permission checks
-  by default. Do not disable them with `roles: "all"` without a reason you would defend.
-- `pull_request_target` runs with the base repository's secrets against a fork's code. Avoid
-  it. If it is unavoidable, PR-head checkout is disabled by default and should stay that way.
+- Unsafe triggers get permission checks by default. Do not disable them with `roles: "all"`
+  without a reason you would defend.
+- `pull_request_target` runs with the base repository's secrets against a fork's code. The
+  router uses it only for the `bot-approve` route, guarded on `github.actor`, with no checkout
+  of the head.
 - Untrusted text belongs in `${{ steps.sanitized.outputs.text }}`, never the raw body.
-- A workflow is not triggered by its own writes, so the obvious infinite loop is prevented.
-  Two workflows triggering each other is not, and `concurrency` will not save you from it.
-  Check the pair whenever you add a `workflow_run` edge.
+- A workflow is not triggered by its own `GITHUB_TOKEN` writes. It **is** triggered by writes
+  made with a GitHub App installation token, which is the usual cause of a bot triggering
+  itself. See `references/safe-outputs.md`.

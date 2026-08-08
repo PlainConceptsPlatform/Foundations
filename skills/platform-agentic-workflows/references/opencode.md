@@ -1,9 +1,9 @@
 # The engine: opencode on Forge
 
-Verified against gh-aw **v0.83.4** by compiling against Numa.
+Verified against gh-aw **v0.83.4** by compiling and running against Numa.
 
-Platform repositories run agentic workflows on our own model gateway. That involves one trick
-and one significant trap, and neither is discoverable from the gh-aw docs.
+Platform repositories run agentic workflows on our own model gateway. The wiring is spread
+across three files and none of it is discoverable from the gh-aw docs.
 
 ---
 
@@ -12,13 +12,14 @@ and one significant trap, and neither is discoverable from the gh-aw docs.
 ```yaml
 engine:
   id: opencode
-  version: 1.2.14
+  version: "1.2.14"
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
 
 model: openai/glm-5-2
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
 max-turns: 300
 max-turn-cache-misses: 3000
 max-ai-credits: 5000
@@ -26,32 +27,40 @@ max-ai-credits: 5000
 network:
   allowed:
     - defaults
-    - forge.plainconcepts.com
-    - dotnet   # NuGet: api.nuget.org, packages.microsoft.com, azuresearch-*.nuget.org, etc.
-    - node     # npm/pnpm: registry.npmjs.org, npmjs.com, nodejs.org, get.pnpm.io, etc.
+    - forge.plainconcepts.com   # not in `defaults`; the firewall blocks it otherwise
+    - dotnet                    # NuGet
+    - node                      # npm, pnpm, yarn
 ```
 
 All parts are load-bearing:
 
-1. **`id: opencode` and pinned `version: 1.2.14`.** Experimental in gh-aw; the compiler says so
-   on every compile. That warning is expected and is not a problem to fix.
-2. **`OPENAI_BASE_URL`** points the OpenAI-compatible client at Forge.
-3. **`model: openai/glm-5-2`.** The provider segment must be `openai` — see below.
-4. **Root `secrets.OPENAI_API_KEY`.** It supplies the model client without putting the key in
-   the agent's `engine.env`; the latter is rejected by strict compilation.
-5. **All three budgets.** `max-turns: 300` bounds tool loops; `max-turn-cache-misses: 3000`
-   prevents otherwise healthy Forge runs failing at the compiler default of five consecutive
-   misses. Forge has no prompt cache, so every turn is a miss. `max-ai-credits: 5000` gives
-   multi-phase pipelines (like `/plan-goal`) room to finish.
-6. **`network.allowed` includes `forge.plainconcepts.com`.** Forge is not in `defaults`, and
-   the firewall will block it otherwise. That failure looks like a model timeout, not a network
-   error, which makes it expensive to diagnose.
-7. **`network.allowed` includes package-ecosystem identifiers** (`dotnet`, `node`). The agent
-   must restore packages during `/repo-verify` or build steps. Use ecosystem identifiers, not
-   individual hostnames — the compiler's expansion covers every registry, CDN, and OCSP endpoint.
+1. **`id: opencode` with a pinned `version`.** Experimental in gh-aw; the compiler says so on
+   every compile. That warning is expected.
+2. **All three budgets.** `max-turns` bounds tool loops. `max-turn-cache-misses: 3000` stops
+   otherwise healthy runs failing at the compiler default of five consecutive misses, because
+   Forge has no prompt cache so every turn is a miss. `max-ai-credits` gives multi-phase
+   pipelines room.
+3. **`network.allowed` includes `forge.plainconcepts.com`.** It is not in `defaults`, and the
+   firewall blocking it presents as a *model timeout*, not a network error, which is expensive
+   to diagnose.
+4. **Ecosystem identifiers, not hostnames.** `dotnet` and `node` expand to every registry, CDN
+   and OCSP endpoint. The compiler nags on every compile if you list hostnames.
 
-### Why the provider segment is `openai`
+---
 
+## Where the model actually comes from
+
+This is the part that confuses everyone, because the model is named in three places and only
+one of them decides anything.
+
+| Layer | Value | What it does |
+|---|---|---|
+| gh-aw `model:` | `openai/glm-5-2` | **Satisfies the compiler's provider validation. Nothing else.** |
+| `opencode.ci.json` `model` | `plainconcepts/glm-5-2` | The model opencode actually loads |
+| `opencode.ci.json` `provider.plainconcepts.api` | `http://172.30.0.30:10000` | Where the request goes: gh-aw's firewall proxy, which forwards to Forge |
+| `engine.args: ["--model", ...]` | optional | A CLI override on top of the config |
+
+The gh-aw provider segment **must** be one of `copilot`, `anthropic`, `openai`, `codex`.
 Naming our own gateway is rejected at compile time:
 
 ```
@@ -59,59 +68,156 @@ unsupported provider "plainconcepts";
 supported providers: copilot, anthropic, openai, codex
 ```
 
-The segment only selects which client library to use. Declaring the OpenAI-compatible one and
-pointing `OPENAI_BASE_URL` at Forge routes there anyway. `plainconcepts/glm-5-2` fails
-validation, and would achieve nothing if it passed: the compiler rewrites the prefix to
-`awf-proxy` regardless, and Forge receives `glm-5-2` either way.
+The segment only selects which client library gh-aw thinks it is configuring, so declaring the
+OpenAI-compatible one is enough to get past validation. The real routing is done by
+`opencode.ci.json`, whose `provider` block is not validated by gh-aw at all.
 
-### Authentication and configuration
+So a Platform repository **does** need a `plainconcepts` provider and **does** need the CI
+merge step that installs it. An earlier version of this reference said the opposite; it was
+written before the provider block existed and is wrong.
 
-The API key must be mapped through root `secrets:`. Do not place `OPENAI_API_KEY` in
-`engine.env`: strict compilation rejects it. Keep `opencode.ci.json` deliberately small and
-direct — its top-level `model` should be `openai/glm-5-2` and its CI agent should use that model.
-Do not introduce an `awf-proxy` provider, `engine.args --model`, or a CI merge step unless a
-compiled workflow proves it is required.
+### Keep the model named once
 
-The CI config is a tracked repository file. Anything only present on a developer machine —
-agent selection, skills, MCP configuration, or permissions — does not exist in CI. Commit the
-minimal configuration the workflow needs, and remove unused provider indirection: it increases
-input complexity and makes failures harder to diagnose.
+`engine.args: ["--model", "plainconcepts/glm-5-2"]` is a CLI override that gh-aw passes through
+without validating. It works, and it is redundant with `opencode.ci.json`'s top-level `model`.
+Numa currently sets it on one worker out of five, which is exactly the state to avoid: five
+workers, two of which would change model if you edited the config, and nobody able to tell
+which without reading each file.
+
+Pin the model in `opencode.ci.json` and leave `engine.args` out, or set it on every worker.
+Not one.
+
+### The CI config merge
+
+`opencode.jsonc` is a developer's local config and is not tracked, so it does not exist in a CI
+checkout. Without a merge step the only config the agent gets is the one gh-aw generates, which
+declares provider `awf-proxy` with a model that is not ours.
+
+The merge belongs in **`pre-agent-steps:`**, not `steps:`. Verified ordering inside the agent
+job:
+
+```
+Checkout repository
+steps:                                         <- too early
+Checkout PR branch
+Restore agent config folders from base branch  <- reverts opencode.jsonc
+pre-agent-steps:                               <- correct window
+Write OpenCode Config                          <- gh-aw merges its base on top
+Execute OpenCode CLI
+```
+
+`steps:` runs before the base-branch restore, which lists `opencode.jsonc` in
+`GH_AW_AGENT_FILES` and would undo the merge on any pull-request event.
+
+Keep the fragment as **pure JSON**, not JSONC: `jq` cannot parse `//` comments, and a naive
+comment-stripper corrupts the `http://` inside the provider's api URL.
+
+gh-aw's own "Write OpenCode Config" step runs next and merges its base with
+`$existing * $base`. Base wins on conflicting keys, but it defines neither `model` nor this
+provider, so both survive.
+
+---
+
+## The CI agent prompt
+
+`opencode.ci.json` carries a `ci-workflow-agent` whose prompt sets three policies worth knowing
+before you write a workflow prompt that contradicts them.
+
+**`gh` is intentionally unauthenticated.** The agent must not use `gh` for GitHub reads or
+writes. Reads come from files you precomputed to `/tmp/gh-aw/agent/` or from the GitHub MCP
+tools; writes go through `safeoutputs`. A workflow prompt that says "run `gh issue view`" will
+burn turns and fail.
+
+**Stop after the last safe output.** The agent is told a task is complete only once every
+required Safe Outputs command succeeds, and to stop immediately afterwards without further
+tools or prose.
+
+**Output discipline.** gh-aw runs `opencode run --print-logs --log-level ERROR`, which
+suppresses opencode's own diagnostics but not the model's narration between tool calls. There
+is no flag for that; the only knob is the system prompt:
+
+```text
+OUTPUT DISCIPLINE: Do not narrate. Do not explain what you are about to do before doing it.
+Do not write prose between tool calls. Call tools silently. The only prose you produce is the
+final result or a brief error explanation when something fails.
+```
+
+Place it at the **end** of the agent `prompt` string. It applies to every workflow using the
+shared CI agent, so no per-workflow change is needed. Local interactive sessions do not want
+it: narration is useful when a human is reading along.
 
 ### Unattended repository reads
 
-An Actions agent cannot approve a runtime permission request. If it must inspect repository
-files, make that permission explicit in `opencode.ci.json`:
+An Actions agent cannot approve a runtime permission request, so make it explicit:
 
 ```json
 {
   "permission": {
     "read": "allow",
-    "external_directory": {
-      "/tmp/**": "allow"
-    }
+    "external_directory": { "/tmp/**": "allow" }
   }
 }
 ```
 
-This permits reads in the checked-out repository and temporary context directory. It does not
-grant GitHub write access or expose application, deployment, or third-party secrets. Diagnose
-`The user rejected permission to use this specific tool call` as a CI permission configuration
-problem, not as a model or Safe Outputs failure.
+Diagnose `The user rejected permission to use this specific tool call` as a CI permission
+configuration problem, not a model or Safe Outputs failure.
+
+---
+
+## The shared setup file
+
+Every worker imports one shared markdown file that prepares the runner. Three rules keep it
+from becoming the least reliable part of the fleet.
+
+**Pin every version.** A run that installs a different toolchain than the last one is not
+reproducible, and a failure caused by a floating dependency reads as a model failure. Put the
+pins in the shared file's `env:` block, which does merge from an import:
+
+```yaml
+env:
+  OPENSPEC_VERSION: "1.8.0"
+  RTK_VERSION: "0.44.1"
+  RTK_SHA256: "986f29704469b3d1051e2474105c6c75ab8b73651068dcd61612c1fb3938ad95"
+```
+
+**Checksum anything you download.** A tarball fetched from a release page and installed to
+`/usr/local/bin` is the one binary in the fleet nothing else verifies:
+
+```bash
+curl -fsSL -o "$tarball" "https://github.com/.../v${RTK_VERSION}/rtk-x86_64-unknown-linux-musl.tar.gz"
+echo "${RTK_SHA256}  $tarball" | sha256sum --check --strict
+```
+
+**Do not swallow failures.** A chain of installs each ending in `|| echo "skipped"` produces a
+silently degraded agent that then fails in a way that looks like bad judgement. Decide per
+tool: if it is optional, mark it `continue-on-error: true` once and say so; if it is required,
+let it fail. In particular `pnpm install --frozen-lockfile || pnpm install` hides lockfile
+drift, which is the one failure you most want to see.
+
+Take the package manager from the repository rather than installing a floating one:
+
+```yaml
+- run: |
+    corepack enable
+    corepack prepare --activate      # honours packageManager in package.json
+```
+
+Cache the stores. Every worker pays this setup cost on every run, and one `actions/cache` block
+in the shared file covers all of them.
 
 ---
 
 ## Git identity inside the agent container
 
-The agent runs inside a chroot with a host filesystem. The framework's
-`configure_git_credentials.sh` step sets up HTTP auth (the Authorization header for GitHub),
-but it does **not** set `user.name` or `user.email`. Any `git commit` inside the agent will fail:
+The framework sets up HTTP auth but not `user.name` or `user.email`, so any `git commit` inside
+the agent fails:
 
 ```
 fatal: unable to auto-detect email address (got 'runner@3360f280c5cf.(none)')
 ```
 
-The guardrails say "NEVER update the git config", and `git config --global` would violate that.
-The fix is **environment variables**, which git respects natively without touching config:
+The guardrails forbid touching git config, so use environment variables, which git respects
+natively:
 
 ```yaml
 env:
@@ -121,76 +227,32 @@ env:
   GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
 ```
 
-Add these to every workflow's top-level `env:` block. The agent can then commit (OpenSpec
-proposals, branch switches) without identity errors and without modifying git config.
-
 ---
 
-## Bot PRs: CI approval and `workflow_run` trigger
+## Bot pull requests
 
-Two related traps when the implement workflow creates PRs as `github-actions[bot]`:
+Two related traps when a worker opens pull requests as a bot.
 
-### Trap 1: CI stalls at `action_required`
+**CI stalls at `action_required`.** GitHub may require manual approval before CI workflows
+start on a bot's pull request. The run shows `status: completed`,
+`conclusion: action_required`, `jobs: []`. The setting is **Settings → Actions → General →
+Workflow permissions → "Allow GitHub Actions to create and approve pull requests"**. It is
+UI-only and cannot be set or verified by API. Even with it enabled, the *first* bot pull
+request for a workflow may still need one approval.
 
-When a bot opens a PR, GitHub may require manual approval before CI workflows can start. The
-`App: CI` run shows `status: completed`, `conclusion: action_required`, `jobs: []` — zero jobs
-created. The CI never runs until someone approves it.
+The router handles the rest with a `bot-approve` route on `pull_request_target`, guarded on
+`github.actor` being a trusted bot, which approves pending runs through the API. It takes
+`actions: write` and no checkout, which is what makes `pull_request_target` acceptable here:
+the fork's code is never fetched.
 
-The repo setting that controls this is **Settings → Actions → General → Workflow permissions →
-"Allow GitHub Actions to create and approve pull requests"**. This is UI-only; it cannot be
-verified or set via API. It must be enabled once by a repo admin.
-
-Even with that enabled, the **first** bot PR for a workflow may still require one-time approval.
-Subsequent PRs should start CI without `action_required`.
-
-### Trap 2: `workflow_run` does not fire for approved runs
-
-Even after approving the `action_required` CI run, the merge gate (which triggers on
-`workflow_run: [completed]` for "App: CI") may not fire. GitHub docs state:
+**`workflow_run` does not fire for approved runs.** GitHub's documented behaviour:
 
 > `workflow_run` events are NOT triggered for workflow runs that were initially pending
 > approval and then approved.
 
-This means the merge gate's `workflow_run` trigger silently does nothing. The CI passed, but
-nobody told the gate. The PR sits open with no gate action.
-
-**Mitigation:** Ensure the repo setting above is enabled so CI starts without
-`action_required`. If a bot PR still goes through that path, the merge gate won't auto-trigger —
-trigger it manually via `workflow_dispatch` with the PR number.
-
----
-
-## Log noise: the agent narrates between tool calls
-
-gh-aw runs `opencode run --print-logs --log-level ERROR "$(cat …/prompt.txt)"`. The
-`--log-level ERROR` suppresses opencode's own diagnostics. What remains in the Actions log is
-the model's **intermediate prose** — the narration it emits between tool calls: "Let me check…",
-"Now I'll…", "I have enough context…". That prose is not work; it is tokens spent talking about
-work, and on long pipelines it floods the log with hundreds of lines that obscure real output.
-
-There is no `--quiet` flag that suppresses model prose. The only knob is the **system prompt**.
-
-### The output-discipline directive
-
-Add this (or a trimmed equivalent) to the CI agent prompt in `opencode.ci.json`:
-
-```text
-OUTPUT DISCIPLINE: Do not narrate. Do not explain what you are about to do before doing it.
-Do not write prose between tool calls. Call tools silently. The only prose you produce is the
-final result or a brief error explanation when something fails. Never output sentences like
-"Let me check…", "Now I will…", "I have enough context…", or "Next I need to…". If you must
-think, use the todowrite tool, not prose.
-```
-
-Place it at the **end** of the agent `prompt` string. It applies to every workflow that uses the
-shared CI agent — no per-workfile change needed. The model still reasons internally; it just
-stops emitting the reasoning as text.
-
-### Where this does not apply
-
-Local interactive sessions do not need the directive: narration is useful when a human is reading
-along. The directive is specifically for the headless `--print-logs` path, where the log is a
-record, not a conversation.
+So after a manual approval, the merge-gate route never hears about the CI result. The pull
+request sits open with no gate action. Mitigation is the repo setting above; if a pull request
+does go down that path, dispatch the router with `operation=merge-gate` and the number.
 
 ---
 
@@ -202,11 +264,8 @@ record, not a conversation.
 ```
 
 The compiler prints that once and drops the **entire** `tools:` block. Verified by compiling a
-workflow with `tools.cache-memory` configured and finding zero references to it in the
-resulting 114KB lock file. This entry is the sole source of truth for this trap —
-`references/frontmatter.md` and `SKILL.md` point here.
-
-What that means:
+workflow with `tools.cache-memory` configured and finding zero references in the resulting lock
+file. This entry is the sole source of truth for this trap.
 
 | You wrote | What happens |
 |---|---|
@@ -214,24 +273,21 @@ What that means:
 | `tools: cache-memory:` | Dropped. No cache is created or restored |
 | `tools: repo-memory:` | Dropped. No memory branch |
 | `tools: github: toolsets: [issues]` | Dropped. The GitHub MCP server is mounted unrestricted |
-| `tools: web-fetch:` | Dropped |
 | `mcp-servers:` | Dropped |
 
 Three consequences:
 
-**Do not write a `tools:` block.** It is dead configuration that reads like a control, which is
-worse than absent: the next reader will believe the workflow is constrained when it is not.
+**Do not write a `tools:` block.** Dead configuration that reads like a control is worse than
+none: the next reader believes the workflow is constrained when it is not.
 
 **The constraints that remain are the ones that matter.** `permissions: read-all` means the
 token cannot write. `safe-outputs` with `allowed:` lists means writes are enumerated and
-validated. `network.allowed` means egress is filtered. `threat-detection` inspects the output.
-Those are enforced outside the agent, so they hold regardless of what the engine supports.
+validated. `network.allowed` filters egress. Those are enforced outside the agent, so they hold
+regardless of what the engine supports.
 
-**Persistence needs another mechanism.** No `cache-memory` means the CI-doctor pattern of
-"remember which runs you already investigated" does not work as written. The options are
-`safe-outputs` (write state where GitHub already stores it: a label, a comment, an issue body),
-an explicit `actions/cache` step at rung 3, or a `repo-memory`-shaped custom job at rung 6.
-Prefer the first: GitHub is already the database, and state stored there is visible to humans.
+**Persistence needs another mechanism.** Store state where GitHub already stores it: a label, a
+comment, an issue body. An explicit `actions/cache` step at rung 3 works for build caches, but
+GitHub is the database for anything a human should be able to see.
 
 ---
 
@@ -239,39 +295,38 @@ Prefer the first: GitHub is already the database, and state stored there is visi
 
 | Field | Works under opencode | Notes |
 |---|---|---|
-| `timeout-minutes:` | yes | Job wall clock. Set generously; an implement agent needs 60–120 |
-| `max-turns:` | yes | Tool-loop budget. **Platform standard: `300`.** The real guard against a confused agent looping |
-| `max-turn-cache-misses:` | yes | **Platform standard: `3000`.** Forge has no cache, so every turn is a miss |
-| `max-ai-credits:` | unreliable | **Platform standard: `5000`.** Only engages when traffic passes gh-aw's proxy accounting |
+| `timeout-minutes:` | yes | Job wall clock. An implement agent needs 60 to 120 |
+| `max-turns:` | yes | **Platform: `300`.** The real guard against a confused agent looping |
+| `max-turn-cache-misses:` | yes | **Platform: `3000`.** Forge has no cache, so every turn is a miss |
+| `max-ai-credits:` | unreliable | **Platform: `5000`.** Only engages when traffic passes gh-aw's proxy accounting |
 | `tools.timeout:` | no | Inside the dropped block |
 
 ---
 
 ## Cost telemetry
 
-gh-aw's AI Credits system tracks usage automatically, visible in the Actions run summary and
-in the `effective_tokens` job output. Do not report tokens in issue comments — it was
-duplication, and Forge routing often produces `not reported` anyway.
+gh-aw's AI Credits system tracks usage automatically, visible in the Actions run summary and in
+the `effective_tokens` job output. Do not report tokens in issue comments: it duplicates the
+run summary and Forge routing often yields `not reported` anyway.
 
-`gh aw logs` and `gh aw audit <run-id>` give duration, tokens, credits and turn count per run
-when the proxy did observe the traffic, and `gh aw logs --format markdown` gives a cross-run
-report with anomaly detection.
-
-The proxy log at `sandbox/firewall/logs/api-proxy-logs/token-usage.jsonl` in the run's artifacts
-has one JSON object per line with model and token counts. Expect it to be missing: routing
-through Forge means requests may not pass through gh-aw's API proxy accounting at all.
+`gh aw audit <run-id>` gives duration, tokens, credits and turn count when the proxy observed
+the traffic, and `gh aw logs --format markdown` gives a cross-run report with anomaly
+detection. The proxy log at `sandbox/firewall/logs/api-proxy-logs/token-usage.jsonl` may be
+absent entirely.
 
 ---
 
 ## Self-hosted runners
 
-Platform workflows currently target `ubuntu-latest`, switched from `[self-hosted, linux,
-agents]` in `0fc7b08`. If a repository moves back to the self-hosted runner, these apply.
+Platform workflows target `ubuntu-latest`. The fleet moved off `[self-hosted, linux, agents]`
+in `0fc7b08`; the model comes from Forge either way, so the only thing the self-hosted runner
+provided was a queue of one.
 
-**Never on a public repository.** A pull request from a fork would execute arbitrary code on a
-machine holding your credentials. Private and internal only.
+**Never on a public repository.** A fork pull request would execute arbitrary code on a machine
+holding your credentials.
 
-Both runner keys must be set, or the framework jobs go to a GitHub-hosted `ubuntu-slim`:
+If a repository moves back, all three runner keys must be set together or the framework jobs go
+to a GitHub-hosted `ubuntu-slim`:
 
 ```yaml
 runs-on: [self-hosted, linux, agents]
@@ -281,22 +336,20 @@ safe-outputs:
     runs-on: [self-hosted, linux, agents]
 ```
 
-A persistent machine breaks two assumptions a hosted runner lets you make:
+A persistent machine breaks assumptions a hosted runner lets you make:
 
 - **A step that installs something may find it already there.** `gh extension install
   github/gh-aw` exits non-zero with *"there is already an installed extension"*. Fall back to
   `upgrade` and assert with `gh aw version`.
 - **The runner's user does not own `/usr/share`.** `actions/setup-dotnet` installs there by
-  default and fails on permissions. Set `DOTNET_INSTALL_DIR` to
-  `${{ runner.tool_cache }}/dotnet`.
-
-Write transient state to `$RUNNER_TEMP`, never a hardcoded path.
+  default and fails. Set `DOTNET_INSTALL_DIR` to `${{ runner.tool_cache }}/dotnet`.
+- **The workspace persists between runs.** A `.npmrc` written with a token stays. A build
+  output directory from a previous run is still there, so a `[ -d dist ]` check can bundle
+  stale artifacts. Clean what you create, and write transient state to `$RUNNER_TEMP`.
 
 ---
 
 ## Other engines
-
-If a repository has reason to use something else:
 
 | Engine | `id` | Needs |
 |---|---|---|

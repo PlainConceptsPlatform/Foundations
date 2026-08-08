@@ -1,14 +1,14 @@
 ---
 name: platform-agentic-workflows
-version: 3.0.0
+version: 4.0.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
   judgement. Load when creating or reviewing a .github/workflows/*.md agentic workflow, when
-  migrating a .loops/recipes/*.yaml recipe, when a workflow needs its Mermaid diagram, when
-  choosing a trigger or a safe output, or when a compiled workflow misbehaves. Covers the
-  determinism ladder, the verified frontmatter contract, the opencode engine on Forge, the
-  full safe-output surface, trigger filters, and the Platform Mermaid scheme.
+  adding or changing a route on the Work Router, when a workflow needs its Mermaid diagram,
+  when choosing a trigger or a safe output, or when a compiled workflow misbehaves. Covers the
+  router architecture, the determinism ladder, the verified frontmatter contract, the opencode
+  engine on Forge, the safe-output surface, and the ways a workflow can be green and dead.
 ---
 
 # Platform Agentic Workflows
@@ -29,125 +29,247 @@ slow, expensive, and non-reproducible, because a model was asked to do arithmeti
 
 A good agentic workflow is mostly **not** agentic. It is a GitHub Actions workflow that has
 an agent in the middle of it. Everything a script can decide, collect or validate, a script
-does — before the agent starts, deterministically, for free. The agent is reserved for the
+does, before the agent starts, deterministically, for free. The agent is reserved for the
 small part that genuinely needs judgement.
 
 Treat model turns and input tokens as a constrained budget. Precompute the smallest useful
 context, give it a bounded task, and require one complete final Safe Outputs payload.
 
+## One router, many workers
+
+The Platform shape is **one conventional workflow that owns every trigger**, and a set of
+agentic workers that have no public trigger at all.
+
+```
+work-router.yml          conventional YAML. Every on: the repository has.
+  └── classify           one event in, exactly one route out
+        ├── call-refine        → agent-refine.lock.yml        workflow_call only
+        ├── call-implement     → agent-implement.lock.yml     workflow_call only
+        ├── call-apply-review  → agent-apply-review.lock.yml  workflow_call only
+        ├── call-merge-gate    → agent-merge-gate.lock.yml    workflow_call only
+        ├── call-audit         → agent-audit.lock.yml         workflow_call only
+        └── deterministic jobs  bot-approve, audit-close, cleanup-artifacts,
+                                stale-recovery, validate
+```
+
+Four things this buys, and they are the reason to accept the indirection:
+
+1. **One route per event.** Before the router, adding a label started a run of every workflow
+   subscribed to `issues: [labeled]`, each spinning up its own selection job before activation
+   skipped it. Now one event creates one run, and at most one thing happens inside it.
+2. **Concurrency has one owner.** Groups are keyed on the caller job. Workers declare none.
+   Two layers would be two answers to the same question, and both would apply.
+3. **Guards are testable.** Classification is a pure shell function with no network calls, so
+   a test can source it. See `references/determinism.md`.
+4. **Adding a route is one file.** The trigger, the guard, the concurrency key and the
+   permissions all sit together.
+
+What it does **not** buy: fewer runs. GitHub creates a run for every event that matches a
+trigger. The router can decide nothing downstream happens, and those runs cost about ten
+seconds with every job skipped, but the run entry still appears. To reduce the *count* you
+have to stop generating events. See **App tokens fire events** below.
+
+### The worker contract
+
+A worker exposes `workflow_call` and nothing else. It declares its inputs, and the router
+passes exactly those.
+
+```yaml
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: string
+```
+
+Adding a public trigger to a worker bypasses the router and breaks the one-route-per-event
+guarantee. If you need a manual entry point, add an operation to the router's
+`workflow_dispatch`, not a trigger to the worker.
+
+**The caller job must grant `permissions: write-all`.** This is not laziness and it is the
+single most expensive thing to get wrong. See the trap table below.
+
 ## The determinism ladder
 
-Every decision a workflow makes sits on one of seven rungs. **Push each decision to the
-lowest rung that can hold it.** Lower is cheaper, faster, reproducible, and auditable.
+Every decision sits on one of seven rungs. **Push each decision to the lowest rung that can
+hold it.** Lower is cheaper, faster, reproducible, and auditable.
 
 ```
-RUNG                       COSTS          DECIDES                        PROMPT CAN READ IT
-────                       ─────          ───────                        ──────────────────
-0  Trigger                 nothing        Does this run at all?          n/a
-1  Trigger filters         nothing        Is this event even ours?        n/a
-2  Pre-activation steps    ~10s runner    Is there work? (gate only)      NO
-3  Precompute steps        ~30s runner    What are the facts?             via /tmp/gh-aw/agent/
-4  Custom jobs             a job          Which item? Facts + reservation YES
-5  The agent               model tokens   Judgement                       n/a
-6  Safe outputs            a job          Writing, validated              n/a
+RUNG                     LIVES IN   COSTS         DECIDES                   PROMPT CAN READ IT
+────                     ────────   ─────         ───────                   ──────────────────
+0  Trigger               router     nothing       Does anything run?        n/a
+1  Route classification  router     ~10s runner   Which one thing runs?     n/a
+2  Pre-activation steps  worker     ~10s runner   Is there work? gate only  NO
+3  Precompute steps      worker     ~30s runner   What are the facts?       via /tmp/gh-aw/agent/
+4  Custom jobs           worker     a job         Guard + reservation       YES, if in the if:
+5  The agent             worker     model tokens  Judgement                 n/a
+6  Safe outputs          worker     a job         Writing, validated        n/a
 ```
 
-Mind the last column. Rung 2 gates but its outputs cannot reach the prompt; rung 4 both gates
-and hands values over. Getting that backwards fails silently.
+Two columns carry the traps. Rung 2 gates but its outputs cannot reach the prompt. Rung 4
+both gates and hands values over, **but only if the guard appears in the dependent's `if:`**.
 
-Rungs 0 to 2 can end a run without ever starting the model. Rung 6 is the only place an
-**agent-directed** write belongs. A custom job may perform a small, idempotent lifecycle
-reservation before the agent starts (for example, add `bot-working`); it must never make an
-agent's judgement call or replace Safe Outputs for the agent's final changes.
+Rungs 0 and 1 can end a run without ever starting a model. Rung 6 is the only place an
+**agent-directed** write belongs. A custom job may perform a small idempotent lifecycle
+reservation before the agent starts (adding `bot-working`); it must never make an agent's
+judgement call.
 
-### Rung 0 — The trigger
+### Rung 0 and 1 live in the router
 
-Never poll, and never ask the agent whether there is work. The event *is* the answer.
+The router's `on:` block is the whole repository's trigger surface, and its classifier is a
+pure function of the event payload: environment in, `key=value` out, no network.
 
-### Rung 1 — Trigger filters
+gh-aw's own rung-1 filters (`names:`, `roles:`, `skip-bots:`, `skip-if-match:`) are compiled
+into the *activation* job and evaluated against a triggering event. A `workflow_call` worker
+has no triggering event, so those filters have nothing to filter. Their job moves to the
+classifier, where it is ordinary shell and can be tested.
 
-`names:`, `roles:`, `bots:`, `skip-bots:`, `skip-author-associations:`, `forks:`,
-`skip-if-match:`, `skip-if-no-match:`. These are evaluated before a runner is claimed. The
-full trigger and filter surface is in `references/frontmatter.md`.
+### Rung 2 and 3, inside the worker
 
-### Rung 2 — Pre-activation steps
+`on.steps` gates. Top-level `steps:` precompute into `/tmp/gh-aw/agent/`, which is handed to
+the agent and uploaded as an artifact. The agent reads a file instead of spending twenty tool
+calls gathering it.
 
-`on.steps` with `on.permissions`, gated by `if: needs.pre_activation.outputs.<id>_result`.
-A step with an `id` exposes `<id>_result` (`success` / `failure`). If the answer is "no
-work", the agent job is never created.
+### Rung 4, custom jobs
 
-**Use this rung for a pure gate only.** Its `$GITHUB_OUTPUT` values land on the
-`pre_activation` job, and the agent job does not depend on `pre_activation`. gh-aw will
-happily interpolate `${{ needs.pre_activation.outputs.foo }}` into your prompt, and it
-arrives **empty** — a silent failure, not a compile error. Anything the prompt needs to read
-goes on rung 4.
+Top-level `jobs:`. The compiler adds them to the agent job's `needs`, so
+`${{ needs.<job>.outputs.<name> }}` genuinely arrives, in the prompt and in rung-3 `steps:`.
 
-### Rung 3 — Precompute steps
+Report "no work" as an output rather than a non-zero exit, and **name that output in the
+agent job's `if:`**. A `needs` job that succeeds with a false output does not stop anything.
 
-Top-level `steps:` run inside the agent job, after checkout, before the model. Write facts
-to `/tmp/gh-aw/agent/`, which is handed to the agent and uploaded as an artifact.
+A custom job has no checkout, so pass `--repo "$REPO"` on every `gh` call, and run
+`actions/checkout` first if the job uses a local composite action.
 
-```yaml
-steps:
-  - name: Collect the diff and the failing checks
-    env:
-      GH_TOKEN: ${{ github.token }}
-    run: |
-      set -euo pipefail
-      mkdir -p /tmp/gh-aw/agent
-      gh pr diff "$PR" > /tmp/gh-aw/agent/diff.patch
-```
-
-The agent reads a file instead of spending twenty tool calls gathering it.
-
-### Rung 4 — Custom jobs
-
-Top-level `jobs:`. **This is where selection lives whenever the prompt needs the answer**,
-because the compiler adds custom jobs to the agent job's `needs`, so
-`${{ needs.<job>.outputs.<name> }}` genuinely arrives — in the prompt and in rung-3 `steps:`.
-
-Report "no work" as an output rather than a non-zero exit, and gate on it, so the run is
-skipped rather than marked failed.
-
-**A custom job has no checkout.** Pass `--repo "$REPO"` on every `gh issue`, `gh pr` and
-`gh run` call, with `REPO: ${{ github.repository }}` in the job `env`.
-
-**A custom job is not gated by the trigger filters, so repeat the filter on the job.**
-`names: [implement]` only gates activation. Without a mirrored `if:`, the job runs on every
-label added to any issue.
-
-```yaml
-jobs:
-  pick:
-    if: >
-      github.event_name != 'issues' || github.event.action != 'labeled' ||
-      github.event.label.name == 'implement'
-```
-
-### Rung 5 — The agent
+### Rung 5, the agent
 
 What only a model can do: read code and judge it, weigh merge risk, write a user story,
 decide what a reviewer meant, fix a failing test.
 
-What must never be here: counting, sorting, label arithmetic, "find the lowest-numbered
-open issue", parsing JSON you could have had `jq` parse on rung 3.
+What must never be here: counting, sorting, label arithmetic, "find the lowest-numbered open
+issue", parsing JSON `jq` could have parsed on rung 3, or re-deriving a fact a job already
+handed it.
 
-Keep its work deliberately narrow:
+### Rung 6, safe outputs
 
-- Read the preloaded event context and only the repository files needed to form a judgement.
-- Do not repeat deterministic checks that already selected, reserved, or supplied the item.
-- End as soon as the judgement is formed with the complete allowed Safe Outputs payload; no
-  progress comments, draft payloads, or exploratory output writes.
+The agent proposes; a separate job writes, with validation and an audit trail. Keep
+`permissions: read-all`.
 
-### Rung 6 — Safe outputs
+Platform workers use two write paths, and the choice is about **attribution**:
 
-The agent proposes; the framework writes, in a separate job, with validation, sanitisation
-and an audit trail. **Never grant the agent a write permission to do by hand what a safe output
-does.** Keep `permissions: read-all`; use Safe Outputs for all final writes. The only exception
-is a deterministic, pre-agent custom-job reservation such as `bot-working`.
+- **`staged: true` plus apply it yourself.** The framework validates and stages, and the
+  worker's own `conclude` job applies the items through `apply-agent-output` using a GitHub
+  App installation token. Writes are attributed to the Platform App. Four of Numa's five
+  workers do this.
+- **Let the framework write.** `agent-implement` does, because `create-pull-request` packages
+  the agent's commits as a git bundle and pushes them through GraphQL, which produces
+  **signed** commits that satisfy a signed-commit ruleset. You cannot reproduce that yourself.
 
-See `references/safe-outputs.md` for the full write surface, the conclude/incomplete lifecycle
-skeleton, and the GitHub App token pattern.
+`references/safe-outputs.md` has both paths in full.
+
+## Ways a workflow is green and dead
+
+This is the heart of the skill. **A field can compile perfectly, or a run can go green, and
+still nothing happened.** Every row below cost a real debugging session.
+
+| Symptom | Cause |
+|---|---|
+| Whole run has **zero jobs**, `startup_failure`, no annotation, no log | A caller job granted narrower `permissions` than a called worker's `read-all` requests |
+| Every job green, agent emitted its output, **nothing was written** | `conclude` downloaded an artifact name that does not exist, and a `continue-on-error` swallowed the miss |
+| Guard job says no, the agent runs anyway | The guard is in `needs` but not in the dependent's `if:` |
+| `Can't find action.yml` | A job used `./.github/actions/...` without `actions/checkout` first |
+| Script exits 126 before its first line | No executable bit. A Windows checkout does not set one |
+| `require is not defined in ES module scope` | A `.js` helper in a repo whose `package.json` is `"type": "module"`. Rename to `.cjs` |
+| `tools:` block does nothing | Dropped entirely under `engine: opencode` |
+| Prompt receives `issue #` with no number | `needs.pre_activation.outputs.*`. Not in the agent job's `needs`, resolves empty |
+| A shared file's `permissions: read-all` has no effect | `permissions` does not merge from an import. No warning at all |
+| The bot triggers itself in a loop | An App-token comment fires a workflow event |
+| Merge gate approves on the wrong verdict | It re-derived CI from `gh pr checks`, whose first entry is an arbitrary check |
+| The PR never closes its issue | `linkPullRequestToIssue` is not in GitHub's public schema |
+| Merge gate never fires after CI | `workflow_run` does not fire for runs that were pending approval and then approved |
+
+The first row is the expensive one and it deserves its own paragraph.
+
+### The caller permission trap
+
+Every gh-aw agent job compiles to `permissions: read-all`, which requests **read on every
+scope**. A caller job granting a tidy explicit map cannot satisfy that:
+
+```yaml
+permissions:          # looks like least privilege
+  contents: read      # is a startup failure
+  issues: write
+  actions: write
+```
+
+GitHub rejects the reusable workflow call before creating any job. There is no annotation, no
+log, and no entry in the jobs list. The run just shows `startup_failure`, and neither
+actionlint nor `gh aw compile` sees it, because neither models permission satisfaction across
+a `workflow_call` boundary.
+
+There is no `read-all plus these writes` syntax, so the caller grants `write-all`:
+
+```yaml
+call-refine:
+  uses: ./.github/workflows/agent-refine.lock.yml
+  permissions: write-all
+  secrets: inherit
+```
+
+This is safe because it is not the boundary that matters. The worker's own
+`permissions: read-all` keeps the agent read-only, and `safe-outputs` with `allowed:` lists
+enumerates every write. Record the reason next to the grant, or the next reader will tidy it
+away and take the fleet down.
+
+### The artifact name carries a prefix
+
+gh-aw names the agent artifact `<prefix>agent`, and the prefix comes from
+`compute_artifact_prefix.sh` reading `toJSON(inputs)`. A workflow triggered by an event has no
+inputs, so the prefix is empty and the artifact is plainly `agent`. **The moment you convert
+that workflow to `workflow_call`, every run gets a non-empty prefix.**
+
+Anything downloading it by the bare name then finds nothing:
+
+```yaml
+- uses: actions/download-artifact@...
+  with:
+    name: ${{ needs.activation.outputs.artifact_prefix }}agent   # correct
+    path: agent-artifact
+```
+
+The conclude job must therefore depend on `activation`, which is where that output lives.
+
+This is the trap the router migration is most likely to spring, because converting a worker to
+`workflow_call` looks purely structural. In Numa it silently disabled the write path of four
+workers at once: the merge gate merged, pushed and closed nothing, apply-review pushed nothing,
+refine changed no labels or bodies, and the audit filed no issues. Every run was green.
+
+**Never wrap that download in `continue-on-error: true`.** That is what turns a wiring bug into
+an invisible one: the miss is swallowed, the item count is zero, every apply step is skipped by
+its `!= '0'` guard, and `conclude` reports success. A conclude job that applied nothing must
+fail.
+
+### App tokens fire events
+
+Writes made with `GITHUB_TOKEN` do not trigger workflows. Writes made with a **GitHub App
+installation token do**. That single fact has two consequences:
+
+**A loop hazard.** A `reserve` job that posts "work has started" with an App token fires an
+`issue_comment` event, which routes back to the same worker, which reserves again. Guard the
+comment route on the sender: `github.event.comment.user.type != 'Bot'`.
+
+**A run-count lever.** One human label on an issue produces three router runs: the label, the
+bot's `bot-working` label, and the bot's start comment. Two of them are ten-second no-ops.
+Moving bookkeeping writes to `GITHUB_TOKEN` removes them entirely.
+
+Do not blanket-switch. Writes that are meant to **advance the pipeline**, such as refine's
+`conclude` adding `implement`, depend on the event firing. Split by intent:
+
+| Write | Token | Why |
+|---|---|---|
+| `bot-working`, start and finish comments | `GITHUB_TOKEN` | Bookkeeping. Nothing keys off it |
+| `implement` added by refine's conclude | App token | The handoff needs the event |
 
 ## Design rules
 
@@ -155,321 +277,227 @@ Build workflows as short, named stages. Each stage has one responsibility, expli
 outputs, and can fail independently. Prefer a graph of small jobs and reusable local composite
 actions over one large job or a long inline script.
 
-The normal shape for an issue lifecycle workflow is:
+The normal shape of a worker:
 
 ```text
-label added or authorised reply
-  → select and validate
-  → reserve (`bot-working` + fixed start comment with run link)
-  → preload issue context to /tmp/gh-aw/agent/issue-context.json
-  → agent judgement (reads context, runs /plan-goal or /plan-story)
+router classifies the event
+  → guard job (is there still work?)      output named in the agent job's if:
+  → reserve (bot-working + start comment)
+  → preload context to /tmp/gh-aw/agent/
+  → agent judgement
   → Safe Outputs
-  → completed: remove `refine`, `review`, `bot-working`; add `refined`; post run link
-  → questions: remove `bot-working`; keep `refine`; add `review`; post one question comment
-  → blocked: remove `bot-working`; keep `refine`; add `review`; post blocking reason
-  → incomplete: remove `bot-working`; keep `refine`; post one retry comment
+  → conclude   (agent succeeded)
+  → incomplete (agent did not)
 ```
 
 ### Composite actions
 
-Put generic, deterministic operations in `.github/actions/<verb-noun>/action.yml`. Pass labels,
-markers, required state, bodies, paths and modes as action inputs. A local action must not
-embed a repository's workflow policy.
+Put deterministic operations in `.github/actions/<verb-noun>/action.yml`. Pass labels,
+markers, required state, bodies, paths and modes as inputs. A local action must not embed a
+repository's workflow policy. The current taxonomy is in `references/determinism.md`.
 
-| Action | Responsibility |
-|---|---|
-| `select-triggering-issue` | Read issue number from event payload |
-| `select-eligible-issue` | Priority-cascade selection with ordered label groups |
-| `validate-issue` | Check required/blocked labels; write issue JSON to disk |
-| `identify-gate-subject` | Find bot PR, closing issue, CI verdict from workflow_run or dispatch |
-| `load-issue-context` | Write issue body + comments to JSON (mandatory for implement/gate/review) |
-| `load-issue-comments` | Write comment stream to JSON |
-| `classify-issue-conversation` | Distinguish initial vs authorised response pass |
-| `add-issue-labels` / `remove-issue-labels` | Label lifecycle |
-| `create-issue-comment` | Post a fixed comment |
-| `download-agent-output` | Download agent artifact; expose JSON, bundle, item count |
-| `update-agent-issues` / `apply-agent-comments` / `apply-agent-labels` | Apply agent output items |
-| `create-agent-pr` / `merge-agent-pr` / `push-agent-branch` | PR lifecycle from agent output |
-| `create-agent-issues` / `link-agent-sub-issues` / `close-agent-issues` | Issue lifecycle from agent output |
-| `label-audit-issues` | Label parent as `audit`, children as `bug`+`implement` (audit pattern) |
-| `list-open-issues` | Write all open issues to JSON for duplicate-checking (audit pattern) |
+Three rules that are not optional:
 
-A job that calls `./.github/actions/...` must run `actions/checkout` first. If checkout uses
-`github.token`, its job needs `contents: read`; `persist-credentials: false` is the default for
-lifecycle jobs that do not need git writes. Any action that writes an input path creates its
-parent directory first.
+- **A job calling `./.github/actions/...` runs `actions/checkout` first.** Without it the
+  action cannot be resolved and the job dies before its first step.
+- **Invoke scripts as `bash path/to.sh`, not `path/to.sh`.** A checkout from a Windows clone
+  carries no executable bit. Set the bit in the index as well
+  (`git update-index --chmod=+x`), but do not depend on it.
+- **One runtime per concern.** Anything that talks to the GitHub API uses
+  `actions/github-script`, where a failed call rejects and fails the step. Anything that
+  touches git uses shell. A `gh` plus `jq` loop that ends in `|| true` reports success it did
+  not achieve.
 
 ### Shared components (imports)
 
-The repeated parts live in `.github/workflows/shared/*.md` — a markdown file with **no `on:`**,
-which the compiler validates but never compiles on its own:
-
-```yaml
-imports:
-  - shared/platform-defaults.md   # network.allowed only
-```
+The repeated parts live in `.github/workflows/shared/*.md`, a markdown file with **no `on:`**,
+which the compiler validates but never compiles on its own.
 
 Only `network`, `safe-outputs`, `steps`, `pre-agent-steps`, `post-steps`, `tools`, `env` and
 `checkout` merge. `permissions`, `engine`, `model`, `runs-on`, `runs-on-slim` and `on:` filters
-do **not**. The full verified merge table is in `references/frontmatter.md`.
+do **not**. The verified table is in `references/frontmatter.md`.
 
 `permissions` is the trap worth memorising: `permissions: read-all` in a shared file compiles
 with no warning and the agent job silently falls back to `contents: read`.
 
-### Issue context preload
-
-**Preload issue context on every workflow that implements, verifies, or gates work.** Use
-the `load-issue-context` action to write the issue body, labels, and comment stream to
-`/tmp/gh-aw/agent/issue-context.json` before the agent starts. The agent reads the file and
-the prompt tells it that acceptance criteria there define what `/plan-goal` produces and what
-`/repo-verify` must pass. Without this, the agent cannot judge whether the work satisfies the
-issue.
+Pin every version a shared setup file installs, and checksum anything it downloads. A run that
+installs a different toolchain than the last one is not reproducible, and a failure caused by a
+floating dependency reads as a model failure.
 
 ### Lifecycle visibility
 
-Make the lifecycle visible to people: a start marker, one complete question/outcome comment,
-and unambiguous labels. Keep a command label when an authorised reply must retrigger work; add
-a separate human-attention label such as `review` when a response is required. Every workflow
-that can stop for human input must add `review` via `add-labels` safe-outputs, and must include
-`review` in `remove-labels.allowed` so the next successful cycle can clear it.
+A start marker, one complete outcome comment, and unambiguous labels. Keep a command label
+when an authorised reply must retrigger work; add `review` when a human is needed. Every
+worker that can stop for human input must add `review` and must include it in
+`remove-labels.allowed` so the next successful cycle clears it.
 
-Put a deterministic link to the current Actions run in every fixed lifecycle comment. Use
-`${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` in the
-workflow-supplied comment body.
-
-When lifecycle writes must be attributed to the Platform GitHub App, mint an installation
-token with `create-github-app-token@v3.2.0` using `BOT_APP_ID` and `BOT_PRIVATE_KEY` secrets.
-See `references/safe-outputs.md` for the pattern.
+Put a deterministic run link in every fixed lifecycle comment:
+`${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`.
 
 ### Labels describe state, not locking
 
-Use `concurrency` for exclusivity. Reserve with one idempotent deterministic job before the
-agent, then release or transition labels on every terminal path. `concurrency`, not
-`bot-working`, is the lock.
+`concurrency` is the lock, on the router's caller job. Reserve with one idempotent
+deterministic job before the agent, then release or transition labels on every terminal path.
+
+### Naming runs
+
+GitHub titles an issue-triggered run with the *issue* title, so every run on one issue reads
+identically. Derive the title from the event instead:
+
+```yaml
+run-name: >-
+  ${{ github.event_name == 'issues'
+  && format('{0} label on #{1} by {2}', github.event.label.name, github.event.issue.number, github.actor)
+  || github.event_name == 'issue_comment'
+  && format('comment on #{0} by {1}', github.event.issue.number, github.actor)
+  || github.event_name }}
+```
+
+Fold it to a single line. In a `>-` scalar, a continuation line indented further than the
+first is preserved literally, newline and all. `run-name` is evaluated when the run is
+created, before any job exists, so it can name the trigger but never the route.
 
 ## Events over schedules
 
 A schedule is a fallback. An interval means latency up to the interval, and a run every
 interval that usually finds nothing to do.
 
-| The work starts when | Trigger |
+| The work starts when | Router trigger |
 |---|---|
-| A label is added | `issues: [labeled]` + `names: [thelabel]` |
-| A label means "do it now, once" | `label_command:` — auto-removes the label |
+| A label is added | `issues: [labeled]` |
 | Someone replies on an issue | `issue_comment: [created]` |
-| Someone reviews a PR | `pull_request_review_comment: [created]`, `pull_request_review: [submitted]` |
-| A PR opens or updates | `pull_request: [opened, synchronize]` |
-| A workflow finishes | `workflow_run: [completed]` + `branches: [main]` |
-| A human asks | `slash_command:`, or `workflow_dispatch:` |
+| Someone reviews a PR | `pull_request_review_comment`, `pull_request_review` |
+| A bot opens a PR | `pull_request_target` |
+| A workflow finishes | `workflow_run: [completed]` with `branches:` |
+| A human asks | `workflow_dispatch:` with an `operation` input |
 | Genuinely a clock | `schedule:` |
-
-Two consequences: you do not need to detect who acted (the event says so — use `roles:` and
-`skip-author-associations:` on rung 1); and exclusivity is `concurrency`, not a label.
-
-## Migrating a recipe
-
-| Recipe construct | Where it goes |
-|---|---|
-| `loops[].intervalHuman` | Delete. Find the event. `schedule:` only if truly clock-driven |
-| Preflight (clean tree, sync main) | Delete. Every run is a fresh checkout |
-| `sh` task that selects or locks | Rung 2, `on.steps` |
-| `sh` task that gathers facts | Rung 3, `steps:` into `/tmp/gh-aw/agent/` |
-| `sh` task that labels, comments, closes, merges | Rung 6, `safe-outputs:` |
-| `opencode` task | The prompt body |
-| `onSuccessTaskId` / `onFailureTaskId` | Numbered prompt steps; a separate workflow on `workflow_run` when it crosses a wait |
-| `maxRuns` on an agent task | `max-turns:` |
-| `maxRuns` on a verify task | A numbered "fix it and run it again" instruction |
-| `exit 75` / nothing-to-do task | Delete. A run that should not happen does not happen |
-| In-progress label used as a lock | `concurrency.group` |
-| `{{output}}` passed between tasks | `/tmp/gh-aw/agent/*.json`, or `needs.<job>.outputs.*` |
-| `{{opencode.tokens}}` / `{{opencode.cost}}` | A cost workflow on `workflow_run` |
-| `silentChain: true` idle task | Delete |
-| `diagram:` | The `## Diagram` section |
 
 ## The frontmatter contract
 
-Verified against gh-aw **v0.83.4**. Full field surface in `references/frontmatter.md`.
+Verified against gh-aw **v0.83.4**. Full surface in `references/frontmatter.md`.
 
 ```yaml
 ---
 description: |
-  What this does, and which recipe or chain it replaces.
+  What this does. Human explanation belongs here, not in the body.
 
 name: "Agent: Thing"        # REQUIRED. workflow_run matches this, not the filename.
 
-on:                          # Rung 0-2. Event, filters, pre-activation steps.
-  issues:
-    types: [labeled]
-    names: [implement]       # Rung 1: cheaper than checking in the prompt.
+on:
+  workflow_call:             # Router-only worker. No public trigger.
+    inputs:
+      issue-number:
+        required: true
+        type: string
 
 runs-on: ubuntu-latest       # Both keys, always. Omitting runs-on-slim silently
 runs-on-slim: ubuntu-latest  # sends framework jobs to a GitHub-hosted ubuntu-slim.
 
-engine:                      # Platform standard: opencode via Forge.
-  id: opencode
-  version: 1.2.14
-  env:
-    OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
-
-model: openai/glm-5-2        # The provider segment must be `openai`. See references/opencode.md.
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-max-turns: 300                 # Platform standard. The real guard against a confused agent looping.
-max-turn-cache-misses: 3000    # Forge has no prompt cache; every turn is a miss.
-max-ai-credits: 5000           # Generous budget for multi-phase pipelines.
+engine:
+  id: opencode
+  version: "1.2.14"
+  env:
+    OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
 
-env:                           # Git identity for commits inside the agent container.
-  GIT_AUTHOR_NAME: "github-actions[bot]"       # Without these, `git commit` fails with
-  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"  # "unable to auto-detect email"
-  GIT_COMMITTER_NAME: "github-actions[bot]"    # See references/opencode.md — Git identity.
+model: openai/glm-5-2        # Provider segment must be `openai`. See references/opencode.md.
+
+max-turns: 300
+max-turn-cache-misses: 3000  # Forge has no prompt cache; every turn is a miss.
+max-ai-credits: 5000
+
+env:
+  GIT_AUTHOR_NAME: "github-actions[bot]"     # Without these, `git commit` inside the agent
+  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
+  GIT_COMMITTER_NAME: "github-actions[bot]"  # fails with "unable to auto-detect email".
   GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
-
-network:                     # Explicit. Forge is not in `defaults`.
-  allowed: [defaults, forge.plainconcepts.com, dotnet, node]  # dotnet/node cover NuGet & npm registries
 
 permissions: read-all        # Read-only. Every write goes through safe-outputs.
 
-safe-outputs:                # Rung 6.
-  threat-detection: false     # Set on every agent workflow; imports do not own this policy.
+safe-outputs:
+  staged: true               # Apply items yourself for App attribution. See safe-outputs.md.
+  threat-detection: false    # Declare locally; imports do not own this policy.
   add-comment:
-
-concurrency:                 # Wherever two runs must not overlap.
-  group: thing
-  cancel-in-progress: false
 
 timeout-minutes: 30          # Always. Default is 20.
 ---
 ```
 
-**`tools:` is silently ignored under `engine: opencode`.** The compiler warns once and drops
-the whole block, `cache-memory` included. Do not write one. This is the single biggest trap in
-the Platform setup; `references/opencode.md` covers what to do instead.
+No `concurrency:`. The router owns it.
 
-## Compiling is not working
-
-The lesson behind most of the traps in this skill: **a field can compile perfectly and still do
-nothing.** There are three ways, and none of them produces an error.
-
-| Failure | Example |
-|---|---|
-| Dropped by the engine | `tools:` under `engine: opencode` — one warning, whole block gone |
-| Wired to a job that cannot see it | `needs.pre_activation.outputs.*` in the prompt — arrives empty |
-| Not merged from an import | `permissions: read-all` in a shared file — no warning at all |
-| CI stalls on bot PRs | `action_required` with zero jobs — see references/opencode.md — Bot PRs |
-| Merge gate never fires | `workflow_run` after an approved `action_required` CI run — same reference |
-
-So for anything this skill does not explicitly confirm: **probe it, then grep the `.lock.yml` to
-confirm it produced something.** `references/verify.md` has the procedure.
+No `tools:` block. gh-aw drops the whole section under `engine: opencode`, `cache-memory`
+included, with one warning and nothing in the lock file. A `bash:` allowlist here is dead
+configuration that reads like a control.
 
 ## The prompt body
 
 The body is the **prompt**. Not a README, not a description of the workflow.
 
 - Numbered, sequential, imperative, second person. One decision per step.
-- State the stop conditions first. A workflow that should not act must stop before it
-  labels, comments or writes anything.
-- Name the facts already on disk: "Read `/tmp/gh-aw/agent/issue-context.json`", not "fetch the issue".
-- Tell the agent that acceptance criteria in the issue context define what `/plan-goal` produces
-  and what `/repo-verify` must pass.
-- Keep the prompt short. Do not restate event fields or facts already interpolated into it, and
-  do not ask the model to verify deterministic work done by jobs.
-- Suppress narration. In the CI agent prompt (`opencode.ci.json`), end with an output-discipline
-  directive: "Do not narrate. Do not write prose between tool calls. Call tools silently."
-  See `references/opencode.md` — Log noise.
-- Require complete final Safe Outputs items. For example, one `add_comment` item contains the
-  entire response, not a greeting followed by a second item with the questions.
+- State the stop conditions first.
+- Name the facts already on disk: "Read `/tmp/gh-aw/agent/issue-context.json`", not "fetch the
+  issue".
+- Do not restate facts already interpolated, and do not ask the model to verify deterministic
+  work a job already did.
+- Require complete final Safe Outputs items. One `add_comment` holds the whole response, not a
+  greeting followed by the questions.
 - Say what not to do where the model would plausibly do it: do not weaken a test, do not
   merge, do not read outside the repository root.
-- For audit/triage workflows, use the **score-then-select** pattern: ask the agent to find N
-  problems, score each 1–10 (severity × likelihood × blast radius), create a parent issue
-  listing all findings, then create only the top 3 as sub-issues. This bounds output and
-  produces a ranked audit record. See Numa's `agent-audit.md` for the reference prompt.
-- Where a fact came from rung 2–4, interpolate it: `${{ needs.pick.outputs.number }}`.
+- Where a fact came from rung 1 to 4, interpolate it.
 - The last numbered step is always, verbatim:
 
   > Ignore the `## Diagram` section below. It is documentation for humans and contains no
   > instructions for you.
 
-Anything a human needs but the model does not goes in `description:`, which the compiler
-keeps out of the prompt.
+Anything a human needs but the model does not goes in `description:`, which the compiler keeps
+out of the prompt.
 
 ## The diagram
 
-Every Platform workflow ends with a Mermaid flowchart under a final `## Diagram` heading,
-sharing one visual language with `.loops/recipes/*.yaml`.
-
+Every Platform workflow ends with a Mermaid flowchart under a final `## Diagram` heading.
 Node roles: `start` (white, exactly one), `decision` (orange), `action` (purple), `success`
 (green terminal that writes), `failure` (red terminal), `idle` (dark grey no-op). Pass paths
 are `-->|✓|`, fail paths are `-.->|✗|`, node IDs are camelCase and never `end`.
 
-The six `classDef` lines must be copied verbatim from `references/diagram.md`. Do not retype
-them from memory.
+Copy the six `classDef` lines verbatim from `references/diagram.md`.
 
 ## Your task
 
-1. **Establish the trigger.** Decide whether the work reacts to a repository event or to a
-   clock. *Done when:* a `schedule:` appears only where no event can express the trigger,
-   and a comment says why.
+1. **Place the trigger on the router.** A new kind of work is a new route, not a new trigger.
+   *Done when:* the classifier maps the event to exactly one route, the route has a job, and
+   `verify-route-matrix.sh` asserts both.
 
-2. **Walk the ladder.** For every decision the workflow makes, name its rung and push it as
-   low as it goes. *Done when:*
-   - [ ] No numbered prompt step asks the model to count, sort, filter or select
-   - [ ] Every gate that can fail cheaply is on rung 1 or 2, not in the prompt
-   - [ ] Facts the agent needs are precomputed to `/tmp/gh-aw/agent/` where a `gh` command yields them
-   - [ ] Every `${{ needs.*.outputs.* }}` in the prompt or in `steps:` names a **custom job**,
-         never `pre_activation` — verify with:
-         `awk '/^  agent:/{f=1} f&&/^    needs:/{g=1;next} g&&/^      - /{print $2; next} g{exit}'`
-         on the `.lock.yml` that the job appears in the agent's `needs`
-   - [ ] A selection job reports "no work" as an output and is gated with `if:`, so a quiet run
-         is skipped rather than failed
-   - [ ] Every `gh issue` / `gh pr` / `gh run` call inside a custom job passes `--repo "$REPO"`
-         — audit with:
-         `awk '/^jobs:/{j=1} /^if:/{j=0} j' wf.md | grep -E 'gh (issue|pr|run) ' | grep -v -- --repo`
-   - [ ] Every custom job on a label-triggered workflow repeats the label filter in its own `if:`
-   - [ ] Any rung-2/rung-4 script was tested from a directory with no `.git`, not from a clone
-   - [ ] Every write goes through `safe-outputs`, none through granted write permissions
-         (except an idempotent, pre-agent custom-job lifecycle reservation such as `bot-working`)
-   - [ ] Every workflow that can stop for human input has `review` in both `add-labels.allowed`
-         and `remove-labels.allowed`
-   - [ ] Implement's `excluded-labels` includes `review` (a human is still working on the issue)
-   - [ ] No workflow uses `exclusive-label` for cross-workflow locking; use `concurrency` groups
-         per workflow and `excluded-labels` per issue
-   - [ ] When the agent creates issues (e.g. audit), labels are applied by a `conclude` job, not
-         by the AI's `create_issue` call
+2. **Walk the ladder.** *Done when:*
+   - [ ] No prompt step asks the model to count, sort, filter, select, or re-derive a fact
+   - [ ] Facts the agent needs are precomputed to `/tmp/gh-aw/agent/`
+   - [ ] Every guard output is named in the `if:` of what it guards, not only in `needs`
+   - [ ] Every `${{ needs.*.outputs.* }}` in the prompt names a custom job, never
+         `pre_activation`
+   - [ ] Every job using a local action runs `actions/checkout` first
+   - [ ] Every write goes through `safe-outputs`, except an idempotent pre-agent reservation
 
-3. **Preload issue context.** *Done when:* every workflow that implements, verifies, or gates
-   work has a `load-issue-context` step writing to `/tmp/gh-aw/agent/issue-context.json`, and
-   the prompt names the file and its acceptance criteria.
+3. **Wire the caller job.** *Done when:* `permissions: write-all`, the concurrency group is
+   keyed on the thing that must not overlap, the inputs match the worker's declared inputs
+   exactly, and a comment records why `write-all`.
 
-4. **Wire the frontmatter contract.** *Done when:* every row of the contract above is
-   present, or absent with a comment saying why.
+4. **Write the prompt body.** *Done when:* a reader can follow it without the YAML, stop
+   conditions come first, label items use `item_number` and `labels`, and the last step
+   carries the `## Diagram` exclusion line verbatim.
 
-5. **Write the prompt body.** Numbered, sequential, imperative, second person. *Done when:*
-   - [ ] A reader can follow it without reading the YAML
-   - [ ] Stop conditions come first
-   - [ ] Final Safe Outputs items are complete and bounded; label items use `item_number` and
-         `labels`, never invented field names such as `label_names`
-   - [ ] The last numbered step carries the `## Diagram` exclusion line verbatim
-   - [ ] Human-only explanation lives in `description:`, not the body
+5. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
 
-6. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
-
-7. **Compile and verify.** *Done when:* `gh aw compile` reports zero errors, you have read
-   every warning, and the generated job graph contains the jobs you intended.
-
-8. **Test the shell before a run.** *Done when:* every rung-2/rung-4 script has been executed
-   from a directory with no `.git`, and its `$GITHUB_OUTPUT` asserted. See `references/verify.md`.
+6. **Verify.** *Done when:* `gh aw compile --strict` reports zero errors, actionlint and
+   shellcheck are clean, the route matrix passes, **and one real event has been observed end
+   to end.** The static checks cannot see a startup failure. See `references/verify.md`.
 
 ## Not-for boundaries
-
-Do not use this skill for:
 
 - **Ordinary CI.** A build-and-test workflow is plain YAML. A gate that sometimes reaches a
   different verdict is not a gate, so `app-*` workflows must never involve a model.
 - **Public repositories on a self-hosted runner.** A fork PR would execute arbitrary code on
-  the box holding the credentials. On GitHub-hosted runners a public repo is fine.
-- **Writing `.loops/recipes/*.yaml`.** Load `loop-task-loops` and `loop-task-tasks`.
+  the box holding the credentials.
 
 ## References
 
@@ -477,18 +505,16 @@ Load these as needed; do not read all of them up front.
 
 | File | Read it when |
 |---|---|
-| `references/determinism.md` | Moving work down the ladder, shaping a workflow, splitting one that does too much, or choosing a pattern. Includes the LifecycleOps pattern, the composite action taxonomy, and the conversion-to-YAML test |
-| `references/frontmatter.md` | Any frontmatter field: the verified surface, triggers, filters, defaults, what we never use, the merge table for imports, step ordering, templating, known gaps |
-| `references/safe-outputs.md` | Choosing what the workflow may write, the GitHub App token pattern, the conclude/incomplete lifecycle skeleton, prompt guidance for safe outputs |
-| `references/opencode.md` | The engine, the Forge wiring, the `tools:` trap, budgets, cost telemetry, self-hosted runners, other engines |
+| `references/determinism.md` | Moving work down the ladder, shaping a workflow, the router classifier and its test, the patterns, the composite action taxonomy |
+| `references/frontmatter.md` | Any frontmatter field: the verified surface, triggers, filters, the merge table for imports, the worker contract, step ordering, known gaps |
+| `references/safe-outputs.md` | What a workflow may write, staged versus framework writes, the App token pattern, the conclude/incomplete skeleton |
+| `references/opencode.md` | The engine, the Forge wiring, the `tools:` trap, budgets, bot PRs, self-hosted runners |
 | `references/diagram.md` | Writing the `## Diagram` section. Contains the verbatim `classDef` lines |
-| `references/verify.md` | Compiling, probing an unfamiliar field, debugging a failed run, testing the shell, rolling out safely |
+| `references/verify.md` | Compiling, linting, probing an unfamiliar field, debugging a failed run, what static checks cannot catch |
 
 ## Cross-Skill References
 
-- For the recipe schema this migrates away from, load **`loop-task-loops`** and
-  **`loop-task-tasks`**.
-- For the origin of the colour scheme and shape vocabulary, load **`loop-task-diagram`**.
-  Both conventions must stay identical.
+- For the origin of the colour scheme and shape vocabulary, load **`loop-task-diagram`**. Both
+  conventions must stay identical.
 - For bringing a repository onto the Platform stack, load **`platform-onboard`** (Domain 5).
 - For prose passes over generated issue bodies, load **`humanizer`**.
