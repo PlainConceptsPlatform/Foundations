@@ -12,18 +12,15 @@ description: |
   | `safe-outputs.threat-detection` | yes, alongside the importer's own safe outputs |
   | `steps` / `pre-agent-steps` / `post-steps` | yes, imported ones are prepended (appended for post) |
   | `tools` / `mcp-servers` / `env` / `checkout` | yes |
-  | `permissions`                | **NO** — validation only |
-  | `engine` / `model`           | **NO** — silently not merged |
-  | `runs-on` / `runs-on-slim`   | **NO** — warns "Ignoring unexpected frontmatter fields" |
+  | `permissions`                | **NO** , validation only |
+  | `engine` / `model`           | **NO** , silently not merged |
+  | `runs-on` / `runs-on-slim`   | **NO** , warns "Ignoring unexpected frontmatter fields" |
   | `on:` and its filters (`roles`, `reaction`, `names`) | **NO**, except `skip-*` keys |
 
   The `permissions` row is the dangerous one. Putting `permissions: read-all` here looks like
   it works and compiles without a warning, but the agent job silently falls back to
   `contents: read`. Every workflow therefore keeps its own `permissions: read-all`, and so do
   `engine`, `model`, `runs-on` and `runs-on-slim`.
-
-  The full merge table is in the `platform-agentic-workflows` skill at
-  `references/frontmatter.md`.
 
 network:
   allowed:
@@ -42,6 +39,8 @@ network:
     # GitHub release assets (RTK, codegraph binary downloads)
     - releaseassets.githubusercontent.com
     - objects.githubusercontent.com
+    # Entra ID (Azure AD) , used by auth token refresh during agent runs
+    - login.microsoftonline.com
 
 safe-outputs:
   threat-detection: false

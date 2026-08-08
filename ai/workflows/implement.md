@@ -1,87 +1,72 @@
 ---
 description: |
   Implements an issue and opens a pull request. Stops there: the merge decision belongs to
-  a merge-gate workflow, which runs once CI has reported. Replaces the `impl-*` chain in
+  `agent-merge-gate.md`, which runs once CI has reported. Replaces the `impl-*` chain in
   .loops/recipes/implement-loop.yaml up to PR creation.
 
   Waiting on CI inside this run would hold a runner doing nothing, which is why the gate is
   a separate workflow rather than a later step.
 
+  Router-only worker: triggered exclusively via workflow_call from work-router.yml.
+  Contract input: issue-number.
+
 name: "Agent: Implement Issue"
 
 # Shared: network policy only. This workflow owns its Safe Outputs and OpenCode configuration.
-# permissions, engine, model and runs-on cannot be shared — see shared/platform-defaults.md.
+# permissions, engine, model and runs-on cannot be shared , see shared/platform-defaults.md.
 imports:
   - shared/platform-defaults.md
   - shared/opencode-ci.md
 
 on:
-  issues:
-    types: [labeled]
-    names: [implement]
-  workflow_dispatch:
+  workflow_call:
     inputs:
       issue-number:
         description: Issue number to implement.
         required: true
-
-  bots: ["platform-devbox[bot]"]
-  roles: [admin, maintainer, write]
-
-  # Rung 1: skip the run entirely when no implement issues are open.
-  skip-if-no-match: "is:issue is:open label:implement -label:bot-working"
-
-  reaction: eyes
+        type: string
 
 jobs:
-  pick:
-    if: >
-      github.event_name != 'issues' || github.event.action != 'labeled' ||
-      github.event.label.name == 'implement'
+  eligibility:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       issues: read
-      pull-requests: read
     outputs:
-      found: ${{ steps.select.outputs.found }}
-      number: ${{ steps.select.outputs.number }}
+      eligible: ${{ steps.check.outputs.eligible }}
     steps:
-      - name: Checkout workflow actions
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Select the next implementation issue
-        id: select
-        uses: ./.github/actions/select-eligible-issue
-        with:
-          token: ${{ github.token }}
-          issue-number: ${{ github.event.inputs.issue-number }}
-          skip-if-open-pr: 'true'
-          candidate-label-groups: |
-            priority,bug,implement
-            priority,implement
-            bug,implement
-            implement
-          excluded-labels: |
-            ${{ env.WORKING_LABEL }}
-            ${{ env.REVIEW_LABEL }}
+      - name: Skip issues planned for the future
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue-number }}
+        run: |
+          set -euo pipefail
+          labels=$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
+            --jq '[.labels[].name]')
+
+          if jq -e 'index("future")' >/dev/null <<<"$labels"; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Issue #$ISSUE_NUMBER has the future label. Automated implementation skipped."
+            exit 0
+          fi
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
 
   reserve:
-    needs: pick
-    if: needs.pick.outputs.found == 'true'
+    needs: eligibility
+    if: needs.eligibility.outputs.eligible == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
     steps:
       - name: Checkout workflow actions
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Create Platform Devbox token
         id: app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
@@ -89,26 +74,22 @@ jobs:
         uses: ./.github/actions/add-issue-labels
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.WORKING_LABEL }}
+      - name: Clear the human-needed flag
+        uses: ./.github/actions/remove-issue-labels
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          issue-number: ${{ inputs.issue-number }}
+          labels: ${{ env.REVIEW_LABEL }}
       - name: Ensure implement label is present
         uses: ./.github/actions/add-issue-labels
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.IMPLEMENT_LABEL }}
-      - name: Announce automated implementation
-        uses: ./.github/actions/create-issue-comment
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
-          body: |
-            ${{ env.IMPLEMENT_MARKER }}
-            ${{ env.START_COMMENT }}
-            [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
   conclude:
-    needs: [pick, agent, safe_outputs]
+    needs: [agent, safe_outputs]
     if: >
       needs.agent.result == 'success' &&
       needs.safe_outputs.result == 'success'
@@ -119,12 +100,12 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout workflow actions
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Create Platform Devbox token
         id: app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
@@ -132,23 +113,21 @@ jobs:
         uses: ./.github/actions/remove-issue-labels
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.WORKING_LABEL }}
-      - name: Confirm automated implementation completed
-        uses: ./.github/actions/create-issue-comment
+      - name: Verify PR closes the source issue
+        if: needs.safe_outputs.outputs.created_pr_number != ''
+        continue-on-error: true
+        uses: ./.github/actions/link-pr-to-issue
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
-          body: |
-            ${{ env.IMPLEMENT_MARKER }}
-            ${{ env.FINISHED_COMMENT }}
-            [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
+          pr-number: ${{ needs.safe_outputs.outputs.created_pr_number }}
+          issue-number: ${{ inputs.issue-number }}
   incomplete:
-    needs: [pick, agent, safe_outputs]
+    needs: [agent, safe_outputs, eligibility]
     if: >
       always() &&
-      needs.pick.outputs.found == 'true' &&
+      needs.eligibility.outputs.eligible == 'true' &&
       needs.agent.result != 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -156,12 +135,12 @@ jobs:
       issues: write
     steps:
       - name: Checkout workflow actions
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Create Platform Devbox token
         id: app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
@@ -169,25 +148,25 @@ jobs:
         uses: ./.github/actions/remove-issue-labels
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.WORKING_LABEL }}
       - name: Flag for human review
         uses: ./.github/actions/add-issue-labels
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.REVIEW_LABEL }}
       - name: Report missing implementation outcome
         uses: ./.github/actions/create-issue-comment
         with:
           token: ${{ steps.app-token.outputs.token }}
-          issue-number: ${{ needs.pick.outputs.number }}
+          issue-number: ${{ inputs.issue-number }}
           body: |
             ${{ env.IMPLEMENT_MARKER }}
             ${{ env.INCOMPLETE_COMMENT }}
             [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
-if: needs.pick.outputs.found == 'true'
+if: inputs.issue-number != '' && needs.eligibility.outputs.eligible == 'true'
 
 runs-on: ubuntu-latest
 runs-on-slim: ubuntu-latest
@@ -203,7 +182,7 @@ engine:
 
 model: openai/glm-5-2
 
-max-turns: 300
+max-turns: 3000
 max-turn-cache-misses: 3000
 max-ai-credits: 5000
 
@@ -211,9 +190,11 @@ env:
   IMPLEMENT_LABEL: implement
   WORKING_LABEL: bot-working
   REVIEW_LABEL: review
+  GIT_AUTHOR_NAME: "github-actions[bot]"
+  GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
+  GIT_COMMITTER_NAME: "github-actions[bot]"
+  GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
   IMPLEMENT_MARKER: "<!-- agent-implement -->"
-  START_COMMENT: "Automated implementation has started."
-  FINISHED_COMMENT: "Automated implementation run finished. See previous comment for pull request details."
   INCOMPLETE_COMMENT: "Automated implementation ended without an outcome. The implement label remains for a retry."
   ISSUE_CONTEXT_PATH: /tmp/gh-aw/agent/implementation-context.json
 
@@ -224,24 +205,24 @@ steps:
     uses: ./.github/actions/load-issue-context
     with:
       token: ${{ github.token }}
-      issue-number: ${{ needs.pick.outputs.number }}
+      issue-number: ${{ inputs.issue-number }}
       output-path: ${{ env.ISSUE_CONTEXT_PATH }}
 
 safe-outputs:
   threat-detection: false
   create-pull-request:
     draft: false
+    max-patch-files: 1000
     title-prefix: "[bot] "
     if-no-changes: error
+    allowed-files:
+      - "**"
 
-concurrency:
-  group: implement
-  cancel-in-progress: false
 
 timeout-minutes: 90
 ---
 
-1. You are implementing issue **#${{ needs.pick.outputs.number }}**. It was
+1. You are implementing issue **#${{ inputs.issue-number }}**. It was
    selected for you; do not choose a different one, and do not look for other candidates.
 
 2. Read `${{ env.ISSUE_CONTEXT_PATH }}`. It contains the issue and its full discussion. Treat
@@ -259,13 +240,19 @@ timeout-minutes: 90
       or replace the pipeline with your own ad-hoc checklist.
 
    c. The `apply` phase uses `ob-plan-apply` which delegates implementation to specialist
-      subagent waves. Let it own worker resolution, concurrency, and retry — do not
+      subagent waves. Let it own worker resolution, concurrency, and retry , do not
       implement the tasks yourself unless `ob-plan-apply` instructs you to.
 
    d. Implement only what the issue asks for: a vague sentence is not licence to redesign
       a module. Never read outside this repository root. The issue context at
       `${{ env.ISSUE_CONTEXT_PATH }}` defines acceptance criteria that the pipeline must
       satisfy.
+
+   **LSP warning**: Design-time LSP errors for `EntityFrameworkCore`, `Xunit`, `Fact`,
+   `DbUpdateException`, `SaveChangesAsync`, etc. are false positives. NuGet packages are
+   not available to the language server inside the sandbox. Ignore LSP errors entirely ,
+   `dotnet build` is the only source of truth for .NET correctness. Do not attempt to
+   fix, investigate, or work around LSP diagnostic errors.
 
 4. After the `/plan-goal` pipeline completes, run `/repo-verify` as a final backstop.
    This loads the `ob-repo-verify` skill which runs lint, typecheck, `dotnet build`,
@@ -275,25 +262,25 @@ timeout-minutes: 90
 
  5. You **must** call exactly one safe-output tool before finishing, or the workflow
     reports a failure. All safe-output tools are on the `safeoutputs` MCP server. Call
-    them using the `safeoutputs/<tool>` convention — for example:
+    them using the `safeoutputs/<tool>` convention , for example:
 
     ```
-    safeoutputs/create_pull_request(title="[bot] Fix X", body="Closes #${{ needs.pick.outputs.number }}\n\n...", branch="fix/x")
+     safeoutputs/create_pull_request(title="[bot] Fix X", body="Closes #${{ inputs.issue-number }}\n\n...", branch="fix/x")
     ```
 
     Choose exactly one:
 
-    - **`safeoutputs/create_pull_request`** — propose a pull request against `main` with
-      the verified changes. Its `body` must close the issue
-      (`Closes #${{ needs.pick.outputs.number }}`) and summarise what changed and why.
+     - **`safeoutputs/create_pull_request`** , propose a pull request against `main` with
+       the verified changes. Its `body` must close the issue
+       (`Closes #${{ inputs.issue-number }}`) and summarise what changed and why.
       This is the normal path.
-    - **`safeoutputs/report_incomplete`** — use only when infrastructure or tooling
+    - **`safeoutputs/report_incomplete`** , use only when infrastructure or tooling
       prevents you from completing the task (e.g. the codebase cannot build due to a
       pre-existing error you cannot fix). Provide a specific `reason`.
-    - **`safeoutputs/noop`** — use only when the issue context shows the work is already
+    - **`safeoutputs/noop`** , use only when the issue context shows the work is already
       done and no changes are needed. Provide a `message` explaining what you found.
 
-    Do not manage labels or post comments — the conclude job handles that.
+    Do not manage labels or post comments , the conclude job handles that.
 
  6. **CRITICAL**: You MUST call at least one `safeoutputs/` tool every run. Never
     complete a run without making at least one tool call. If you finish implementing
@@ -306,10 +293,10 @@ timeout-minutes: 90
 
 ```mermaid
 flowchart TD
-    implStart("Trigger<br/>implement label, or gate finished") --> implPick
+    implStart("Work Router<br/>implement route") --> implPick
     implPick["Pick (rung 4)<br/>Priority cascade + in-flight check"] -->|✓| implReserve
     implPick -.->|no eligible issue| implIdle
-    implReserve("Reserve<br/>bot-working + starting comment") --> implFacts
+    implReserve("Reserve<br/>bot-working") --> implFacts
     implFacts("Facts<br/>Issue and comments to disk") --> implCode
     implCode["Implement<br/>/plan-goal, only what was asked"] -->|✓| implVerify
     implCode -.->|too unclear| implUnclear

@@ -26,9 +26,9 @@ written for the apps that depend on it.
 4. FRONTEND STACK         pnpm -> Next -> Tailwind v4 -> shadcn -> Biome
                            -> FSD + Steiger -> inversify-hooks
                            -> react-i18next -> Platform theme
-5. AGENT AUTOMATION       private/internal: gh-aw markdown workflows on the
-                           self-hosted runner with engine: opencode
-                           public: .loops/recipes/ fallback + GitHub labels
+5. AGENT AUTOMATION       one work router owning every trigger, gh-aw markdown
+                           workers on ubuntu-latest with engine: opencode
+                           against Forge + GitHub labels
 6. BACKEND GUARDRAILS     (if .NET) plain-dotnet-guardrails, arch tests
 ```
 
@@ -81,28 +81,27 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 
 ### Domain 5: Agent automation
 
-The Platform default is **GitHub Agentic Workflows on a self-hosted runner**, with `loop-task`
-as the fallback. Which set of checks applies depends on the repository:
-
-**If the repository is private or internal** (a self-hosted runner is safe):
-
-| Check | How to detect | Pass condition |
-|---|---|---|
-| Agentic workflows | `.github/workflows/` contains at least one `.md` workflow | Markdown workflow present |
-| gh-aw skill | `.github/skills/agentic-workflows/SKILL.md` exists | `gh aw init` has been run |
-| Self-hosted runner | `gh api repos/{owner}/{repo}/actions/runners` lists an online runner | Runner online with the expected label |
-| Runner wiring | Each `.md` workflow sets both `runs-on` and `runs-on-slim` | Framework jobs are not on a hosted runner |
-| Engine | Each `.md` workflow sets `engine.id: opencode` with `engine.command` | Uses the runner's authenticated opencode |
-
-**If the repository is public** (a self-hosted runner is unsafe, so the fallback applies):
+The Platform default is **GitHub Agentic Workflows on `ubuntu-latest`**, with `engine: opencode`
+pointed at the Forge gateway. This applies to public repositories too: the model comes from
+Forge either way, so nothing needs to run on a machine holding credentials.
 
 | Check | How to detect | Pass condition |
 |---|---|---|
-| Loop recipes | `.loops/recipes/` exists with at least one `.yaml` file | YAML recipe present |
+| Work Router | `.github/workflows/` contains a conventional workflow owning the repository's triggers | One router present |
+| Workers | Each `agent-*.md` declares `workflow_call` and no public trigger | Router owns every entry point |
+| Caller grants | Each calling job sets `permissions: write-all` | Calls are not rejected at startup |
+| Runner wiring | Each `.md` sets both `runs-on` and `runs-on-slim` | Framework jobs land on the same runner |
+| Engine | Each `.md` sets `engine.id: opencode` with `OPENAI_BASE_URL` pointed at Forge | Traffic reaches the gateway |
+| Compiled locks | Each `.md` has a committed `.lock.yml` | Actions runs what the source says |
+| Checks | A pull-request workflow runs actionlint, shellcheck, the route matrix, and the manifest lint | The gaps the compiler cannot see are covered |
 | GitHub labels | `gh label list` includes the workflow intent labels | Label set created |
 
-Never attach a self-hosted runner to a public repository: a pull request from a fork would
-execute arbitrary code on it, with whatever credentials it holds.
+A self-hosted runner is optional, and only for private or internal repositories. Never attach
+one to a public repository: a pull request from a fork would execute arbitrary code on it, with
+whatever credentials it holds.
+
+`loop-task` remains the fallback for work with no repository event to react to, not a
+substitute for public repositories.
 
 ### Domain 6: Backend guardrails (.NET only)
 
@@ -161,22 +160,33 @@ Each step is an OpenSpec change. Capture Playwright characterization tests befor
 
 Which path you take depends on the repository, and the choice is not a preference.
 
-**Private or internal repository: Agentic Workflows on the self-hosted runner.**
+**Private or internal repository: Agentic Workflows on `ubuntu-latest`.**
 
-1. Run `gh aw init`. This installs GitHub's first-party `agentic-workflows` skill at
-   `.github/skills/agentic-workflows/SKILL.md`, which is the reference for the format,
-   `gh aw compile`, `gh aw trial` and debugging. Do not write your own guide for that.
-2. Register the runner and confirm it is online with the expected label. Install its service
-   as the user that holds the `opencode` session, or the engine will fail to authenticate in
-   a way that looks like an agent problem and is not.
-3. Author the workflows. Load the **`platform-agentic-workflows`** skill: it carries the
-   Platform frontmatter contract, the event-over-schedule rule, the Mermaid convention shared
-   with `.loops/recipes/`, and the token telemetry pattern.
-4. Create the GitHub labels the workflows filter on.
+1. Run `gh aw init --no-mcp --no-skill --no-agent`. The extra flags matter: the scaffolding
+   they suppress is for authoring workflows with GitHub Copilot Chat, which Platform does not
+   use, and it comes back every time you rerun `init` without them.
+2. Copy the templates from Foundations `ai/workflows`: the router, the two workers, the shared
+   components, the composite actions, and `opencode.ci.json`. The shape is **one router that
+   owns every trigger and workers that have none**, so do not give a worker its own trigger.
+3. Add the secrets: `OPENAI_API_KEY` for Forge, plus `BOT_APP_ID` and `BOT_PRIVATE_KEY` for the
+   Platform App that lifecycle writes are attributed to.
+4. Author or adapt the workflows. Load the **`platform-agentic-workflows`** skill: it carries
+   the router architecture, the determinism ladder, the verified frontmatter contract, the
+   Mermaid convention, and the ways a workflow can be green and dead.
+5. Create the GitHub labels the workflows read and write:
+   `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
+6. Compile, lint, and then **watch one real event end to end**. `gh aw compile --strict` and
+   actionlint both pass on workflows that produce zero jobs at runtime.
 
-**Public repository: `loop-task` recipes.** A self-hosted runner is unsafe on a public
-repository, so the fallback applies. Read `references/loop-recipes.md`, create the labels, and
-add YAML recipes with an embedded Mermaid `diagram` field to `.loops/recipes/`.
+A self-hosted runner is supported for repositories that need one, but it is no longer the
+default: the model comes from Forge either way, so the runner was only ever providing a queue
+of one.
+
+**Work with no repository event: `loop-task` recipes.** Anything genuinely driven by a clock or
+an external system rather than something happening in the repository. Read
+`references/loop-recipes.md`, create the labels, and add YAML recipes with an embedded Mermaid
+`diagram` field to `.loops/recipes/`. Do not reach for it because a repository is public;
+`ubuntu-latest` covers that case.
 
 Keep `.loops/recipes/` in place while migrating a repository from one path to the other. The
 recipes are the reference for what the workflows must reproduce, and deleting them early loses

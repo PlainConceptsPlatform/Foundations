@@ -1,0 +1,189 @@
+name: Recover stale agent work
+description: Reconcile Refine, Implement, and Merge Gate claims whose bot-working label has outlived the staleness threshold.
+inputs:
+  token:
+    description: GitHub token with issues write and pull-requests read access.
+    required: true
+  stale-threshold-hours:
+    description: Hours after which a bot-working claim is stale. Invalid or empty values use 2.
+    required: false
+    default: ''
+  refine-marker:
+    description: Marker identifying the comment a Refine run posts when it asks the author a question.
+    required: false
+    default: '<!-- agent-refine -->'
+  working-label:
+    description: Label marking an issue the bot currently owns.
+    required: false
+    default: bot-working
+  refine-label:
+    description: Label marking an issue queued for refinement.
+    required: false
+    default: refine
+  implement-label:
+    description: Label marking an issue queued for implementation.
+    required: false
+    default: implement
+  review-label:
+    description: Label marking an issue that needs a human.
+    required: false
+    default: review
+runs:
+  using: composite
+  steps:
+    - name: Reconcile stale claims
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        STALE_THRESHOLD_HOURS: ${{ inputs.stale-threshold-hours }}
+        REFINE_MARKER: ${{ inputs.refine-marker }}
+        WORKING_LABEL: ${{ inputs.working-label }}
+        REFINE_LABEL: ${{ inputs.refine-label }}
+        IMPLEMENT_LABEL: ${{ inputs.implement-label }}
+        REVIEW_LABEL: ${{ inputs.review-label }}
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const WORKING = process.env.WORKING_LABEL;
+          const REVIEW = process.env.REVIEW_LABEL;
+          const MARKER = process.env.REFINE_MARKER;
+
+          const parsedHours = Number.parseInt(process.env.STALE_THRESHOLD_HOURS, 10);
+          const hours = Number.isInteger(parsedHours) && parsedHours > 0 ? parsedHours : 2;
+          const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+
+          core.info(`Stale threshold: ${hours}h (cutoff ${cutoff.toISOString()})`);
+
+          const staleIssuesLabelled = async (label) => {
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo,
+              state: 'open',
+              labels: `${WORKING},${label}`,
+              per_page: 100,
+            });
+
+            return issues.filter((issue) => new Date(issue.updated_at) < cutoff);
+          };
+
+          const removeWorking = async (issueNumber) => {
+            try {
+              await github.rest.issues.removeLabel({
+                ...context.repo,
+                issue_number: issueNumber,
+                name: WORKING,
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+          };
+
+          // An open bot pull request means the work is still in flight, whatever the issue's
+          // updated_at says. GraphQL carries the authorship and the closing references in one
+          // query; the REST pulls API omits both. `__typename` rather than a login match: the
+          // gh CLI reports an App as `app/platform-devbox` while REST reports
+          // `platform-devbox[bot]`, so matching on a `[bot]` suffix misses real bot pull requests.
+          const openPullRequests = [];
+
+          for (let cursor = null; ; ) {
+            const page = await github.graphql(
+              `query($owner: String!, $name: String!, $cursor: String) {
+                repository(owner: $owner, name: $name) {
+                  pullRequests(states: OPEN, first: 100, after: $cursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      number
+                      updatedAt
+                      author { __typename }
+                      closingIssuesReferences(first: 10) {
+                        nodes { number labels(first: 20) { nodes { name } } }
+                      }
+                    }
+                  }
+                }
+              }`,
+              { owner: context.repo.owner, name: context.repo.repo, cursor },
+            );
+
+            const { nodes, pageInfo } = page.repository.pullRequests;
+            openPullRequests.push(...nodes);
+
+            if (!pageInfo.hasNextPage) break;
+            cursor = pageInfo.endCursor;
+          }
+
+          const botPullRequests = openPullRequests.filter(
+            (pr) => pr.author?.__typename === 'Bot',
+          );
+
+          const issuesWithOpenBotPr = new Set(
+            botPullRequests.flatMap((pr) => pr.closingIssuesReferences.nodes.map((n) => n.number)),
+          );
+
+          const summary = {
+            refineEscalated: 0,
+            refineAwaitingAuthor: 0,
+            implementReleased: 0,
+            mergeGateReleased: 0,
+          };
+
+          for (const issue of await staleIssuesLabelled(process.env.REFINE_LABEL)) {
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number: issue.number,
+              per_page: 100,
+            });
+
+            const lastMarker = comments.filter((c) => (c.body ?? '').includes(MARKER)).pop();
+            const lastHuman = comments.filter((c) => c.user?.type !== 'Bot').pop();
+
+            // The bot asked a question nobody has answered yet. Escalating would drop the
+            // question on the floor, so leave the claim in place.
+            if (lastMarker && !(lastHuman && new Date(lastHuman.created_at) > new Date(lastMarker.created_at))) {
+              core.info(`#${issue.number}: awaiting author reply, left alone`);
+              summary.refineAwaitingAuthor += 1;
+              continue;
+            }
+
+            await removeWorking(issue.number);
+            await github.rest.issues.addLabels({
+              ...context.repo,
+              issue_number: issue.number,
+              labels: [REVIEW],
+            });
+
+            core.info(`#${issue.number}: escalated to ${REVIEW}`);
+            summary.refineEscalated += 1;
+          }
+
+          for (const issue of await staleIssuesLabelled(process.env.IMPLEMENT_LABEL)) {
+            if (issuesWithOpenBotPr.has(issue.number)) {
+              core.info(`#${issue.number}: open bot pull request still in flight, left alone`);
+              continue;
+            }
+
+            await removeWorking(issue.number);
+            core.info(`#${issue.number}: released`);
+            summary.implementReleased += 1;
+          }
+
+          for (const pr of botPullRequests.filter((p) => new Date(p.updatedAt) < cutoff)) {
+            for (const issue of pr.closingIssuesReferences.nodes) {
+              if (!issue.labels.nodes.some((label) => label.name === WORKING)) {
+                continue;
+              }
+
+              await removeWorking(issue.number);
+              core.info(`PR #${pr.number} / issue #${issue.number}: released`);
+              summary.mergeGateReleased += 1;
+            }
+          }
+
+          await core.summary
+            .addHeading('Stale recovery', 2)
+            .addList([
+              `Threshold: ${hours} hours (cutoff ${cutoff.toISOString()})`,
+              `Refine escalated to ${REVIEW}: ${summary.refineEscalated}`,
+              `Refine awaiting author: ${summary.refineAwaitingAuthor}`,
+              `Implement released: ${summary.implementReleased}`,
+              `Merge Gate released: ${summary.mergeGateReleased}`,
+            ])
+            .write();

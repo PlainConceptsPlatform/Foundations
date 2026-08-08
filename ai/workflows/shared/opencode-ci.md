@@ -1,12 +1,13 @@
 ---
 description: |
-  Merges the CI-only OpenCode provider from opencode.ci.json into opencode.jsonc before the
-  agent starts. Imported by every agentic workflow, so the merge is defined once.
+  Prepares the runner for an agent run and merges the CI-only OpenCode provider from
+  opencode.ci.json into opencode.jsonc. Imported by every agentic workflow, so the setup is
+  defined once.
 
-  Why this file exists at all: `opencode.jsonc` is a developer's local config and is not
+  Why the config merge exists at all: `opencode.jsonc` is a developer's local config and is not
   tracked, so it does not exist in a CI checkout. Without something like this, the only
   config the agent gets is the one gh-aw generates, which declares provider `awf-proxy` with
-  model `claude-sonnet-4.5` — while `engine.args` asks for `awf-proxy/glm-5-2`.
+  model `claude-sonnet-4.5`, while `engine.args` asks for `awf-proxy/glm-5-2`.
 
   Why `pre-agent-steps:` and not `steps:`. Verified ordering inside the agent job:
 
@@ -15,17 +16,28 @@ description: |
       Checkout PR branch
       Restore agent config folders from base branch    <- reverts opencode.jsonc
       pre-agent-steps:                                 <- correct window
-      Write OpenCode Config                           <- gh-aw merges its base on top
+      Write OpenCode Config                            <- gh-aw merges its base on top
       Execute OpenCode CLI
 
   `steps:` runs before the base-branch restore, which lists `opencode.jsonc` in
   GH_AW_AGENT_FILES and would undo the merge on any pull-request event.
 
+  Every version here is pinned. An agent run that installs a different toolchain than the one
+  the last run used is not reproducible, and a failure caused by a floating dependency reads
+  as a model failure.
+
+env:
+  OPENSPEC_VERSION: "1.8.0"
+  AGENTMEMORY_VERSION: "0.9.28"
+  CODEGRAPH_VERSION: "1.5.0"
+  RTK_VERSION: "0.44.1"
+  RTK_SHA256: "986f29704469b3d1051e2474105c6c75ab8b73651068dcd61612c1fb3938ad95"
+
 pre-agent-steps:
   - name: Create agent scratch directory
     run: mkdir -p .opencode/.tmp
 
-  - name: Verify ripgrep is available to the agent runtime
+  - name: Install ripgrep
     run: |
       set -euo pipefail
 
@@ -36,71 +48,79 @@ pre-agent-steps:
 
       rg --version
 
-  - name: Install pnpm
+  - name: Activate the pnpm version package.json pins
     run: |
       set -euo pipefail
-      npm install -g pnpm
+      corepack enable
+      corepack prepare --activate
       pnpm --version
+
+  - name: Cache the pnpm store
+    uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    with:
+      path: ~/.local/share/pnpm/store
+      key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      restore-keys: pnpm-store-${{ runner.os }}-
+
+  - name: Cache NuGet packages
+    uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    with:
+      path: ~/.nuget/packages
+      key: nuget-${{ runner.os }}-${{ hashFiles('apps/api/**/*.csproj', 'apps/api/**/packages.lock.json') }}
+      restore-keys: nuget-${{ runner.os }}-
 
   - name: Install OpenSpec CLI
     run: |
       set -euo pipefail
-      npm install -g @fission-ai/openspec
+      npm install -g "@fission-ai/openspec@${OPENSPEC_VERSION}"
       openspec --version
 
-  - name: Install RTK (token optimization CLI proxy)
+  - name: Install RTK
     run: |
       set -euo pipefail
-      RTK_VERSION="0.44.1"
-      curl -fsSL "https://github.com/rtk-ai/rtk/releases/download/v${RTK_VERSION}/rtk-x86_64-unknown-linux-musl.tar.gz" -o /tmp/rtk.tar.gz
-      tar -xzf /tmp/rtk.tar.gz -C /tmp
-      sudo mv /tmp/rtk /usr/local/bin/rtk
-      chmod +x /usr/local/bin/rtk
+
+      tarball="$RUNNER_TEMP/rtk.tar.gz"
+      curl -fsSL -o "$tarball" \
+        "https://github.com/rtk-ai/rtk/releases/download/v${RTK_VERSION}/rtk-x86_64-unknown-linux-musl.tar.gz"
+      echo "${RTK_SHA256}  $tarball" | sha256sum --check --strict
+
+      tar -xzf "$tarball" -C "$RUNNER_TEMP"
+      sudo install -m 0755 "$RUNNER_TEMP/rtk" /usr/local/bin/rtk
+
       rtk --version
-      rtk init -g --opencode --auto-patch || echo "RTK init skipped (non-fatal)"
+      rtk init -g --opencode --auto-patch
 
   - name: Install agentmemory
     run: |
       set -euo pipefail
-      npm install -g @agentmemory/agentmemory
-      agentmemory --version || echo "agentmemory installed"
+      npm install -g "@agentmemory/agentmemory@${AGENTMEMORY_VERSION}"
+      agentmemory --version
 
-  - name: Install codegraph
+  - name: Install codegraph and index the repository
+    continue-on-error: true
     run: |
       set -euo pipefail
-      npm install -g @colbymchenry/codegraph || echo "codegraph install skipped (non-fatal)"
-
-  - name: Initialize codegraph index
-    run: |
-      set -euo pipefail
-      if command -v codegraph > /dev/null 2>&1; then
-        codegraph init || echo "codegraph init skipped (non-fatal)"
-      else
-        echo "codegraph not on PATH, skipping index"
-      fi
+      npm install -g "@colbymchenry/codegraph@${CODEGRAPH_VERSION}"
+      codegraph init
 
   - name: Install opencode plugin dependencies
     run: |
       set -euo pipefail
-      cd .opencode
-      if [ -f package.json ]; then
-        npm install
-        echo "Installed .opencode dependencies:"
-        ls node_modules/ | head -5
-      else
-        echo "No .opencode/package.json found, skipping"
+
+      if [ ! -f .opencode/package.json ]; then
+        echo "No .opencode/package.json, nothing to install"
+        exit 0
       fi
 
-  - name: Install workspace dependencies
-    run: |
-      set -euo pipefail
-      pnpm install --frozen-lockfile || pnpm install
-      echo "Workspace dependencies installed"
+      npm install --prefix .opencode
 
+  - name: Install workspace dependencies
+    run: pnpm install --frozen-lockfile
+
+  # Adjust or delete for the repository. A workflow whose agent never builds .NET does not
+  # need this, and a solution at another path needs the path changed.
   - name: Restore .NET packages
-    run: |
-      set -euo pipefail
-      dotnet restore apps/api/Numa.slnx || echo "dotnet restore skipped (non-fatal)"
+    run: dotnet restore apps/api/<Solution>.slnx
 
   - name: Merge the CI-only OpenCode provider into opencode.jsonc
     run: |
