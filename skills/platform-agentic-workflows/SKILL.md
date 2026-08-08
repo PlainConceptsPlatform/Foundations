@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.1.0
+version: 4.2.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -296,20 +296,19 @@ python -c "import yaml,sys; print(sorted(yaml.safe_load(open(sys.argv[1]))['jobs
 Writes made with `GITHUB_TOKEN` do not trigger workflows. Writes made with a **GitHub App
 installation token do**. That single fact has two consequences:
 
-**A loop hazard.** A `reserve` job that posts "work has started" with an App token fires an
-`issue_comment` event, which routes back to the same worker, which reserves again. Guard the
-comment route on the sender: `github.event.comment.user.type != 'Bot'`.
+**A loop hazard.** Any bot comment written with an App token fires an `issue_comment` event.
+Guard the comment route on the sender: `github.event.comment.user.type != 'Bot'`.
 
-**A run-count lever.** One human label on an issue produces three router runs: the label, the
-bot's `bot-working` label, and the bot's start comment. Two of them are ten-second no-ops.
-Moving bookkeeping writes to `GITHUB_TOKEN` removes them entirely.
+**A run-count lever.** One human label normally produces two router runs: the label and the
+bot's `bot-working` label. Meaningful bot outcome comments can add short no-op runs. Moving
+bookkeeping writes to `GITHUB_TOKEN` removes their event runs entirely.
 
 Do not blanket-switch. Writes that are meant to **advance the pipeline**, such as refine's
 `conclude` adding `implement`, depend on the event firing. Split by intent:
 
 | Write | Token | Why |
 |---|---|---|
-| `bot-working`, start and finish comments | `GITHUB_TOKEN` | Bookkeeping. Nothing keys off it |
+| `bot-working` and other bookkeeping writes | `GITHUB_TOKEN` | Bookkeeping. Nothing keys off it |
 | `implement` added by refine's conclude | App token | The handoff needs the event |
 
 ## Design rules
@@ -323,7 +322,7 @@ The normal shape of a worker:
 ```text
 router classifies the event
   → guard job (is there still work?)      output named in the agent job's if:
-  → reserve (bot-working + start comment)
+  → reserve (bot-working)
   → preload context to /tmp/gh-aw/agent/
   → agent judgement
   → Safe Outputs
@@ -391,6 +390,13 @@ lifecycle also multiplies your run count.
 The test: would a human learn something they cannot see from the labels and the run list? If
 not, delete it. Put a run link in the ones you keep:
 `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`.
+
+### Deferred automation must say so
+
+Do not promise that a later worker will start when an eligibility label can defer it. Read labels
+from the precomputed issue context and make the outcome conditional. For example, when a refined
+issue retains `future`, say implementation is paused until that label is removed; otherwise say
+the implement worker will start. The comment must describe the state the workflow actually leaves.
 
 ### Labels describe state, not locking
 
