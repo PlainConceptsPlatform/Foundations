@@ -88,9 +88,30 @@ Keys allowed on a job that calls a reusable workflow: `name`, `needs`, `if`, `pe
 `uses`, `with`, `secrets`, `strategy`, `concurrency`. Anything else, including `runs-on`,
 `env`, `steps` and `timeout-minutes`, is a syntax error.
 
-`secrets: inherit` passes everything the repository has. Some SAST rules flag it; the
-alternative is naming the three that are actually used
-(`OPENAI_API_KEY`, `BOT_APP_ID`, `BOT_PRIVATE_KEY`).
+**Do not use `secrets: inherit`.** It hands the called workflow every secret in the
+repository, and Semgrep's `github-actions.security.secrets-inherit` rule blocks it, which is
+enough to keep a deploy pipeline red on every push. Name what the worker needs:
+
+```yaml
+  secrets:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+    BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
+    BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
+```
+
+That is the engine key, its documented `CODEX_API_KEY` fallback, and the App credentials the
+`reserve` and `conclude` jobs mint a token from. gh-aw declares several more on every worker
+(`GH_AW_GITHUB_TOKEN`, `GH_AW_GITHUB_MCP_SERVER_TOKEN`, `GH_AW_CI_TRIGGER_TOKEN`,
+`COPILOT_GITHUB_TOKEN`), all optional; if the repository does not define them, inheriting them
+was already passing nothing.
+
+Check before narrowing, because **passing a secret the called workflow does not declare is a
+startup failure**:
+
+```bash
+gh secret list
+```
 
 ### What stops applying without a public trigger
 

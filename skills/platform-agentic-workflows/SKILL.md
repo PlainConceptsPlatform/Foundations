@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.0.0
+version: 4.1.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -178,6 +178,8 @@ still nothing happened.** Every row below cost a real debugging session.
 | Whole run has **zero jobs**, `startup_failure`, no annotation, no log | A caller job granted narrower `permissions` than a called worker's `read-all` requests |
 | Every job green, agent emitted its output, **nothing was written** | `conclude` downloaded an artifact name that does not exist, and a `continue-on-error` swallowed the miss |
 | Guard job says no, the agent runs anyway | The guard is in `needs` but not in the dependent's `if:` |
+| A whole job vanished and nothing complained | It was indented one level too deep, so YAML absorbed it into the job above |
+| `Unrecognized named-value: 'needs'`, job dies in one second | An `action.yml` used a context a composite action does not have, including inside `description:` |
 | `Can't find action.yml` | A job used `./.github/actions/...` without `actions/checkout` first |
 | Script exits 126 before its first line | No executable bit. A Windows checkout does not set one |
 | `require is not defined in ES module scope` | A `.js` helper in a repo whose `package.json` is `"type": "module"`. Rename to `.cjs` |
@@ -250,6 +252,45 @@ an invisible one: the miss is swallowed, the item count is zero, every apply ste
 its `!= '0'` guard, and `conclude` reports success. A conclude job that applied nothing must
 fail.
 
+### A composite action manifest is not a document
+
+The runner evaluates `${{ }}` **everywhere** in an `action.yml`, including inside
+`description:`, and a composite action has no `needs`, `jobs` or `secrets` context. Writing a
+caller's expression as documentation is enough to break it:
+
+```yaml
+inputs:
+  artifact-name:
+    description: Pass `${{ needs.activation.outputs.artifact_prefix }}agent`   # fails to load
+```
+
+The action fails at load time with `Unrecognized named-value: 'needs'` and the job dies in
+about one second. Name the output in prose instead.
+
+Nothing catches this by default: `gh aw compile` does not read composite action files and
+actionlint does not lint them. A twenty-line script that parses every manifest and rejects
+those three contexts closes the gap, and belongs in the same job as the other linters.
+
+### A job indented one level too deep disappears
+
+```yaml
+  reserve:
+    steps:
+      - name: Claim the issue
+        uses: ./.github/actions/add-issue-labels
+    conclude:            # four spaces, not two
+    needs: [agent]
+```
+
+YAML parses this without complaint, `conclude` becomes a key inside `reserve`, and the
+workflow compiles with one fewer job. The merge gate lost its entire `conclude` job this way
+and would simply never have merged anything. Assert the job list after compiling rather than
+trusting a clean compile:
+
+```bash
+python -c "import yaml,sys; print(sorted(yaml.safe_load(open(sys.argv[1]))['jobs']))" x.lock.yml
+```
+
 ### App tokens fire events
 
 Writes made with `GITHUB_TOKEN` do not trigger workflows. Writes made with a **GitHub App
@@ -307,6 +348,9 @@ Three rules that are not optional:
   `actions/github-script`, where a failed call rejects and fails the step. Anything that
   touches git uses shell. A `gh` plus `jq` loop that ends in `|| true` reports success it did
   not achieve.
+- **No `needs`, `jobs` or `secrets` in a manifest**, not even inside `description:`. The
+  runner evaluates every `${{ }}` in the file and a composite action has none of those
+  contexts. Lint for it; nothing else does.
 
 ### Shared components (imports)
 
@@ -324,20 +368,50 @@ Pin every version a shared setup file installs, and checksum anything it downloa
 installs a different toolchain than the last one is not reproducible, and a failure caused by a
 floating dependency reads as a model failure.
 
-### Lifecycle visibility
+### Comment on outcomes, not on state a label already shows
 
-A start marker, one complete outcome comment, and unambiguous labels. Keep a command label
-when an authorised reply must retrigger work; add `review` when a human is needed. Every
-worker that can stop for human input must add `review` and must include it in
-`remove-labels.allowed` so the next successful cycle clears it.
+The instinct is to narrate: "work has started", "the run finished". Both are noise. The label
+already says the bot owns the issue, the Actions tab already says a run happened, and each
+comment is another notification for everyone watching.
 
-Put a deterministic run link in every fixed lifecycle comment:
+Worse, a bot comment written with an App token **fires a workflow event**, so a chatty
+lifecycle also multiplies your run count.
+
+| Comment | Keep |
+|---|---|
+| Clarification questions for the author | yes, it is the whole point of stopping |
+| The refinement outcome | yes, it is the result |
+| Feedback applied, or explicitly nothing actionable | yes |
+| Failures and handoffs to a human | yes, with the reason |
+| Risk assessment, merge or refusal | yes, the verdict is the value |
+| Pull request link fallback | yes, it records a thing that is otherwise invisible |
+| "Automated X has started" | no, the label says it |
+| "Run finished, see previous comment" | no, it says nothing |
+
+The test: would a human learn something they cannot see from the labels and the run list? If
+not, delete it. Put a run link in the ones you keep:
 `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`.
 
 ### Labels describe state, not locking
 
 `concurrency` is the lock, on the router's caller job. Reserve with one idempotent
 deterministic job before the agent, then release or transition labels on every terminal path.
+
+**Contradictory labels must never coexist.** `bot-working` says the bot owns the issue right
+now; `review` says a human is needed. An issue that stopped for a question and then got an
+answer will carry both unless the claim clears the other:
+
+```yaml
+- name: Mark the issue as in progress
+  uses: ./.github/actions/add-issue-labels
+  with: { labels: "${{ env.WORKING_LABEL }}" }
+- name: Clear the human-needed flag
+  uses: ./.github/actions/remove-issue-labels
+  with: { labels: "${{ env.REVIEW_LABEL }}" }
+```
+
+Both in the `reserve` job, so the claim is atomic. Do not leave it to the agent: it is a
+deterministic consequence of claiming, not a judgement.
 
 ### Naming runs
 
@@ -489,8 +563,9 @@ Copy the six `classDef` lines verbatim from `references/diagram.md`.
 5. **Render the diagram.** *Done when:* every check in `references/diagram.md` passes.
 
 6. **Verify.** *Done when:* `gh aw compile --strict` reports zero errors, actionlint and
-   shellcheck are clean, the route matrix passes, **and one real event has been observed end
-   to end.** The static checks cannot see a startup failure. See `references/verify.md`.
+   shellcheck are clean, the route matrix passes, every composite manifest lints, the compiled
+   job list is the one you intended, **and one real event has been observed end to end.** The
+   static checks cannot see a startup failure. See `references/verify.md`.
 
 ## Not-for boundaries
 

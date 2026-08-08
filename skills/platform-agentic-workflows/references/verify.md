@@ -14,6 +14,7 @@ Start here, because the gap is where the expensive failures live.
 | `actionlint` | Expression syntax, `needs` references, unknown keys, shell in `run:` | Reusable-workflow permission satisfaction, file modes |
 | `shellcheck` | Quoting, unused variables, unsafe patterns | Whether the script is executable |
 | The route matrix | Every event selects one route, every route has a job | Everything outside the classifier |
+| A manifest linter | Contexts a composite action does not have | Nothing else reads those files at all |
 | **A real run** | All of the above, plus the four below | Nothing |
 
 Four failure modes are invisible to every static check, and each one produces a run that did
@@ -74,6 +75,23 @@ actionlint "${authored[@]}"
 
 find .github/actions -name '*.sh' -print0 | xargs -0 -r shellcheck -x
 bash .github/actions/verify-route-matrix/verify-route-matrix.sh
+bash .github/actions/verify-composite-actions/verify-composite-actions.sh
+```
+
+Nothing in that list reads a composite `action.yml`, so the last one is not optional. The
+runner evaluates `${{ }}` everywhere in a manifest, `description:` included, and a composite
+action has no `needs`, `jobs` or `secrets`. The whole check is a parse plus one grep:
+
+```bash
+grep -oE '\$\{\{[^}]*\}\}' "$manifest" | grep -E '\b(needs|jobs|secrets)\.'
+```
+
+Also assert the compiled job list, because a job indented one level too deep is absorbed into
+the one above it and the workflow compiles with it missing:
+
+```bash
+python -c "import yaml,sys; print(sorted(yaml.safe_load(open(sys.argv[1]))['jobs']))" \
+  .github/workflows/agent-merge-gate.lock.yml
 ```
 
 The exclusion is not laziness. actionlint does not model gh-aw's frontmatter extensions
@@ -324,6 +342,8 @@ rejected, which points straight at 1 or 2.
 | Exit code 126, no output | No executable bit. Invoke as `bash path/to.sh` and `git update-index --chmod=+x` |
 | `require is not defined in ES module scope` | A `.js` helper in a `"type": "module"` repo. Rename to `.cjs` |
 | A guard rejected the work but the agent ran | The guard is in `needs` but not in the dependent's `if:` |
+| `Unrecognized named-value`, job fails in ~1s | An `action.yml` used `needs`, `jobs` or `secrets`, possibly only in a `description:` |
+| A job you wrote is not in the compiled graph | It was indented one level too deep and YAML absorbed it into the job above |
 | Agent emitted output, every job green, nothing written | Compare the run's artifact names with what `conclude` downloaded. Expect a prefix |
 | The agent log shows `{"result":"success"}` per safe output but the issue is untouched | Same. `staged: true` means gh-aw validated and stored them; applying them is your job |
 | Workflow never fires | `workflow_run.workflows` versus the target's `name:` |

@@ -415,6 +415,12 @@ modes as inputs.
 | `create-issue-comment` | Post a fixed Markdown comment |
 | `link-pr-to-issue` | Ensure the pull request body carries a closing reference |
 
+**Checks**
+
+| Action | Responsibility |
+|---|---|
+| `verify-composite-actions` | Parse every manifest and reject contexts a composite action lacks |
+
 **Scheduled maintenance**
 
 | Action | Responsibility |
@@ -435,6 +441,16 @@ modes as inputs.
   `"type": "module"`, because `actions/github-script` loads with `require`.
 - Pass the helper's path explicitly via `${{ github.action_path }}` in the step `env`.
   `GITHUB_ACTION_PATH` inside a nested `uses:` step refers to that nested action, not yours.
+- **A manifest may not reference `needs`, `jobs` or `secrets`,** not even inside
+  `description:`. The runner evaluates every `${{ }}` in an `action.yml`, so an expression
+  written as documentation still fails the action at load time with `Unrecognized
+  named-value`. Neither `gh aw compile` nor actionlint reads these files, so lint them:
+
+  ```bash
+  grep -oE '\$\{\{[^}]*\}\}' "$manifest" | grep -E '\b(needs|jobs|secrets)\.'
+  ```
+- Invoke a script as `bash "${GITHUB_ACTION_PATH}/thing.sh"`, never by path alone. A checkout
+  from a Windows clone carries no executable bit and the step exits 126 before its first line.
 
 ### The write path is the part to get right
 
