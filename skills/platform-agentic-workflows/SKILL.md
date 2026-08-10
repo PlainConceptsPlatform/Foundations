@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.2.0
+version: 4.4.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -168,6 +168,39 @@ Platform workers use two write paths, and the choice is about **attribution**:
 
 `references/safe-outputs.md` has both paths in full.
 
+### Validate the outcome, then let the workflow own state
+
+A Safe Outputs payload being syntactically valid does not make it a valid business outcome.
+Validate the artifact after Safe Outputs and classify it deterministically, for example:
+
+```text
+nonblank update_issue body for source issue   -> complete
+meaningful add_comment for source issue       -> questions
+anything else                                 -> invalid
+```
+
+The classifier is a custom job whose output gates `conclude` and `incomplete`. A successful
+agent run with an `invalid` outcome must go through incomplete handling, not write a partial
+result.
+
+Do not require the model to emit label actions as proof of completion. Labels are deterministic
+state transitions. Disable agent label Safe Outputs for that worker, apply its body or comment,
+then let ordinary workflow steps transition labels from the classifier result:
+
+```text
+complete  -> add refined + implement; remove refine + bot-working + review
+questions -> add review; remove bot-working
+invalid   -> existing incomplete path
+```
+
+This keeps the agent responsible for judgement and prose, while the workflow owns state.
+
+When the apply action deliberately supplies a fallback target, outcome validation must mirror
+that contract. An `update_issue` item may omit its target only when the caller deterministically
+maps it to the source issue. Accept the source target or the documented fallback, but reject an
+explicit target for another issue. Do not make a valid agent result fail because the validator
+implements a narrower contract than the writer.
+
 ## Ways a workflow is green and dead
 
 This is the heart of the skill. **A field can compile perfectly, or a run can go green, and
@@ -190,6 +223,7 @@ still nothing happened.** Every row below cost a real debugging session.
 | Merge gate approves on the wrong verdict | It re-derived CI from `gh pr checks`, whose first entry is an arbitrary check |
 | The PR never closes its issue | `linkPullRequestToIssue` is not in GitHub's public schema |
 | Merge gate never fires after CI | `workflow_run` does not fire for runs that were pending approval and then approved |
+| Agent wrote a plausible body or comment, but the worker stopped incomplete | Outcome validation required model-authored label changes or did not classify the output |
 
 The first row is the expensive one and it deserves its own paragraph.
 
@@ -418,6 +452,11 @@ answer will carry both unless the claim clears the other:
 
 Both in the `reserve` job, so the claim is atomic. Do not leave it to the agent: it is a
 deterministic consequence of claiming, not a judgement.
+
+The same rule applies after the agent finishes. Derive terminal labels from a validated outcome,
+not from `add_labels` or `remove_labels` items the model happened to return. A model can write a
+good story and still omit one label instruction; that omission must never leave an issue half
+refined.
 
 ### Naming runs
 
