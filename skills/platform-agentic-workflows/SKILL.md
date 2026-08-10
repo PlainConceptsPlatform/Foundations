@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.5.0
+version: 4.6.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -223,6 +223,13 @@ on:
 Keep human role checks unchanged. Do not weaken `on.roles` or allow all bots. Add a regression
 check that the worker source retains the trusted App, compile its lock file, and inspect the
 generated `GH_AW_ALLOWED_BOTS` value.
+
+### Give implementation work a realistic deadline
+
+Long-running implementation workers need a timeout that covers planning, parallel implementation,
+verification, and PR creation. Set the worker's `timeout-minutes` explicitly rather than relying
+on the default. Use 180 minutes for a broad, multi-layer change; do not extend a timeout merely to
+hide a known stalled subagent.
 
 ## Ways a workflow is green and dead
 
