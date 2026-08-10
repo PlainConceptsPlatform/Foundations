@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.4.0
+version: 4.5.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -201,6 +201,29 @@ maps it to the source issue. Accept the source target or the documented fallback
 explicit target for another issue. Do not make a valid agent result fail because the validator
 implements a narrower contract than the writer.
 
+### Allow trusted App hand-offs explicitly
+
+When a workflow-owned state transition triggers another agentic worker, GitHub sets the triggering
+actor to the GitHub App. The default gh-aw activation requires a repository role, but an App has
+none. The route can classify correctly and still skip every agent job.
+
+Allow only the orchestrating App in that worker's own `on.bots` configuration:
+
+```yaml
+on:
+  bots:
+    - platform-devbox[bot]
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: string
+```
+
+Keep human role checks unchanged. Do not weaken `on.roles` or allow all bots. Add a regression
+check that the worker source retains the trusted App, compile its lock file, and inspect the
+generated `GH_AW_ALLOWED_BOTS` value.
+
 ## Ways a workflow is green and dead
 
 This is the heart of the skill. **A field can compile perfectly, or a run can go green, and
@@ -224,6 +247,7 @@ still nothing happened.** Every row below cost a real debugging session.
 | The PR never closes its issue | `linkPullRequestToIssue` is not in GitHub's public schema |
 | Merge gate never fires after CI | `workflow_run` does not fire for runs that were pending approval and then approved |
 | Agent wrote a plausible body or comment, but the worker stopped incomplete | Outcome validation required model-authored label changes or did not classify the output |
+| Router classified a trusted App label event, but every worker job skipped | The called worker did not list the App in `on.bots`, so activation rejected its role `none` |
 
 The first row is the expensive one and it deserves its own paragraph.
 
