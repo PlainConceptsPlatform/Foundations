@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.7.0
+version: 4.8.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -391,6 +391,45 @@ Do not blanket-switch. Writes that are meant to **advance the pipeline**, such a
 |---|---|---|
 | `bot-working` and other bookkeeping writes | `GITHUB_TOKEN` | Bookkeeping. Nothing keys off it |
 | `implement` added by refine's conclude | App token | The handoff needs the event |
+
+### Visual evidence needs a real, reproducible system
+
+Visual evidence is only proof when a reviewer can open the exact rendered image and connect it to
+the tested change. Treat capture, validation, publishing, and commenting as deterministic work,
+not an agent judgement task.
+
+**Agent sandboxes may not have Docker.** Do not make an agent-time capture depend on Docker,
+SQL Server, or a full production-shaped stack. Give the agent a deterministic fixture-backed app
+that starts from checked-in data and has a stable route for each capture. The fixture must exercise
+the relevant state, not a generic empty screen.
+
+**A manifest without image assets is blocked, not evidence.** Validate that every manifest entry
+resolves to an existing, non-empty PNG before publishing. A screenshot URL, commit SHA, route,
+viewport, and state description are useful metadata, but none can substitute for the image asset.
+Reject incomplete manifests and surface the missing asset as a workflow failure.
+
+Use full-stack PR CI when the change needs integration evidence. Its deterministic setup must:
+
+1. Start a disposable SQL service and the API and web applications.
+2. Pass explicit connection strings and ports to every process. Do not rely on local defaults.
+3. Seed the mock user and the data required by the scenario.
+4. Wait for SQL, API, and web readiness before capture, with bounded retries.
+5. Collect process logs, health responses, and other startup diagnostics when readiness or capture
+   fails.
+
+Commit only PNGs from a passed capture to the same-repository PR branch. Do not commit failed,
+partial, or local-only evidence, and do not publish evidence to a fork or a separate branch. Pin
+every evidence link in a PR or issue comment to the commit SHA containing those PNGs. Render raw
+GitHub URLs so the image and commit remain visible outside Markdown-specific viewers.
+
+Evidence-only commits can trigger `push`, `pull_request`, or other router events. Classify and
+ignore them before routing agent work, using a deterministic marker such as the evidence path or
+commit metadata. Do not let a successful capture start another evidence run.
+
+Use a GitHub App installation token to commit evidence or post its durable links only in a trusted
+same-repository PR context. Never expose that token to code from a fork or an untrusted PR event.
+Use `GITHUB_TOKEN` where an event-triggering write is unnecessary, and keep evidence comments to
+the final result rather than lifecycle chatter.
 
 ## Design rules
 
