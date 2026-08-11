@@ -333,6 +333,12 @@ A route triggered by another workflow's completion. `merge-gate` is this. The tr
 `name:` match: `workflows: ["App: CI"]` must equal the target's `name:` exactly, and renaming
 either side breaks it silently.
 
+A second trap is that `workflow_run` does not fire for `pull_request`-triggered CI
+completions on feature branches. The trigger works for push-to-main, but bot PRs whose CI
+was triggered by `pull_request` never produce the event. The `stale-recovery` action
+(2h cron) is the fallback: it polls for bot PRs with failed CI and dispatches the
+merge-gate via `workflow_dispatch`.
+
 ### LifecycleOps
 
 Use this shape when a human can answer an agent's questions and resume the same work:

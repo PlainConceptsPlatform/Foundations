@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.8.0
+version: 4.9.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -268,7 +268,7 @@ still nothing happened.** Every row below cost a real debugging session.
 | The bot triggers itself in a loop | An App-token comment fires a workflow event |
 | Merge gate approves on the wrong verdict | It re-derived CI from `gh pr checks`, whose first entry is an arbitrary check |
 | The PR never closes its issue | `linkPullRequestToIssue` is not in GitHub's public schema |
-| Merge gate never fires after CI | `workflow_run` does not fire for runs that were pending approval and then approved |
+| Merge gate never fires after CI | `workflow_run` does not fire for runs that were pending approval and then approved, and does not fire for PR-triggered CI completions on feature branches. Mitigation: the `stale-recovery` action polls every 2h for bot PRs with failed CI and dispatches the merge-gate via `workflow_dispatch` with `operation=merge-gate` |
 | Agent wrote a plausible body or comment, but the worker stopped incomplete | Outcome validation required model-authored label changes or did not classify the output |
 | Router classified a trusted App label event, but every worker job skipped | The called worker did not list the App in `on.bots`, so activation rejected its role `none` |
 

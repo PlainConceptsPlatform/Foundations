@@ -245,14 +245,18 @@ The router handles the rest with a `bot-approve` route on `pull_request_target`,
 `actions: write` and no checkout, which is what makes `pull_request_target` acceptable here:
 the fork's code is never fetched.
 
-**`workflow_run` does not fire for approved runs.** GitHub's documented behaviour:
+**`workflow_run` does not fire for approved runs or PR-triggered CI on feature branches.** GitHub's documented behaviour:
 
 > `workflow_run` events are NOT triggered for workflow runs that were initially pending
 > approval and then approved.
 
-So after a manual approval, the merge-gate route never hears about the CI result. The pull
-request sits open with no gate action. Mitigation is the repo setting above; if a pull request
-does go down that path, dispatch the router with `operation=merge-gate` and the number.
+In practice, `workflow_run` also does not fire for `pull_request`-triggered CI completions on feature branches. The trigger works for `push`-to-main CI runs, but bot PRs on `feature/*` branches whose CI was triggered by `pull_request` never produce a `workflow_run` event. This was confirmed in Orbion (public repo): zero `workflow_run` events across 62+ runs despite the trigger being correctly configured.
+
+So after a manual approval, or after a bot PR's CI fails on a feature branch, the merge-gate route never hears about the CI result. The pull request sits open with no gate action.
+
+Mitigation is twofold:
+1. The repo setting that auto-approves CI runs (so `workflow_run` fires for the main-push case).
+2. The `stale-recovery` action polls every 2h for bot PRs whose CI concluded failure, and dispatches the merge-gate via `workflow_dispatch` with `operation=merge-gate`. This is the same thing the `workflow_run` trigger would have done. It requires `actions: write` permission on the `stale-recovery` job. If a merge-gate run is already in progress for the same PR, the router's concurrency group skips the duplicate.
 
 ---
 

@@ -168,6 +168,18 @@ and for heads in another repository. Guard for it and route to `none` rather tha
 empty number down. It is also the *pull request* number, never the issue number, so do not use
 it to key an issue-scoped concurrency group.
 
+**`workflow_run` does not fire for PR-triggered CI completions on feature branches.** This is
+not a gh-aw limitation; it is GitHub's. The trigger works for `push`-to-main CI runs, but
+`pull_request`-triggered CI on feature branches does not produce a `workflow_run` event. The
+merge-gate never hears about the failure, and the bot PR sits open.
+
+The mitigation is the `stale-recovery` action, which runs on a 2h cron. It queries open bot PRs,
+checks if their latest CI run concluded `failure`, and dispatches the merge-gate via
+`workflow_dispatch` with `operation=merge-gate`. This requires `actions: write` on the
+`stale-recovery` job and two new inputs on the composite action: `ci-workflow-name` and
+`router-workflow-name` (both have sensible defaults). See `references/opencode.md` for the full
+trap description.
+
 ### `schedule`
 
 Prefer fuzzy syntax over cron where the exact minute does not matter; the compiler scatters it
