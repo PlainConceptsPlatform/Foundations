@@ -64,6 +64,74 @@ Only frontmatter changes require recompilation. The markdown body is read at run
 prompt fix can be edited on github.com directly. That is a convenience and a trap: a body
 edited on the web is not reflected in the lock file's hash.
 
+### Compile on commit, not on review
+
+Relying on people to remember `gh aw compile` does not work. The failure is quiet: the commit
+looks fine, and the pull request fails a check that names a file nobody edited. Put it in a
+pre-commit hook instead.
+
+```js
+// scripts/compile-agent-workflows.mjs, run from .husky/pre-commit
+const changed = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR']);
+const relevant = changed.split('\n').some((p) =>
+  p.startsWith('.github/actions/') || p.startsWith('.github/workflows/') || p === 'opencode.ci.json',
+);
+if (!relevant) process.exit(0);
+
+run('gh', ['aw', 'compile', '--strict']);
+patchLogLevel();                    // see below
+git(['add', '--', ...regeneratedLocks]);
+```
+
+Three details earn their place. It **gates on staged paths**, so a commit touching only source
+does not pay for a compile. It includes **`opencode.ci.json`**, because the engine config is
+merged into the run and changing it changes the lock. And it **stages what it regenerates**, so
+the commit cannot be half-updated.
+
+The hook needs the extension present. Fail with a real message rather than a bare `ENOENT`:
+
+```
+Could not run `gh aw compile`. Install it with:
+  gh extension install githubnext/gh-aw
+```
+
+### Quieten the agent log, and keep the lockfile check honest
+
+gh-aw hardcodes `--log-level DEBUG` for the opencode engine. One run then emits thousands of
+lines of `service=bus type=... publishing` and permission rulesets containing kilobytes of
+inlined JSON. The line explaining why the run failed is in there somewhere.
+
+Patch the generated locks after compiling:
+
+```js
+content.replaceAll('--log-level DEBUG', '--log-level ERROR');
+```
+
+Nothing diagnostic is lost. The failures that actually cost time — `ConfigInvalidError` from a
+malformed `opencode.jsonc`, a provider rejection, a firewall verdict — are logged at ERROR.
+Shell steps such as `npm install` are unaffected, because the flag only reaches opencode.
+
+**Then make the lockfile check apply the same patch.** This is the part that is easy to get
+wrong, and the resulting breakage is invisible until someone edits a workflow. If CI runs a
+plain `gh aw compile --strict` and diffs, it regenerates DEBUG, the committed locks say ERROR,
+and the check fails on every workflow change:
+
+```yaml
+# wrong: recompiles without the transform, so the diff can never be clean
+- run: gh aw compile --strict
+
+# right: both sides apply the same post-processing
+- run: node scripts/compile-agent-workflows.mjs --force
+```
+
+Give the script a `--force` mode that compiles and patches but stages nothing, and have CI call
+that. The check stays strict about everything else. Verify the pairing by running it twice: the
+only difference should be `GH_AW_INFO_MODEL_COSTS`, which the freshness check already tolerates
+because model prices change without a source change.
+
+The general rule: **any deliberate post-processing of a generated file has to be applied on both
+sides of the freshness check**, or the check is measuring the transform instead of the drift.
+
 ### Lint what you authored, not what was generated
 
 ```bash
@@ -302,6 +370,10 @@ gh aw logs --format markdown
 
 `gh aw audit` shows the firewall verdict per domain, token usage, turn count, and the agent's
 tool calls. It is the first thing to run when a workflow "did nothing".
+
+If the raw log is thousands of lines of `service=bus ... publishing`, the engine is still on
+gh-aw's default DEBUG. See [Quieten the agent log](#quieten-the-agent-log-and-keep-the-lockfile-check-honest);
+it is worth fixing before the next incident rather than during one.
 
 ### Diagnosing a startup failure
 

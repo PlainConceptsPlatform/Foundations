@@ -677,7 +677,7 @@ Load these as needed; do not read all of them up front.
 | `references/safe-outputs.md` | What a workflow may write, staged versus framework writes, the App token pattern, the conclude/incomplete skeleton |
 | `references/opencode.md` | The engine, the Forge wiring, the `tools:` trap, budgets, bot PRs, self-hosted runners |
 | `references/diagram.md` | Writing the `## Diagram` section. Contains the verbatim `classDef` lines |
-| `references/verify.md` | Compiling, linting, probing an unfamiliar field, debugging a failed run, what static checks cannot catch |
+| `references/verify.md` | Compiling, compiling on commit, quietening the agent log, linting, probing an unfamiliar field, debugging a failed run, what static checks cannot catch |
 
 ## Cross-Skill References
 
