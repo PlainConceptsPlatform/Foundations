@@ -1,6 +1,6 @@
 ---
 name: platform-agentic-workflows
-version: 4.6.0
+version: 4.7.0
 description: >
   Author GitHub Agentic Workflows (gh-aw) for PlainConcepts Platform repos, pushing every
   deterministic decision into GitHub Actions primitives and spending the agent only on
@@ -230,6 +230,22 @@ Long-running implementation workers need a timeout that covers planning, paralle
 verification, and PR creation. Set the worker's `timeout-minutes` explicitly rather than relying
 on the default. Use 180 minutes for a broad, multi-layer change; do not extend a timeout merely to
 hide a known stalled subagent.
+
+### Protected files belong in Merge Gate
+
+An implementation worker must be able to create a pull request when it changes a guardrail,
+architecture document, workflow, or other protected file. Do not turn that expected review case
+into a fallback issue. Configure PR creation with `protected-files: allowed`, then make Merge Gate
+inspect changed filenames before its agent runs.
+
+When a protected path is present, Merge Gate must deterministically skip its agent and every merge
+output, remove `bot-working`, add `review`, and state that a human must merge the PR. This is a
+hard gate, not a prompt instruction: models can miss a filename, but a deterministic job cannot.
+
+Keep the protected path list broad enough to include top-level dot directories, agent instructions,
+architecture and design documents, repository policy files, package manifests, lock files, and
+workflow files. Add a regression check that PR creation permits protected files and Merge Gate
+contains the deterministic hold.
 
 ## Ways a workflow is green and dead
 
