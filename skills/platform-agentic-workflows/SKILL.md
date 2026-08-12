@@ -45,6 +45,7 @@ work-router.yml          conventional YAML. Every on: the repository has.
   └── classify           one event in, exactly one route out
         ├── call-refine        → agent-refine.lock.yml        workflow_call only
         ├── call-implement     → agent-implement.lock.yml     workflow_call only
+        ├── call-direct        → agent-direct.lock.yml        workflow_call only
         ├── call-apply-review  → agent-apply-review.lock.yml  workflow_call only
         ├── call-merge-gate    → agent-merge-gate.lock.yml    workflow_call only
         ├── call-audit         → agent-audit.lock.yml         workflow_call only
@@ -246,6 +247,39 @@ Keep the protected path list broad enough to include top-level dot directories, 
 architecture and design documents, repository policy files, package manifests, lock files, and
 workflow files. Add a regression check that PR creation permits protected files and Merge Gate
 contains the deterministic hold.
+
+### The direct route: issue body as prompt, conversational chain
+
+The `direct` worker inverts the normal worker contract: the issue body **is** the prompt. All other
+workers read the issue as untrusted data and run a fixed prompt that tells the model what to do
+with it. The direct worker reads the issue body as the instruction itself, and the agent decides
+which safe-output path to take based on what it did:
+
+| Outcome | Safe output | When |
+|---|---|---|
+| No code changed (explore, plan, answer) | `add-comment` | Informational result |
+| Code changed, non-trivial | `create-pull-request` → merge-gate | Needs review |
+| Code changed, trivial (typo, formatting) | `push-to-pull-request-branch` to `main` | No review needed |
+
+The direct route is **conversational**: a human reply on a `direct`-labeled issue re-triggers the
+agent in `continue` mode. The agent reads the full issue thread — its own previous comments are its
+past work, and the latest human comment is the new instruction. This is the same pattern as
+refine's `rerefine` mode, generalised to free-form instructions.
+
+The `direct` label is **never removed by the bot**. A human adds it, and a human removes it. That
+is what makes the chain work: while the label is present, every human reply re-triggers the agent.
+When the conversation is done, the human removes the label. Stale recovery clears `bot-working`
+and adds `review` if a direct run has been stuck, but it never touches the `direct` label itself.
+
+Because the direct route can push directly to `main` (the `push-to-pull-request-branch` safe output
+targets `main` for trivial changes), it must be **maintainer-only**. On a private repository, the
+eligibility job checks the actor's permission. On a public repository, the router's existing
+`authorize` job gates the `direct` route the same way it gates `refine`, `implement`, and
+`apply-review`. A maintainer already has push rights, so this automates what they could do manually.
+
+The direct worker uses `checkout: fetch: ["*"] fetch-depth: 0`, because `push-to-pull-request-branch`
+with `target: "*"` cannot reach a branch the shallow clone does not have. This is the same
+requirement as merge-gate's push path.
 
 ## Ways a workflow is green and dead
 
@@ -576,6 +610,11 @@ interval that usually finds nothing to do.
 | A workflow finishes | `workflow_run: [completed]` with `branches:` |
 | A human asks | `workflow_dispatch:` with an `operation` input |
 | Genuinely a clock | `schedule:` |
+
+The `direct` route uses both `issues: [labeled]` (label `direct` added, mode `first`) and
+`issue_comment: [created]` (human reply on a `direct`-labeled issue, mode `continue`). The
+classifier checks `direct` before `refine` in the comment path, so a direct issue never falls
+through to refine.
 
 ## The frontmatter contract
 

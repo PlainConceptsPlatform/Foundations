@@ -340,6 +340,13 @@ checkout:
 **`target: "*"` requires the wildcard fetch.** Without it the branch is not in the shallow
 clone and the push fails at the end of an otherwise successful run.
 
+The `direct` worker uses `target: "*"` to push directly to `main` for trivial changes (typo
+fixes, formatting, mechanical replacements). This is a maintainer-only shortcut: the agent
+decides whether a change is trivial enough to bypass review and push directly. When the
+worker combines `push-to-pull-request-branch` with `create-pull-request` and `add-comment`,
+the agent chooses one based on what it did — no code changed produces a comment, non-trivial
+code produces a PR, and trivial code pushes to main.
+
 ### `merge-pull-request`
 
 Experimental, and the compiler says so on every compile. Merging is the highest-consequence
