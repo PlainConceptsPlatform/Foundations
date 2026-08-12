@@ -170,9 +170,9 @@ Which path you take depends on the repository, and the choice is not a preferenc
    owns every trigger and workers that have none**, so do not give a worker its own trigger.
 3. Add the secrets: `OPENAI_API_KEY` for Forge, plus `BOT_APP_ID` and `BOT_PRIVATE_KEY` for the
    Platform App that lifecycle writes are attributed to.
-4. Author or adapt the workflows. Load the **`platform-agentic-workflows`** skill: it carries
-   the router architecture, the determinism ladder, the verified frontmatter contract, the
-   Mermaid convention, and the ways a workflow can be green and dead.
+4. Author or adapt workflows with the self-contained `workflow-author` and `workflow-consumer`
+   skills from
+   [`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
 5. Create the GitHub labels the workflows read and write:
    `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
 6. Compile, lint, and then **watch one real event end to end**. `gh aw compile --strict` and

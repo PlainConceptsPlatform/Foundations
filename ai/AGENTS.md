@@ -71,9 +71,11 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
   with `engine: opencode` against the Forge gateway, on `ubuntu-latest`. This is the Platform
   default. Event triggers instead of polling, a fresh checkout per run, and a `concurrency` group
   instead of a hand-rolled mutex. The shape is **one router that owns every trigger and workers that
-  have none**: copy the templates from [`ai/workflows`](./workflows) and load the
-  **`platform-agentic-workflows`** skill for the contract. Self-hosted runners are supported but not
-  the default, and must never be attached to a **public** repository.
+   have none**: copy the templates from [`ai/workflows`](./workflows). Reusable workflow skills and
+   copyable loops live in
+   [`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+   Use its self-contained `workflow-author` and `workflow-consumer` skills. Self-hosted runners are
+   supported but not the default, and must never be attached to a **public** repository.
 - **Loop-engineering (fallback):** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task)
   for work with no repository event to react to, or that cannot run on a runner. Do not reach for it
   when the trigger is a repository event.

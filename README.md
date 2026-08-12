@@ -80,6 +80,13 @@ Platform stack, use [`platform-onboard`](skills/platform-onboard/SKILL.md). It a
 in dependency order: agentic infrastructure, architecture docs, OpenSpec, frontend stack, loop
 automation, and .NET guardrails.
 
+### Agentic Workflow migration
+
+Reusable GitHub Agentic Workflow skills and copyable loops now live in
+[`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+Use its self-contained `workflow-author` and `workflow-consumer` skills when creating or adopting
+workflows.
+
 ## Documentation
 
 - [`ai/ARCHITECTURE.md`](ai/ARCHITECTURE.md): reference architecture + stack (frontend and backend/.NET)

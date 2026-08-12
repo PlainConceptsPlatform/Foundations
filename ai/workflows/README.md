@@ -16,8 +16,9 @@ The shape is **one router that owns every trigger, and workers that have none**.
 | `opencode.ci.json` | Read at runtime. Declares the CI agent, its provider, and read permissions |
 | `actions/*` | 23 composite actions and one shared helper, covering routing, context, output and maintenance |
 
-The full contract is the [`platform-agentic-workflows`](../../skills/platform-agentic-workflows)
-skill.
+Reusable workflow skills and copyable loops are in
+[`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+Use its self-contained `workflow-author` and `workflow-consumer` skills.
 
 ## Why a router
 
@@ -112,5 +113,4 @@ the workflow loads and the composite actions resolve.
 ## What is deliberately not here
 
 The merge gate, applying review feedback, and the scheduled audit. Two workers show the
-pattern and five are a dump. Their routes are present in the router as commented contracts, and
-the [skill](../../skills/platform-agentic-workflows) specifies all five.
+pattern and five are a dump. Their routes are present in the router as commented contracts.
