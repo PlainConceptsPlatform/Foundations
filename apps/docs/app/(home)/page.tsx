@@ -1,6 +1,6 @@
 import { ThemedScreen } from "@/components/themed-screen";
 import { source } from "@/lib/source";
-import { AppWindow, Bot, Boxes, Palette, Rocket, Server } from "lucide-react";
+import { AppWindow, Bot, Boxes, Palette, Rocket, Server, Workflow } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -51,8 +51,18 @@ const DESTINATIONS: Destination[] = [
     href: "/docs/ai",
     icon: Bot,
     fallback: {
-      title: "AI",
+      title: "How to",
       description: "Tools that prepare a codebase for agents and run them on a cadence.",
+    },
+  },
+  {
+    slug: ["ai", "workflows"],
+    href: "/docs/ai/workflows",
+    icon: Workflow,
+    fallback: {
+      title: "Workflows",
+      description:
+        "GitHub Agentic Workflows: one router and many workers, the label state machine, and the determinism ladder.",
     },
   },
   {
