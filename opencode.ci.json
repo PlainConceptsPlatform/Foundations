@@ -14,7 +14,7 @@
     "read": "allow",
     "external_directory": {
       "/tmp/**": "allow",
-      "/home/runner/work/_temp/gh-aw/mcp-cli/tools/**": "allow"
+      "/home/runner/work/_temp/gh-aw/**": "allow"
     }
   },
   "provider": {
