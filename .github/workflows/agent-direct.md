@@ -3,7 +3,6 @@
 env:
   VERIFY_COMMANDS: "pnpm verify"
   REPO_RULES: "Execute the selected issue's latest human instruction exactly as asked. Follow repository documentation and existing patterns. Keep scope to the requested outcome."
-  OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
   WORKING_LABEL: bot-working
   REVIEW_LABEL: review
   DIRECT_LABEL: direct
@@ -103,11 +102,7 @@ jobs:
     needs: [agent, safe_outputs]
     if: >
       needs.agent.result == 'success' &&
-      needs.safe_outputs.result == 'success' &&
-      (
-        needs.safe_outputs.outputs.created_pr_number != '' ||
-        needs.safe_outputs.outputs.process_safe_outputs_processed_count != '0'
-      )
+      needs.safe_outputs.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -143,14 +138,7 @@ jobs:
     if: >
       always() &&
       needs.eligibility.outputs.eligible == 'true' &&
-      (
-        needs.agent.result != 'success' ||
-        needs.safe_outputs.result != 'success' ||
-        (
-          needs.safe_outputs.outputs.created_pr_number == '' &&
-          needs.safe_outputs.outputs.process_safe_outputs_processed_count == '0'
-        )
-      )
+      needs.agent.result != 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read

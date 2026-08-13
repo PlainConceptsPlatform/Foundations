@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"f622e7326f65d4d8b024e0c526b423ab78296f068e4e87a98ca23f5b1cd4f59b","body_hash":"592e96cfc25669720cfb53067737a66c32cdcb34405daa017e93bac45fb2ff8e","compiler_version":"v0.83.4","strict":true,"agent_id":"opencode","agent_model":"openai/glm-5-2","engine_versions":{"opencode":"1.2.14"},"agent_image_runner":"ubuntu-latest"}
-# gh-aw-manifest: {"version":1,"secrets":["BOT_APP_ID","BOT_PRIVATE_KEY","CODEX_API_KEY","COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","OPENAI_API_KEY"],"actions":[{"repo":"actions/cache","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/create-github-app-token","sha":"bcd2ba49218906704ab6c1aa796996da409d3eb1","version":"v3.2.0"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"e89c65e17eb281bbd5ff2ff9e9199a03e96654c7","version":"v0.83.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.42","digest":"sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.42@sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.42","digest":"sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.42@sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.42","digest":"sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.42@sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.6","digest":"sha256:fecabec51bbc41f2ad61076d6bcd9a36ef23b142e672a444e054d37fc29de93c","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.6@sha256:fecabec51bbc41f2ad61076d6bcd9a36ef23b142e672a444e054d37fc29de93c"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:a8082161d7dceda14b68f32eb39d0eaa96b825d07f5895b096afab9d9e0c7748","pinned_image":"ghcr.io/github/gh-aw-node@sha256:a8082161d7dceda14b68f32eb39d0eaa96b825d07f5895b096afab9d9e0c7748"},{"image":"ghcr.io/github/github-mcp-server:v1.7.0","digest":"sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308","pinned_image":"ghcr.io/github/github-mcp-server:v1.7.0@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"578260e30655c9599bb134e6cbebcc26f8761bfc16d5256a36d991506131dc29","body_hash":"3786b7f082b1ec8db61a40959a7b4441064ac1864b67e2dc929d66fe6d956209","compiler_version":"v0.83.4","strict":true,"agent_id":"opencode","agent_model":"openai/glm-5-2","engine_versions":{"opencode":"1.2.14"},"agent_image_runner":"ubuntu-latest"}
+# gh-aw-manifest: {"version":1,"secrets":["BOT_APP_ID","BOT_PRIVATE_KEY","CODEX_API_KEY","COPILOT_GITHUB_TOKEN","GH_AW_CI_TRIGGER_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","OPENAI_API_KEY"],"actions":[{"repo":"actions/cache","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/create-github-app-token","sha":"bcd2ba49218906704ab6c1aa796996da409d3eb1","version":"v3.2.0"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"e89c65e17eb281bbd5ff2ff9e9199a03e96654c7","version":"v0.83.4"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.42","digest":"sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.42@sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.42","digest":"sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.42@sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.42","digest":"sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.42@sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.6","digest":"sha256:fecabec51bbc41f2ad61076d6bcd9a36ef23b142e672a444e054d37fc29de93c","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.6@sha256:fecabec51bbc41f2ad61076d6bcd9a36ef23b142e672a444e054d37fc29de93c"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:a8082161d7dceda14b68f32eb39d0eaa96b825d07f5895b096afab9d9e0c7748","pinned_image":"ghcr.io/github/gh-aw-node@sha256:a8082161d7dceda14b68f32eb39d0eaa96b825d07f5895b096afab9d9e0c7748"},{"image":"ghcr.io/github/github-mcp-server:v1.7.0","digest":"sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308","pinned_image":"ghcr.io/github/github-mcp-server:v1.7.0@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"}]}
 # This file was automatically generated by gh-aw (v0.83.4). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _
@@ -23,12 +23,15 @@
 #
 # For more information: https://github.github.com/gh-aw/introduction/overview/
 #
-# Decides what happens to a bot-authored pull request once CI has reported: merge when the
-# risk assessment is clean, hand to a human when it is not, fix CI when it failed. Called by
-# the Work Router; does not trigger on public events.
+# Implements an issue and opens a pull request. Stops there: the merge decision belongs to
+# `agent-merge-gate.md`, which runs once CI has reported. Replaces the `impl-*` chain in
+# .loops/recipes/implement-loop.yaml up to PR creation.
 #
-# The router supplies the CI conclusion and run ID as facts, so there is no polling and no
-# timeout branch. The conclusion is read from the inputs instead of filtered at the trigger.
+# Waiting on CI inside this run would hold a runner doing nothing, which is why the gate is
+# a separate workflow rather than a later step.
+#
+# Router-only worker: triggered exclusively via workflow_call from work-router.yml.
+# Contract input: issue-number.
 #
 # Resolved workflow manifest:
 #   Imports:
@@ -38,12 +41,12 @@
 # Frontmatter env variables:
 #   - AGENTMEMORY_VERSION: shared/opencode-ci.md
 #   - CODEGRAPH_VERSION: shared/opencode-ci.md
-#   - GATE_MARKER: (main workflow)
 #   - GIT_AUTHOR_EMAIL: (main workflow)
 #   - GIT_AUTHOR_NAME: (main workflow)
 #   - GIT_COMMITTER_EMAIL: (main workflow)
 #   - GIT_COMMITTER_NAME: (main workflow)
 #   - IMPLEMENT_LABEL: (main workflow)
+#   - IMPLEMENT_MARKER: (main workflow)
 #   - INCOMPLETE_COMMENT: (main workflow)
 #   - ISSUE_CONTEXT_PATH: (main workflow)
 #   - REPO_RULES: (main workflow)
@@ -58,6 +61,7 @@
 #   - BOT_PRIVATE_KEY
 #   - CODEX_API_KEY
 #   - COPILOT_GITHUB_TOKEN
+#   - GH_AW_CI_TRIGGER_TOKEN
 #   - GH_AW_GITHUB_MCP_SERVER_TOKEN
 #   - GH_AW_GITHUB_TOKEN
 #   - GITHUB_TOKEN
@@ -84,7 +88,7 @@
 #   - ghcr.io/github/gh-aw-node@sha256:a8082161d7dceda14b68f32eb39d0eaa96b825d07f5895b096afab9d9e0c7748
 #   - ghcr.io/github/github-mcp-server:v1.7.0@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308
 
-name: "Agent: Merge Gate"
+name: "Agent: Implement Issue"
 on:
   workflow_call:
     inputs:
@@ -93,35 +97,17 @@ on:
         description: "Agent caller context (used internally by Agentic Workflows)."
         required: false
         type: string
-      ci-conclusion:
-        description: CI conclusion (success, failure, action_required, cancelled, etc.).
-        required: true
-        type: string
-      ci-run-id:
-        description: CI workflow run ID for fetching failing logs.
-        required: false
-        type: string
-      linked-issue:
-        description: Issue number the pull request closes. May be empty.
-        required: false
-        type: string
-      pr-number:
-        description: Pull request number to gate.
+      issue-number:
+        description: Issue number to implement.
         required: true
         type: string
     outputs:
-      comment_id:
-        description: ID of the first added comment
-        value: ${{ jobs.safe_outputs.outputs.comment_id }}
-      comment_url:
-        description: URL of the first added comment
-        value: ${{ jobs.safe_outputs.outputs.comment_url }}
-      push_commit_sha:
-        description: SHA of the pushed commit
-        value: ${{ jobs.safe_outputs.outputs.push_commit_sha }}
-      push_commit_url:
-        description: URL of the pushed commit
-        value: ${{ jobs.safe_outputs.outputs.push_commit_url }}
+      created_pr_number:
+        description: Number of the first created pull request
+        value: ${{ jobs.safe_outputs.outputs.created_pr_number }}
+      created_pr_url:
+        description: URL of the first created pull request
+        value: ${{ jobs.safe_outputs.outputs.created_pr_url }}
     secrets:
       BOT_APP_ID:
         required: false
@@ -130,6 +116,8 @@ on:
       CODEX_API_KEY:
         required: false
       COPILOT_GITHUB_TOKEN:
+        required: false
+      GH_AW_CI_TRIGGER_TOKEN:
         required: false
       GH_AW_GITHUB_MCP_SERVER_TOKEN:
         required: false
@@ -141,22 +129,22 @@ on:
 permissions: {}
 
 concurrency:
-  group: "gh-aw-agent-merge-gate-${{ github.run_id }}"
+  group: "gh-aw-agent-implement-${{ github.run_id }}"
 
-run-name: "Agent: Merge Gate"
+run-name: "Agent: Implement Issue"
 
 env:
   AGENTMEMORY_VERSION: 0.9.28
   CODEGRAPH_VERSION: 1.5.0
-  GATE_MARKER: "<!-- agent-merge-gate -->"
   GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
   GIT_AUTHOR_NAME: github-actions[bot]
   GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
   GIT_COMMITTER_NAME: github-actions[bot]
   IMPLEMENT_LABEL: implement
-  INCOMPLETE_COMMENT: Automated CI failure remediation ended without an outcome. The issue remains for a retry.
-  ISSUE_CONTEXT_PATH: /tmp/gh-aw/agent/issue-context.json
-  REPO_RULES: Make a risk-based merge decision for the selected bot pull request. Merge only when CI is green and no risk indicators are present. Flag security, schema, auth, or calculation changes for human review. Do not merge protected file changes.
+  IMPLEMENT_MARKER: "<!-- agent-implement -->"
+  INCOMPLETE_COMMENT: Automated implementation ended without an outcome. The implement label remains for a retry.
+  ISSUE_CONTEXT_PATH: /tmp/gh-aw/agent/implementation-context.json
+  REPO_RULES: Implement only the selected issue. Follow repository documentation and existing conventions. Do not weaken tests, lower coverage thresholds, or bypass checks. Run the project's full verification suite before creating a pull request.
   REVIEW_LABEL: review
   RTK_SHA256: 986f29704469b3d1051e2474105c6c75ab8b73651068dcd61612c1fb3938ad95
   RTK_VERSION: 0.44.1
@@ -165,11 +153,8 @@ env:
 
 jobs:
   activation:
-    needs:
-      - pre_activation
-      - subject
-    if: >
-      needs.pre_activation.outputs.activated == 'true' && (needs.subject.outputs.found == 'true' && needs.protected_changes.outputs.requires_review != 'true')
+    needs: pre_activation
+    if: needs.pre_activation.outputs.activated == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -208,8 +193,8 @@ jobs:
           parent-span-id: ${{ needs.pre_activation.outputs.setup-parent-span-id || needs.pre_activation.outputs.setup-span-id }}
           safe-output-artifact-client: ${{ env.GH_AW_MAX_DAILY_AI_CREDITS != '' }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-merge-gate.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-implement.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_ENGINE_ID: "opencode"
           GH_AW_SETUP_AW_CONTEXT: ${{ inputs.aw_context }}
@@ -241,10 +226,10 @@ jobs:
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_AGENT_VERSION: "1.2.14"
           GH_AW_INFO_CLI_VERSION: "v0.83.4"
-          GH_AW_INFO_WORKFLOW_NAME: "Agent: Merge Gate"
+          GH_AW_INFO_WORKFLOW_NAME: "Agent: Implement Issue"
           GH_AW_INFO_EXPERIMENTAL: "true"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "false"
-          GH_AW_INFO_STAGED: "true"
+          GH_AW_INFO_STAGED: "false"
           GH_AW_INFO_ALLOWED_DOMAINS: '["defaults","dotnet","fonts","forge.plainconcepts.com","github","node"]'
           GH_AW_INFO_FIREWALL_ENABLED: "false"
           GH_AW_INFO_AWF_VERSION: ""
@@ -252,7 +237,7 @@ jobs:
           GH_AW_INFO_FIREWALL_TYPE: "squid"
           GH_AW_COMPILED_STRICT: "true"
           GH_AW_INFO_TARGET_REPO: ${{ steps.resolve-host-repo.outputs.target_repo }}
-          GH_AW_INFO_MODEL_COSTS: '{"providers":{"openai":{"models":{"glm-5-2":{"cost":{"cache_read":"0","cache_write":"0","input":"0","output":"0"}}}}}}'
+          GH_AW_INFO_MODEL_COSTS: '{"providers":{"openai":{"models":{"glm-5-2":{"cost":{"input":"1.8000000000000001e-06","output":"5.5e-06"}}}}}}'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
@@ -266,8 +251,8 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: agentic-workflow-usage-agentmergegate-${{ github.run_id }}
-          restore-keys: agentic-workflow-usage-agentmergegate-
+          key: agentic-workflow-usage-agentimplement-${{ github.run_id }}
+          restore-keys: agentic-workflow-usage-agentimplement-
           path: /tmp/gh-aw/agentic-workflow-usage-cache.jsonl
       - name: Restore daily AIC usage cache (artifact fallback)
         id: restore-daily-aic-cache-fallback
@@ -289,8 +274,8 @@ jobs:
         if: ${{ env.GH_AW_MAX_DAILY_AI_CREDITS != '' }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_WORKFLOW_ID: "agent-merge-gate"
+          GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_WORKFLOW_ID: "agent-implement"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_WORKFLOW_DISPATCH_AW_CONTEXT: ${{ github.event.inputs.aw_context || '' }}
           GH_AW_HAS_SLASH_COMMAND: "false"
@@ -351,7 +336,7 @@ jobs:
         id: check-lock-file
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          GH_AW_WORKFLOW_FILE: "agent-merge-gate.lock.yml"
+          GH_AW_WORKFLOW_FILE: "agent-implement.lock.yml"
           GH_AW_CONTEXT_WORKFLOW_REF: "${{ github.workflow_ref }}"
         with:
           script: |
@@ -379,6 +364,7 @@ jobs:
           GH_AW_ENV_ISSUE_CONTEXT_PATH: ${{ env.ISSUE_CONTEXT_PATH }}
           GH_AW_ENV_REPO_RULES: ${{ env.REPO_RULES }}
           GH_AW_ENV_VERIFY_COMMANDS: ${{ env.VERIFY_COMMANDS }}
+          GH_AW_EXPR_15287C23: ${{ inputs.issue-number }}
           GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
@@ -387,30 +373,27 @@ jobs:
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_CONCLUSION: ${{ needs.subject.outputs.conclusion }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_ISSUE: ${{ needs.subject.outputs.issue }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_PR: ${{ needs.subject.outputs.pr }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_e060f974ba821615_EOF'
+          cat << 'GH_AW_PROMPT_0d22f4fccc82f78c_EOF'
           <system>
-          GH_AW_PROMPT_e060f974ba821615_EOF
+          GH_AW_PROMPT_0d22f4fccc82f78c_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_e060f974ba821615_EOF'
+          cat << 'GH_AW_PROMPT_0d22f4fccc82f78c_EOF'
           <safe-output-tools>
-          Tools: add_comment, close_issue, add_labels, remove_labels, push_to_pull_request_branch, missing_tool, missing_data, noop
-          GH_AW_PROMPT_e060f974ba821615_EOF
-          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_push_to_pr_branch.md"
-          cat << 'GH_AW_PROMPT_e060f974ba821615_EOF'
+          Tools: create_pull_request, missing_tool, missing_data, noop
+          GH_AW_PROMPT_0d22f4fccc82f78c_EOF
+          cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
+          cat << 'GH_AW_PROMPT_0d22f4fccc82f78c_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_e060f974ba821615_EOF
+          GH_AW_PROMPT_0d22f4fccc82f78c_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_e060f974ba821615_EOF'
+          cat << 'GH_AW_PROMPT_0d22f4fccc82f78c_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -437,29 +420,16 @@ jobs:
           {{#if github.run_id}}
           - **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__
           {{/if}}
-          - **checkouts**: The following repositories have been checked out and are available in the workspace:
-            - repo `__GH_AW_GITHUB_REPOSITORY__` → `$GITHUB_WORKSPACE` (cwd) [full history, all branches available as remote-tracking refs] [additional refs fetched: *]
-            - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
-            - **Warning: No git credentials are available to the agent.** Credentials are
-              intentionally removed after the checkout step for security. This means any git
-              operation that needs to authenticate to the remote will fail. In private repositories, that includes:
-              - `git fetch`, `git pull`, `git clone`, and `git push` (direct push, not via safe-output tools)
-              - Checking out or switching to a remote branch that is not already fetched
-              - Deepening a shallow clone (`git fetch --unshallow`)
-              - On-demand blob fetches in partial/blobless clones (operations on files not in the initial checkout)
-              Do NOT attempt to configure credentials, run `git credential fill`, or modify `.gitconfig` —
-              authentication will not succeed. If you encounter credential prompts or authentication errors,
-              stop immediately and report the limitation rather than spending turns trying to work around it.
           </github-context>
 
-          GH_AW_PROMPT_e060f974ba821615_EOF
+          GH_AW_PROMPT_0d22f4fccc82f78c_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_e060f974ba821615_EOF'
+          cat << 'GH_AW_PROMPT_0d22f4fccc82f78c_EOF'
           </system>
           {{#runtime-import .github/workflows/shared/platform-defaults.md}}
           {{#runtime-import .github/workflows/shared/opencode-ci.md}}
-          {{#runtime-import .github/workflows/agent-merge-gate.md}}
-          GH_AW_PROMPT_e060f974ba821615_EOF
+          {{#runtime-import .github/workflows/agent-implement.md}}
+          GH_AW_PROMPT_0d22f4fccc82f78c_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -469,9 +439,7 @@ jobs:
           GH_AW_ENV_ISSUE_CONTEXT_PATH: ${{ env.ISSUE_CONTEXT_PATH }}
           GH_AW_ENV_REPO_RULES: ${{ env.REPO_RULES }}
           GH_AW_ENV_VERIFY_COMMANDS: ${{ env.VERIFY_COMMANDS }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_CONCLUSION: ${{ needs.subject.outputs.conclusion }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_ISSUE: ${{ needs.subject.outputs.issue }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_PR: ${{ needs.subject.outputs.pr }}
+          GH_AW_EXPR_15287C23: ${{ inputs.issue-number }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -485,6 +453,7 @@ jobs:
           GH_AW_ENV_ISSUE_CONTEXT_PATH: ${{ env.ISSUE_CONTEXT_PATH }}
           GH_AW_ENV_REPO_RULES: ${{ env.REPO_RULES }}
           GH_AW_ENV_VERIFY_COMMANDS: ${{ env.VERIFY_COMMANDS }}
+          GH_AW_EXPR_15287C23: ${{ inputs.issue-number }}
           GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
@@ -495,9 +464,6 @@ jobs:
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_CONCLUSION: ${{ needs.subject.outputs.conclusion }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_ISSUE: ${{ needs.subject.outputs.issue }}
-          GH_AW_NEEDS_SUBJECT_OUTPUTS_PR: ${{ needs.subject.outputs.pr }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -512,6 +478,7 @@ jobs:
                 GH_AW_ENV_ISSUE_CONTEXT_PATH: process.env.GH_AW_ENV_ISSUE_CONTEXT_PATH,
                 GH_AW_ENV_REPO_RULES: process.env.GH_AW_ENV_REPO_RULES,
                 GH_AW_ENV_VERIFY_COMMANDS: process.env.GH_AW_ENV_VERIFY_COMMANDS,
+                GH_AW_EXPR_15287C23: process.env.GH_AW_EXPR_15287C23,
                 GH_AW_EXPR_1A3A194A: process.env.GH_AW_EXPR_1A3A194A,
                 GH_AW_EXPR_463A214A: process.env.GH_AW_EXPR_463A214A,
                 GH_AW_EXPR_802A9F6A: process.env.GH_AW_EXPR_802A9F6A,
@@ -521,10 +488,7 @@ jobs:
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST,
-                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
-                GH_AW_NEEDS_SUBJECT_OUTPUTS_CONCLUSION: process.env.GH_AW_NEEDS_SUBJECT_OUTPUTS_CONCLUSION,
-                GH_AW_NEEDS_SUBJECT_OUTPUTS_ISSUE: process.env.GH_AW_NEEDS_SUBJECT_OUTPUTS_ISSUE,
-                GH_AW_NEEDS_SUBJECT_OUTPUTS_PR: process.env.GH_AW_NEEDS_SUBJECT_OUTPUTS_PR
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED
               }
             });
       - name: Validate prompt placeholders
@@ -559,17 +523,14 @@ jobs:
   agent:
     needs:
       - activation
-      - protected_changes
+      - eligibility
       - reserve
-      - review_required
-      - subject
     if: >
-      (needs.subject.outputs.found == 'true' && needs.protected_changes.outputs.requires_review != 'true') &&
-      (needs.activation.outputs.daily_ai_credits_exceeded != 'true')
+      (inputs.issue-number != '' && needs.eligibility.outputs.eligible == 'true') && (needs.activation.outputs.daily_ai_credits_exceeded != 'true')
     runs-on: ubuntu-latest
     permissions: read-all
     concurrency:
-      group: "gh-aw-opencode-agent-merge-gate"
+      group: "gh-aw-opencode-agent-implement"
       queue: max
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -578,7 +539,7 @@ jobs:
       GH_AW_ASSETS_MAX_SIZE_KB: 0
       GH_AW_MCP_LOG_DIR: /tmp/gh-aw/mcp-logs/safeoutputs
       GH_AW_RUNTIME_FEATURES: ${{ vars.GH_AW_RUNTIME_FEATURES }}
-      GH_AW_WORKFLOW_ID_SANITIZED: agentmergegate
+      GH_AW_WORKFLOW_ID_SANITIZED: agentimplement
     outputs:
       ai_credits_rate_limit_error: ${{ steps.parse-mcp-gateway.outputs.ai_credits_rate_limit_error || 'false' }}
       aic: ${{ steps.parse-mcp-gateway.outputs.aic }}
@@ -604,8 +565,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-merge-gate.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-implement.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_ENGINE_ID: "opencode"
           GH_AW_SETUP_AW_CONTEXT: ${{ inputs.aw_context }}
@@ -621,13 +582,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
-      - name: Fetch additional refs
-        env:
-          GH_AW_FETCH_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          header=$(printf "x-access-token:%s" "${GH_AW_FETCH_TOKEN}" | base64 -w 0)
-          git -c "http.extraheader=Authorization: Basic ${header}" fetch origin '+refs/heads/*:refs/remotes/origin/*'
       - name: Create gh-aw temp directory
         run: bash "${RUNNER_TEMP}/gh-aw/actions/create_gh_aw_tmp_dir.sh"
       - name: Configure gh CLI for GitHub Enterprise
@@ -639,20 +593,12 @@ jobs:
         with:
           name: ${{ needs.activation.outputs.artifact_prefix }}activation
           path: /tmp/gh-aw
-      - name: Load the issue context
+      - name: Load implementation context
         uses: ./.github/actions/load-issue-context
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           output-path: ${{ env.ISSUE_CONTEXT_PATH }}
           token: ${{ github.token }}
-      - env:
-          CONCLUSION: ${{ needs.subject.outputs.conclusion }}
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ needs.subject.outputs.pr }}
-          REPO: ${{ github.repository }}
-          RUN_ID: ${{ inputs.ci-run-id }}
-        name: Fetch the diff and any failing job logs
-        run: "set -euo pipefail\nmkdir -p /tmp/gh-aw/agent\ngh pr diff \"$PR\" --repo \"$REPO\" > /tmp/gh-aw/agent/diff.patch\ngh pr view \"$PR\" --repo \"$REPO\" --json title,body,files,additions,deletions \\\n  > /tmp/gh-aw/agent/pr.json\nif [ \"$CONCLUSION\" = \"failure\" ]; then\n  gh run view \"$RUN_ID\" --repo \"$REPO\" --log-failed \\\n    > /tmp/gh-aw/agent/failed-logs.txt 2>/dev/null || \\\n    echo \"logs unavailable\" > /tmp/gh-aw/agent/failed-logs.txt\n  gh run view \"$RUN_ID\" --repo \"$REPO\" --json jobs \\\n    --jq '[.jobs[] | select(.conclusion == \"failure\") | {name, conclusion}]' \\\n    > /tmp/gh-aw/agent/failed-jobs.json\nfi"
 
       - name: Configure Git credentials
         env:
@@ -763,135 +709,59 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_469a5f2ddc44200a_EOF'
-          {"add_comment":{"max":1},"add_labels":{},"close_issue":{"max":1},"create_report_incomplete_issue":{},"merge_pull_request":{"max":1},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"push_to_pull_request_branch":{"if_no_changes":"warn","max_patch_size":4096,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","opencode.jsonc","AGENTS.md"]},"remove_labels":{},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_469a5f2ddc44200a_EOF
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_6995b796d4b648b2_EOF'
+          {"create_pull_request":{"allowed_files":["**"],"draft":false,"if_no_changes":"error","max":1,"max_patch_files":1000,"max_patch_size":4096,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","opencode.jsonc","AGENTS.md"],"protected_files_policy":"allowed","title_prefix":"[bot] "},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{}}
+          GH_AW_SAFE_OUTPUTS_CONFIG_6995b796d4b648b2_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
             {
               "description_suffixes": {
-                "add_comment": " CONSTRAINTS: Maximum 1 comment(s) can be added. Supports reply_to_id for discussion threading.",
-                "close_issue": " CONSTRAINTS: Maximum 1 issue(s) can be closed."
+                "create_pull_request": " CONSTRAINTS: Maximum 1 pull request(s) can be created. Title will be prefixed with \"[bot] \"."
               },
               "repo_params": {},
-              "dynamic_tools": [],
-              "property_injections": {
-                "close_issue": {
-                  "state_reason": {
-                    "description": "Optional closing state reason. Omit to use the configured default. Select 'duplicate' together with 'duplicate_of' to mark a native duplicate relationship.",
-                    "enum": [
-                      "completed",
-                      "not_planned",
-                      "duplicate"
-                    ],
-                    "type": "string"
-                  }
-                }
-              }
+              "dynamic_tools": []
             }
           GH_AW_VALIDATION_JSON: |
             {
-              "add_comment": {
+              "create_pull_request": {
                 "defaultMax": 1,
                 "fields": {
+                  "base": {
+                    "type": "string",
+                    "sanitize": true,
+                    "maxLength": 128
+                  },
                   "body": {
                     "required": true,
                     "type": "string",
                     "sanitize": true,
                     "maxLength": 65000
                   },
-                  "item_number": {
-                    "issueOrPRNumber": true
-                  },
-                  "reply_to_id": {
+                  "branch": {
+                    "required": true,
                     "type": "string",
+                    "sanitize": true,
                     "maxLength": 256
                   },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  }
-                }
-              },
-              "add_labels": {
-                "defaultMax": 5,
-                "fields": {
-                  "item_number": {
-                    "issueNumberOrTemporaryId": true
+                  "draft": {
+                    "type": "boolean"
                   },
                   "labels": {
+                    "type": "array",
+                    "itemType": "string",
+                    "itemSanitize": true,
+                    "itemMaxLength": 128
+                  },
+                  "repo": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "title": {
                     "required": true,
-                    "type": "array"
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  }
-                }
-              },
-              "close_issue": {
-                "defaultMax": 1,
-                "fields": {
-                  "body": {
                     "type": "string",
                     "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "confidence": {
-                    "type": "string",
-                    "enum": [
-                      "LOW",
-                      "MEDIUM",
-                      "HIGH"
-                    ],
-                    "x-strip-on-error": true
-                  },
-                  "issue_number": {
-                    "optionalPositiveInteger": true
-                  },
-                  "rationale": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 280,
-                    "x-strip-on-error": true
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
-                  },
-                  "suggest": {
-                    "type": "boolean"
-                  }
-                }
-              },
-              "merge_pull_request": {
-                "defaultMax": 1,
-                "fields": {
-                  "commit_message": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "commit_title": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 256
-                  },
-                  "merge_method": {
-                    "type": "string",
-                    "enum": [
-                      "merge",
-                      "squash",
-                      "rebase"
-                    ]
-                  },
-                  "pull_request_number": {
-                    "issueOrPRNumber": true
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
+                    "maxLength": 128
                   }
                 }
               },
@@ -949,41 +819,6 @@ jobs:
                     "type": "string",
                     "sanitize": true,
                     "maxLength": 65000
-                  }
-                }
-              },
-              "push_to_pull_request_branch": {
-                "defaultMax": 1,
-                "fields": {
-                  "branch": {
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 256
-                  },
-                  "message": {
-                    "required": true,
-                    "type": "string",
-                    "sanitize": true,
-                    "maxLength": 65000
-                  },
-                  "pull_request_number": {
-                    "issueOrPRNumber": true
-                  }
-                }
-              },
-              "remove_labels": {
-                "defaultMax": 5,
-                "fields": {
-                  "item_number": {
-                    "issueNumberOrTemporaryId": true
-                  },
-                  "labels": {
-                    "required": true,
-                    "type": "array"
-                  },
-                  "repo": {
-                    "type": "string",
-                    "maxLength": 256
                   }
                 }
               },
@@ -1170,13 +1005,13 @@ jobs:
           chmod 600 "$CONFIG"
       - name: Execute OpenCode CLI
         id: agentic_execution
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: |
           set -o pipefail
           printf '%s' "$(date +%s%3N)" > /tmp/gh-aw/agent_cli_start_ms.txt
           (umask 177 && touch /tmp/gh-aw/agent-stdio.log)
           # shellcheck disable=SC2016
-          printf '%s\n' '{"$schema":"https://github.com/github/gh-aw-firewall/releases/download/v0.27.42/awf-config.schema.json","network":{"allowDomains":["*.githubusercontent.com","*.vsblob.vsassets.io","api.npms.io","api.nuget.org","api.openai.com","api.snapcraft.io","archive.ubuntu.com","azure.archive.ubuntu.com","azuresearch-usnc.nuget.org","azuresearch-ussc.nuget.org","builds.dotnet.microsoft.com","bun.sh","cdn.jsdelivr.net","ci.dot.net","codeload.github.com","crl.geotrust.com","crl.globalsign.com","crl.identrust.com","crl.sectigo.com","crl.thawte.com","crl.usertrust.com","crl.verisign.com","crl3.digicert.com","crl4.digicert.com","crls.ssl.com","dc.services.visualstudio.com","deb.nodesource.com","deno.land","dist.nuget.org","docs.github.com","dot.net","dotnet.microsoft.com","dotnetcli.blob.core.windows.net","esm.sh","fonts.googleapis.com","fonts.gstatic.com","forge.plainconcepts.com","get.pnpm.io","github-cloud.githubusercontent.com","github-cloud.s3.amazonaws.com","github.blog","github.com","github.githubassets.com","googleapis.deno.dev","googlechromelabs.github.io","host.docker.internal","json-schema.org","json.schemastore.org","jsr.io","keyserver.ubuntu.com","lfs.github.com","models.dev","nodejs.org","npm.pkg.github.com","npmjs.com","npmjs.org","nuget.org","nuget.pkg.github.com","nugetregistryv2prod.blob.core.windows.net","objects.githubusercontent.com","ocsp.digicert.com","ocsp.geotrust.com","ocsp.globalsign.com","ocsp.identrust.com","ocsp.sectigo.com","ocsp.ssl.com","ocsp.thawte.com","ocsp.usertrust.com","ocsp.verisign.com","oneocsp.microsoft.com","opencode.ai","packagecloud.io","packages.cloud.google.com","packages.microsoft.com","patch-diff.githubusercontent.com","patchdiff.githubusercontent.com","pkgs.dev.azure.com","ppa.launchpad.net","raw.githubusercontent.com","registry.bower.io","registry.npmjs.com","registry.npmjs.org","registry.yarnpkg.com","repo.yarnpkg.com","s.symcb.com","s.symcd.com","security.ubuntu.com","skimdb.npmjs.com","storage.googleapis.com","telemetry.vercel.com","ts-crl.ws.symantec.com","ts-ocsp.ws.symantec.com","www.googleapis.com","www.microsoft.com","www.npmjs.com","www.npmjs.org","yarnpkg.com"],"isolation":true,"topologyAttach":["awmg-mcpg"]},"apiProxy":{"enabled":true,"enableTokenSteering":true,"maxRuns":300,"maxCacheMisses":3000,"maxAiCredits":5000,"targets":{"openai":{"host":"forge.plainconcepts.com"}},"models":{"agent":["sonnet-6x","gpt-5.4","gpt-5.5","gpt-5.6","gpt-5.3","gemini-pro","any"],"antigravity":["copilot/antigravity*","google/antigravity*","gemini/antigravity*"],"any":["copilot/*","anthropic/*","openai/*","google/*","gemini/*"],"claude":["agent"],"codex":["agent"],"coding":["copilot/gpt-5*codex*","openai/gpt-5*codex*","gpt-5-codex","kimi"],"computer-use":["copilot/*computer-use*","google/*computer-use*","gemini/*computer-use*","openai/*computer-use*"],"copilot":["agent"],"deep-research":["copilot/deep-research*","copilot/o3-deep-research*","copilot/o4-mini-deep-research*","google/deep-research*","gemini/deep-research*","openai/o3-deep-research*","openai/o4-mini-deep-research*"],"fable":["copilot/*fable*","anthropic/*fable*"],"gemini":["agent"],"gemini-3-flash":["copilot/gemini-3*flash*","google/gemini-3*flash*","gemini/gemini-3*flash*"],"gemini-3-pro":["copilot/gemini-3*pro*","google/gemini-3*pro*","google/nano-banana*","gemini/gemini-3*pro*"],"gemini-3.1-flash":["copilot/gemini-3.1*flash*","google/gemini-3.1*flash*","gemini/gemini-3.1*flash*"],"gemini-3.1-pro":["copilot/gemini-3.1*pro*","google/gemini-3.1*pro*","gemini/gemini-3.1*pro*"],"gemini-3.5-flash":["copilot/gemini-3.5*flash*","google/gemini-3.5*flash*","gemini/gemini-3.5*flash*"],"gemini-3.6-flash":["copilot/gemini-3.6*flash*","google/gemini-3.6*flash*","gemini/gemini-3.6*flash*"],"gemini-flash":["copilot/gemini-*flash*","google/gemini-*flash*","gemini/gemini-*flash*"],"gemini-flash-lite":["copilot/gemini-*flash*lite*","google/gemini-*flash*lite*","gemini/gemini-*flash*lite*"],"gemini-omni":["copilot/gemini-omni*","google/gemini-omni*","gemini/gemini-omni*"],"gemini-pro":["copilot/gemini-*pro*","google/gemini-*pro*","gemini/gemini-*pro*"],"gemma":["copilot/gemma*","google/gemma*","gemini/gemma*"],"gpt-5":["copilot/gpt-5*","openai/gpt-5*"],"gpt-5-codex":["copilot/gpt-5*codex*","openai/gpt-5*codex*"],"gpt-5-mini":["copilot/gpt-5*mini*","openai/gpt-5*mini*"],"gpt-5-nano":["copilot/gpt-5*nano*","openai/gpt-5*nano*"],"gpt-5-pro":["copilot/gpt-5*pro*","openai/gpt-5*pro*"],"gpt-5.1":["copilot/gpt-5.1*","openai/gpt-5.1*"],"gpt-5.2":["copilot/gpt-5.2*","openai/gpt-5.2*"],"gpt-5.3":["copilot/gpt-5.3*","openai/gpt-5.3*"],"gpt-5.4":["copilot/gpt-5.4*","openai/gpt-5.4*"],"gpt-5.5":["copilot/gpt-5.5*","openai/gpt-5.5*"],"gpt-5.6":["copilot/gpt-5.6*","openai/gpt-5.6*"],"haiku":["copilot/*haiku*","anthropic/*haiku*"],"image-generation":["copilot/gpt-image*","openai/gpt-image*","openai/chatgpt-image*","copilot/gemini-*image*","google/gemini-*image*","gemini/gemini-*image*","google/imagen*"],"kimi":["copilot/kimi*","openai/kimi*"],"kiwi":["copilot/kiwi*","openai/kiwi*"],"large":["fable","sonnet","gpt-5-pro","gpt-5","gemini-pro"],"lyria":["google/lyria*","gemini/lyria*","copilot/lyria*"],"mai-code":["copilot/MAI-Code*","copilot/mai-code*","openai/MAI-Code*"],"mai-code-1-flash-picker":["copilot/MAI-Code-1-Flash-picker*","copilot/mai-code-1-flash-picker*","openai/MAI-Code-1-Flash-picker*"],"mini":["haiku","gpt-5-mini","gpt-5-nano","gemini-flash-lite"],"nano-banana":["copilot/nano-banana*","google/nano-banana*","gemini/nano-banana*"],"opus":["copilot/*opus*","anthropic/*opus*"],"opusplan":["opus?effort=high"],"raptor-mini":["copilot/raptor*","openai/raptor*"],"reasoning":["copilot/o1*","copilot/o3*","copilot/o4*","openai/o1*","openai/o3*","openai/o4*"],"robotics":["copilot/*robotics*","google/*robotics*","gemini/*robotics*"],"small":["mini"],"small-agent":["haiku","gpt-5-mini","gemini-flash"],"sonnet":["copilot/*sonnet*","anthropic/*sonnet*"],"sonnet-6x":["copilot/*sonnet-4.5*","copilot/*sonnet-4.6*","copilot/*sonnet-5*","copilot/*sonnet-4-5-*","anthropic/*sonnet-4-5-*","copilot/*sonnet-4-6*","anthropic/*sonnet-4-6*","anthropic/*sonnet-5*"],"summarization":["haiku","gpt-5-mini","gemini-flash-lite","mini"],"veo":["google/veo*","gemini/veo*"],"vision":["copilot/gemini-*image*","google/gemini-*image*","gemini/gemini-*image*","copilot/gemini-*flash*","google/gemini-*flash*","gemini/gemini-*flash*"]}},"container":{"imageTag":"0.27.42,squid=sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0,agent=sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b,agent-act=sha256:a14ad974484aa518aab83d40f3f141175dfd171d3745e01c092375b970f73a20,api-proxy=sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607,cli-proxy=sha256:da006bf96d2d246dd269d57b233c1798d2ad63d6cd64ca02f7bf71045028781f"},"logging":{"proxyLogsDir":"/tmp/gh-aw/sandbox/firewall/logs","auditDir":"/tmp/gh-aw/sandbox/firewall/audit"}}' > "${RUNNER_TEMP}/gh-aw/awf-config.json"
+          printf '%s\n' '{"$schema":"https://github.com/github/gh-aw-firewall/releases/download/v0.27.42/awf-config.schema.json","network":{"allowDomains":["*.githubusercontent.com","*.vsblob.vsassets.io","api.npms.io","api.nuget.org","api.openai.com","api.snapcraft.io","archive.ubuntu.com","azure.archive.ubuntu.com","azuresearch-usnc.nuget.org","azuresearch-ussc.nuget.org","builds.dotnet.microsoft.com","bun.sh","cdn.jsdelivr.net","ci.dot.net","codeload.github.com","crl.geotrust.com","crl.globalsign.com","crl.identrust.com","crl.sectigo.com","crl.thawte.com","crl.usertrust.com","crl.verisign.com","crl3.digicert.com","crl4.digicert.com","crls.ssl.com","dc.services.visualstudio.com","deb.nodesource.com","deno.land","dist.nuget.org","docs.github.com","dot.net","dotnet.microsoft.com","dotnetcli.blob.core.windows.net","esm.sh","fonts.googleapis.com","fonts.gstatic.com","forge.plainconcepts.com","get.pnpm.io","github-cloud.githubusercontent.com","github-cloud.s3.amazonaws.com","github.blog","github.com","github.githubassets.com","googleapis.deno.dev","googlechromelabs.github.io","host.docker.internal","json-schema.org","json.schemastore.org","jsr.io","keyserver.ubuntu.com","lfs.github.com","models.dev","nodejs.org","npm.pkg.github.com","npmjs.com","npmjs.org","nuget.org","nuget.pkg.github.com","nugetregistryv2prod.blob.core.windows.net","objects.githubusercontent.com","ocsp.digicert.com","ocsp.geotrust.com","ocsp.globalsign.com","ocsp.identrust.com","ocsp.sectigo.com","ocsp.ssl.com","ocsp.thawte.com","ocsp.usertrust.com","ocsp.verisign.com","oneocsp.microsoft.com","opencode.ai","packagecloud.io","packages.cloud.google.com","packages.microsoft.com","patch-diff.githubusercontent.com","patchdiff.githubusercontent.com","pkgs.dev.azure.com","ppa.launchpad.net","raw.githubusercontent.com","registry.bower.io","registry.npmjs.com","registry.npmjs.org","registry.yarnpkg.com","repo.yarnpkg.com","s.symcb.com","s.symcd.com","security.ubuntu.com","skimdb.npmjs.com","storage.googleapis.com","telemetry.vercel.com","ts-crl.ws.symantec.com","ts-ocsp.ws.symantec.com","www.googleapis.com","www.microsoft.com","www.npmjs.com","www.npmjs.org","yarnpkg.com"],"isolation":true,"topologyAttach":["awmg-mcpg"]},"apiProxy":{"enabled":true,"enableTokenSteering":true,"maxRuns":3000,"maxCacheMisses":3000,"maxAiCredits":5000,"targets":{"openai":{"host":"forge.plainconcepts.com"}},"models":{"agent":["sonnet-6x","gpt-5.4","gpt-5.5","gpt-5.6","gpt-5.3","gemini-pro","any"],"antigravity":["copilot/antigravity*","google/antigravity*","gemini/antigravity*"],"any":["copilot/*","anthropic/*","openai/*","google/*","gemini/*"],"claude":["agent"],"codex":["agent"],"coding":["copilot/gpt-5*codex*","openai/gpt-5*codex*","gpt-5-codex","kimi"],"computer-use":["copilot/*computer-use*","google/*computer-use*","gemini/*computer-use*","openai/*computer-use*"],"copilot":["agent"],"deep-research":["copilot/deep-research*","copilot/o3-deep-research*","copilot/o4-mini-deep-research*","google/deep-research*","gemini/deep-research*","openai/o3-deep-research*","openai/o4-mini-deep-research*"],"fable":["copilot/*fable*","anthropic/*fable*"],"gemini":["agent"],"gemini-3-flash":["copilot/gemini-3*flash*","google/gemini-3*flash*","gemini/gemini-3*flash*"],"gemini-3-pro":["copilot/gemini-3*pro*","google/gemini-3*pro*","google/nano-banana*","gemini/gemini-3*pro*"],"gemini-3.1-flash":["copilot/gemini-3.1*flash*","google/gemini-3.1*flash*","gemini/gemini-3.1*flash*"],"gemini-3.1-pro":["copilot/gemini-3.1*pro*","google/gemini-3.1*pro*","gemini/gemini-3.1*pro*"],"gemini-3.5-flash":["copilot/gemini-3.5*flash*","google/gemini-3.5*flash*","gemini/gemini-3.5*flash*"],"gemini-3.6-flash":["copilot/gemini-3.6*flash*","google/gemini-3.6*flash*","gemini/gemini-3.6*flash*"],"gemini-flash":["copilot/gemini-*flash*","google/gemini-*flash*","gemini/gemini-*flash*"],"gemini-flash-lite":["copilot/gemini-*flash*lite*","google/gemini-*flash*lite*","gemini/gemini-*flash*lite*"],"gemini-omni":["copilot/gemini-omni*","google/gemini-omni*","gemini/gemini-omni*"],"gemini-pro":["copilot/gemini-*pro*","google/gemini-*pro*","gemini/gemini-*pro*"],"gemma":["copilot/gemma*","google/gemma*","gemini/gemma*"],"gpt-5":["copilot/gpt-5*","openai/gpt-5*"],"gpt-5-codex":["copilot/gpt-5*codex*","openai/gpt-5*codex*"],"gpt-5-mini":["copilot/gpt-5*mini*","openai/gpt-5*mini*"],"gpt-5-nano":["copilot/gpt-5*nano*","openai/gpt-5*nano*"],"gpt-5-pro":["copilot/gpt-5*pro*","openai/gpt-5*pro*"],"gpt-5.1":["copilot/gpt-5.1*","openai/gpt-5.1*"],"gpt-5.2":["copilot/gpt-5.2*","openai/gpt-5.2*"],"gpt-5.3":["copilot/gpt-5.3*","openai/gpt-5.3*"],"gpt-5.4":["copilot/gpt-5.4*","openai/gpt-5.4*"],"gpt-5.5":["copilot/gpt-5.5*","openai/gpt-5.5*"],"gpt-5.6":["copilot/gpt-5.6*","openai/gpt-5.6*"],"haiku":["copilot/*haiku*","anthropic/*haiku*"],"image-generation":["copilot/gpt-image*","openai/gpt-image*","openai/chatgpt-image*","copilot/gemini-*image*","google/gemini-*image*","gemini/gemini-*image*","google/imagen*"],"kimi":["copilot/kimi*","openai/kimi*"],"kiwi":["copilot/kiwi*","openai/kiwi*"],"large":["fable","sonnet","gpt-5-pro","gpt-5","gemini-pro"],"lyria":["google/lyria*","gemini/lyria*","copilot/lyria*"],"mai-code":["copilot/MAI-Code*","copilot/mai-code*","openai/MAI-Code*"],"mai-code-1-flash-picker":["copilot/MAI-Code-1-Flash-picker*","copilot/mai-code-1-flash-picker*","openai/MAI-Code-1-Flash-picker*"],"mini":["haiku","gpt-5-mini","gpt-5-nano","gemini-flash-lite"],"nano-banana":["copilot/nano-banana*","google/nano-banana*","gemini/nano-banana*"],"opus":["copilot/*opus*","anthropic/*opus*"],"opusplan":["opus?effort=high"],"raptor-mini":["copilot/raptor*","openai/raptor*"],"reasoning":["copilot/o1*","copilot/o3*","copilot/o4*","openai/o1*","openai/o3*","openai/o4*"],"robotics":["copilot/*robotics*","google/*robotics*","gemini/*robotics*"],"small":["mini"],"small-agent":["haiku","gpt-5-mini","gemini-flash"],"sonnet":["copilot/*sonnet*","anthropic/*sonnet*"],"sonnet-6x":["copilot/*sonnet-4.5*","copilot/*sonnet-4.6*","copilot/*sonnet-5*","copilot/*sonnet-4-5-*","anthropic/*sonnet-4-5-*","copilot/*sonnet-4-6*","anthropic/*sonnet-4-6*","anthropic/*sonnet-5*"],"summarization":["haiku","gpt-5-mini","gemini-flash-lite","mini"],"veo":["google/veo*","gemini/veo*"],"vision":["copilot/gemini-*image*","google/gemini-*image*","gemini/gemini-*image*","copilot/gemini-*flash*","google/gemini-*flash*","gemini/gemini-*flash*"]}},"container":{"imageTag":"0.27.42,squid=sha256:42dfeb649c680a8558cd5423dbc530b653a69413e35ffbe5e71da5d48c94bdf0,agent=sha256:26a8af4e5566485b02f52af59ee03803ae798271a9619d4767e94d07806deb9b,agent-act=sha256:a14ad974484aa518aab83d40f3f141175dfd171d3745e01c092375b970f73a20,api-proxy=sha256:944f2686c9ab9bec338fd14b662461662f77cd12cd0ea8a3e7cb8c0987cd1607,cli-proxy=sha256:da006bf96d2d246dd269d57b233c1798d2ad63d6cd64ca02f7bf71045028781f"},"logging":{"proxyLogsDir":"/tmp/gh-aw/sandbox/firewall/logs","auditDir":"/tmp/gh-aw/sandbox/firewall/audit"}}' > "${RUNNER_TEMP}/gh-aw/awf-config.json"
           cp "${RUNNER_TEMP}/gh-aw/awf-config.json" /tmp/gh-aw/awf-config.json
           export GH_AW_MODELS_JSON_PATH="/tmp/gh-aw/models.json"
           GH_AW_DOCKER_HOST=""
@@ -1198,11 +1033,10 @@ jobs:
             -- /bin/bash -c 'set +o histexpand; export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && export no_proxy="${NO_PROXY:-}" && : "${RUNNER_TOOL_CACHE:?RUNNER_TOOL_CACHE must be set}"; GH_AW_TOOL_CACHE="$RUNNER_TOOL_CACHE"; export PATH="$(find "$GH_AW_TOOL_CACHE" -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true; [ -n "$ERLANG_HOME" ] && export PATH="$ERLANG_HOME/bin:$PATH" || true && cd "${GITHUB_WORKSPACE}" && opencode run --log-level ERROR "$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           CODEX_API_KEY: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
-          GH_AW_MAX_TURNS: 300
+          GH_AW_MAX_TURNS: 3000
           GH_AW_MCP_CONFIG: ${{ github.workspace }}/opencode.jsonc
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
-          GH_AW_SAFE_OUTPUTS_STAGED: true
           GITHUB_WORKSPACE: ${{ github.workspace }}
           NO_PROXY: localhost,127.0.0.1,host.docker.internal,host.docker.internal:10000,host.docker.internal:10001,host.docker.internal:10002,host.docker.internal:10003,172.30.0.30,172.30.0.30:10000,172.30.0.30:10001,172.30.0.30:10002,172.30.0.30:10003
           OPENAI_API_KEY: ${{ secrets.CODEX_API_KEY || secrets.OPENAI_API_KEY }}
@@ -1325,6 +1159,8 @@ jobs:
             /tmp/gh-aw/github_rate_limits.jsonl
             /tmp/gh-aw/safeoutputs.jsonl
             /tmp/gh-aw/agent_output.json
+            /tmp/gh-aw/aw-*.patch
+            /tmp/gh-aw/aw-*.bundle
             /tmp/gh-aw/awf-config.json
             /tmp/gh-aw/sandbox/firewall/logs/
             /tmp/gh-aw/sandbox/firewall/audit/
@@ -1333,16 +1169,13 @@ jobs:
 
   conclude:
     needs:
-      - activation
       - agent
-      - protected_changes
       - safe_outputs
-      - subject
     if: >
-      needs.agent.result == 'success' && needs.safe_outputs.result == 'success' && needs.protected_changes.outputs.requires_review != 'true'
+      needs.agent.result == 'success' && needs.safe_outputs.result == 'success'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       issues: write
       pull-requests: write
     steps:
@@ -1355,54 +1188,51 @@ jobs:
           GH_HOST="${GITHUB_SERVER_URL#https://}"
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create bot token
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Remove bot-working label
+        uses: ./.github/actions/remove-issue-labels
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          issue-number: ${{ inputs.issue-number }}
+          labels: ${{ env.WORKING_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
-      - name: Verify pull request closes the source issue
+      - name: Verify PR closes the source issue
+        if: needs.safe_outputs.outputs.created_pr_number != ''
         uses: ./.github/actions/link-pr-to-issue
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
-          pr-number: ${{ needs.subject.outputs.pr }}
+          issue-number: ${{ inputs.issue-number }}
+          pr-number: ${{ needs.safe_outputs.outputs.created_pr_number }}
           token: ${{ steps.app-token.outputs.token }}
         continue-on-error: true
-      - name: Apply agent output
-        uses: ./.github/actions/apply-agent-output
-        with:
-          artifact-name: ${{ needs.activation.outputs.artifact_prefix }}agent
-          close-issues: "true"
-          merge-pull-request: "true"
-          push-to-branch: "true"
-          token: ${{ steps.app-token.outputs.token }}
 
   conclusion:
     needs:
       - activation
       - agent
       - conclude
+      - eligibility
       - incomplete
-      - protected_changes
       - reserve
-      - review_required
       - safe_outputs
-      - subject
     if: >
       always() && (needs.agent.result != 'skipped' || needs.activation.outputs.lockdown_check_failed == 'true' ||
       needs.activation.outputs.oauth_token_check_failed == 'true' || needs.activation.outputs.stale_lock_file_failed == 'true' ||
       needs.activation.outputs.secret_verification_result == 'failed' || needs.activation.outputs.daily_ai_credits_exceeded == 'true')
     runs-on: ubuntu-latest
     permissions:
-      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
     concurrency:
-      group: "gh-aw-conclusion-agent-merge-gate"
+      group: "gh-aw-conclusion-agent-implement"
       cancel-in-progress: false
       queue: max
     env:
@@ -1422,8 +1252,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-merge-gate.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-implement.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_ENGINE_ID: "opencode"
           GH_AW_SETUP_AW_CONTEXT: ${{ inputs.aw_context }}
@@ -1500,8 +1330,8 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: agentic-workflow-usage-agentmergegate-${{ github.run_id }}
-          restore-keys: agentic-workflow-usage-agentmergegate-
+          key: agentic-workflow-usage-agentimplement-${{ github.run_id }}
+          restore-keys: agentic-workflow-usage-agentimplement-
           path: /tmp/gh-aw/agentic-workflow-usage-cache.jsonl
       - name: Write daily AIC usage cache entry
         id: write-daily-aic-cache
@@ -1521,7 +1351,7 @@ jobs:
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          key: agentic-workflow-usage-agentmergegate-${{ github.run_id }}
+          key: agentic-workflow-usage-agentimplement-${{ github.run_id }}
           path: /tmp/gh-aw/agentic-workflow-usage-cache.jsonl
       - name: Upload daily AIC usage cache artifact
         id: upload-daily-aic-cache
@@ -1539,14 +1369,14 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: "1"
-          GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-merge-gate.md"
+          GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-implement.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_REPORT_AS_ISSUE: "true"
           GH_AW_AIC: ${{ needs.agent.outputs.aic }}
           GH_AW_AMBIENT_CONTEXT: ${{ needs.agent.outputs.ambient_context }}
-          GH_AW_WORKFLOW_ID: "agent-merge-gate"
+          GH_AW_WORKFLOW_ID: "agent-implement"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1560,8 +1390,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_MISSING_TOOL_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-merge-gate.md"
+          GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-implement.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1575,8 +1405,8 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
           GH_AW_REPORT_INCOMPLETE_CREATE_ISSUE: "true"
-          GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-merge-gate.md"
+          GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-implement.md"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1590,11 +1420,11 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-merge-gate.md"
+          GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-implement.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
-          GH_AW_WORKFLOW_ID: "agent-merge-gate"
+          GH_AW_WORKFLOW_ID: "agent-implement"
           GH_AW_ACTION_FAILURE_ISSUE_EXPIRES_HOURS: "168"
           GH_AW_ENGINE_ID: "opencode"
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.activation.outputs.secret_verification_result }}
@@ -1616,7 +1446,7 @@ jobs:
           GH_AW_FAILURE_REPORT_AS_ISSUE: "true"
           GH_AW_MISSING_TOOL_REPORT_AS_FAILURE: "true"
           GH_AW_MISSING_DATA_REPORT_AS_FAILURE: "true"
-          GH_AW_TIMEOUT_MINUTES: "60"
+          GH_AW_TIMEOUT_MINUTES: "90"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1625,14 +1455,48 @@ jobs:
             const { main } = require('${{ runner.temp }}/gh-aw/actions/handle_agent_failure.cjs');
             await main();
 
+  eligibility:
+    needs: activation
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    outputs:
+      eligible: ${{ steps.check.outputs.eligible }}
+    steps:
+      - name: Configure GH_HOST for enterprise compatibility
+        id: ghes-host-config
+        shell: bash
+        run: | # zizmor: ignore[github-env] - GITHUB_SERVER_URL is set by GitHub Actions, not user input.
+          # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
+          # GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.
+          GH_HOST="${GITHUB_SERVER_URL#https://}"
+          GH_HOST="${GH_HOST#http://}"
+          echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
+      - name: Skip issues planned for the future
+        id: check
+        run: |
+          set -euo pipefail
+          labels=$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels \
+            --jq '[.labels[].name]')
+
+          if jq -e 'index("future")' >/dev/null <<<"$labels"; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Issue #$ISSUE_NUMBER has the future label. Automated implementation skipped."
+            exit 0
+          fi
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ inputs.issue-number }}
+
   incomplete:
     needs:
       - agent
-      - protected_changes
+      - eligibility
       - safe_outputs
-      - subject
     if: >
-      always() && needs.subject.outputs.found == 'true' && needs.protected_changes.outputs.requires_review != 'true' && needs.agent.result != 'success'
+      always() && needs.eligibility.outputs.eligible == 'true' && needs.agent.result != 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1657,26 +1521,26 @@ jobs:
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Release the issue
+      - name: Release the selected issue
         uses: ./.github/actions/remove-issue-labels
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.WORKING_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
       - name: Flag for human review
         uses: ./.github/actions/add-issue-labels
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.REVIEW_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
-      - name: Report missing remediation outcome
+      - name: Report missing implementation outcome
         uses: ./.github/actions/create-issue-comment
         with:
           body: |
-            ${{ env.GATE_MARKER }}
+            ${{ env.IMPLEMENT_MARKER }}
             ${{ env.INCOMPLETE_COMMENT }}
             [View this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           token: ${{ steps.app-token.outputs.token }}
 
   pre_activation:
@@ -1697,8 +1561,8 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-merge-gate.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-implement.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_ENGINE_ID: "opencode"
           GH_AW_SETUP_AW_CONTEXT: ${{ inputs.aw_context }}
@@ -1715,51 +1579,9 @@ jobs:
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_membership.cjs');
             await main();
 
-  protected_changes:
-    needs: subject
-    if: needs.subject.outputs.found == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-    outputs:
-      files: ${{ steps.files.outputs.files }}
-      requires_review: ${{ steps.files.outputs.requires_review }}
-    steps:
-      - name: Configure GH_HOST for enterprise compatibility
-        id: ghes-host-config
-        shell: bash
-        run: | # zizmor: ignore[github-env] - GITHUB_SERVER_URL is set by GitHub Actions, not user input.
-          # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
-          # GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.
-          GH_HOST="${GITHUB_SERVER_URL#https://}"
-          GH_HOST="${GH_HOST#http://}"
-          echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Require review for protected pull request files
-        id: files
-        run: |
-          set -euo pipefail
-          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files?per_page=100" --jq '.[].filename')
-          protected=$(printf '%s\n' "$files" | grep -E '^(\.|AGENTS\.md$|ARCHITECTURE\.md$|DESIGN\.md$|opencode\.jsonc$|package\.json$|pnpm-lock\.yaml$|Directory\.Packages\.props$|global\.json$)' || true)
-
-          if [ -n "$protected" ]; then
-            echo "requires_review=true" >> "$GITHUB_OUTPUT"
-            {
-              echo 'files<<EOF'
-              printf '%s\n' "$protected"
-              echo EOF
-            } >> "$GITHUB_OUTPUT"
-          else
-            echo "requires_review=false" >> "$GITHUB_OUTPUT"
-            echo "files=" >> "$GITHUB_OUTPUT"
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ needs.subject.outputs.pr }}
-          REPO: ${{ github.repository }}
-
   reserve:
-    needs: subject
-    if: needs.subject.outputs.found == 'true'
+    needs: eligibility
+    if: needs.eligibility.outputs.eligible == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -1775,84 +1597,32 @@ jobs:
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
       - name: Checkout workflow actions
-        if: needs.subject.outputs.conclusion == 'failure'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Create bot token
         id: app-token
-        if: needs.subject.outputs.conclusion == 'failure'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Mark the failed implementation issue as in progress
-        if: needs.subject.outputs.conclusion == 'failure'
+      - name: Mark the selected issue as in progress
         uses: ./.github/actions/add-issue-labels
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.WORKING_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
       - name: Clear the human-needed flag
-        if: needs.subject.outputs.conclusion == 'failure'
         uses: ./.github/actions/remove-issue-labels
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
           labels: ${{ env.REVIEW_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
-
-  review_required:
-    needs:
-      - protected_changes
-      - subject
-    if: needs.subject.outputs.found == 'true' && needs.protected_changes.outputs.requires_review == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - name: Configure GH_HOST for enterprise compatibility
-        id: ghes-host-config
-        shell: bash
-        run: | # zizmor: ignore[github-env] - GITHUB_SERVER_URL is set by GitHub Actions, not user input.
-          # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
-          # GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.
-          GH_HOST="${GITHUB_SERVER_URL#https://}"
-          GH_HOST="${GH_HOST#http://}"
-          echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Checkout workflow actions
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Create bot token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Release the issue
-        uses: ./.github/actions/remove-issue-labels
-        with:
-          issue-number: ${{ needs.subject.outputs.issue }}
-          labels: ${{ env.WORKING_LABEL }}
-          token: ${{ steps.app-token.outputs.token }}
-      - name: Flag human review
+      - name: Ensure implement label is present
         uses: ./.github/actions/add-issue-labels
         with:
-          issue-number: ${{ needs.subject.outputs.issue }}
-          labels: ${{ env.REVIEW_LABEL }}
-          token: ${{ steps.app-token.outputs.token }}
-      - name: Explain the merge hold
-        uses: ./.github/actions/create-issue-comment
-        with:
-          body: |
-            ${{ env.GATE_MARKER }}
-            PR #${{ needs.subject.outputs.pr }} changes protected files and cannot be auto-merged.
-            Review the pull request before merging it manually.
-
-            Protected files:
-            ${{ needs.protected_changes.outputs.files }}
-          issue-number: ${{ needs.subject.outputs.issue }}
+          issue-number: ${{ inputs.issue-number }}
+          labels: ${{ env.IMPLEMENT_LABEL }}
           token: ${{ steps.app-token.outputs.token }}
 
   safe_outputs:
@@ -1861,33 +1631,33 @@ jobs:
       - agent
     if: (!cancelled()) && needs.agent.result != 'skipped'
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     timeout-minutes: 45
     env:
       GH_AW_AGENT_AIC: ${{ needs.agent.outputs.aic }}
       GH_AW_AIC: ${{ needs.agent.outputs.aic }}
       GH_AW_AMBIENT_CONTEXT: ${{ needs.agent.outputs.ambient_context }}
-      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/agent-merge-gate"
+      GH_AW_CALLER_WORKFLOW_ID: "${{ github.repository }}/agent-implement"
       GH_AW_EFFECTIVE_TOKENS: ${{ needs.agent.outputs.effective_tokens }}
       GH_AW_ENGINE_ID: "opencode"
       GH_AW_ENGINE_MODEL: "openai/glm-5-2"
       GH_AW_ENGINE_VERSION: "1.2.14"
       GH_AW_RUNTIME_FEATURES: ${{ vars.GH_AW_RUNTIME_FEATURES }}
-      GH_AW_SAFE_OUTPUTS_STAGED: "true"
-      GH_AW_WORKFLOW_ID: "agent-merge-gate"
-      GH_AW_WORKFLOW_NAME: "Agent: Merge Gate"
-      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-merge-gate.md"
+      GH_AW_WORKFLOW_ID: "agent-implement"
+      GH_AW_WORKFLOW_NAME: "Agent: Implement Issue"
+      GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.github/workflows/agent-implement.md"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
-      comment_id: ${{ steps.process_safe_outputs.outputs.comment_id }}
-      comment_url: ${{ steps.process_safe_outputs.outputs.comment_url }}
       create_discussion_error_count: ${{ steps.process_safe_outputs.outputs.create_discussion_error_count }}
       create_discussion_errors: ${{ steps.process_safe_outputs.outputs.create_discussion_errors }}
+      created_pr_number: ${{ steps.process_safe_outputs.outputs.created_pr_number }}
+      created_pr_url: ${{ steps.process_safe_outputs.outputs.created_pr_url }}
       process_safe_outputs_processed_count: ${{ steps.process_safe_outputs.outputs.processed_count }}
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
-      push_commit_sha: ${{ steps.process_safe_outputs.outputs.push_commit_sha }}
-      push_commit_url: ${{ steps.process_safe_outputs.outputs.push_commit_url }}
     steps:
       - name: Setup Scripts
         id: setup
@@ -1898,8 +1668,8 @@ jobs:
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
           parent-span-id: ${{ needs.activation.outputs.setup-parent-span-id || needs.activation.outputs.setup-span-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Merge Gate"
-          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-merge-gate.lock.yml@${{ github.ref }}
+          GH_AW_SETUP_WORKFLOW_NAME: "Agent: Implement Issue"
+          GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/agent-implement.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.2.14"
           GH_AW_INFO_ENGINE_ID: "opencode"
           GH_AW_SETUP_AW_CONTEXT: ${{ inputs.aw_context }}
@@ -1917,6 +1687,25 @@ jobs:
           mkdir -p /tmp/gh-aw/
           find "/tmp/gh-aw/" -type f -print
           echo "GH_AW_AGENT_OUTPUT=/tmp/gh-aw/agent_output.json" >> "$GITHUB_OUTPUT"
+      - name: Download patch artifact
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.activation.outputs.artifact_prefix }}agent
+          path: /tmp/gh-aw/
+      - name: Checkout repository
+        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request')
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Configure Git credentials
+        if: (!cancelled()) && needs.agent.result != 'skipped' && contains(needs.agent.outputs.output_types, 'create_pull_request')
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GIT_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/configure_git_credentials.sh"
       - name: Configure GH_HOST for enterprise compatibility
         id: ghes-host-config
         shell: bash
@@ -1935,8 +1724,8 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,*.vsblob.vsassets.io,api.npms.io,api.nuget.org,api.openai.com,api.snapcraft.io,archive.ubuntu.com,azure.archive.ubuntu.com,azuresearch-usnc.nuget.org,azuresearch-ussc.nuget.org,builds.dotnet.microsoft.com,bun.sh,cdn.jsdelivr.net,ci.dot.net,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,dc.services.visualstudio.com,deb.nodesource.com,deno.land,dist.nuget.org,docs.github.com,dot.net,dotnet.microsoft.com,dotnetcli.blob.core.windows.net,esm.sh,fonts.googleapis.com,fonts.gstatic.com,forge.plainconcepts.com,get.pnpm.io,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,googleapis.deno.dev,googlechromelabs.github.io,host.docker.internal,json-schema.org,json.schemastore.org,jsr.io,keyserver.ubuntu.com,lfs.github.com,models.dev,nodejs.org,npm.pkg.github.com,npmjs.com,npmjs.org,nuget.org,nuget.pkg.github.com,nugetregistryv2prod.blob.core.windows.net,objects.githubusercontent.com,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,oneocsp.microsoft.com,opencode.ai,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,patch-diff.githubusercontent.com,patchdiff.githubusercontent.com,pkgs.dev.azure.com,ppa.launchpad.net,raw.githubusercontent.com,registry.bower.io,registry.npmjs.com,registry.npmjs.org,registry.yarnpkg.com,repo.yarnpkg.com,s.symcb.com,s.symcd.com,security.ubuntu.com,skimdb.npmjs.com,storage.googleapis.com,telemetry.vercel.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com,www.microsoft.com,www.npmjs.com,www.npmjs.org,yarnpkg.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":1},\"add_labels\":{},\"close_issue\":{\"max\":1},\"create_report_incomplete_issue\":{},\"merge_pull_request\":{\"max\":1},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"push_to_pull_request_branch\":{\"if_no_changes\":\"warn\",\"max_patch_size\":4096,\"protect_top_level_dot_folders\":true,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"DESIGN.md\",\"README.md\",\"CONTRIBUTING.md\",\"CHANGELOG.md\",\"SECURITY.md\",\"CODE_OF_CONDUCT.md\",\"opencode.jsonc\",\"AGENTS.md\"]},\"remove_labels\":{},\"report_incomplete\":{}}"
-          GH_AW_SAFE_OUTPUTS_STAGED: "true"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request\":{\"allowed_files\":[\"**\"],\"draft\":false,\"if_no_changes\":\"error\",\"max\":1,\"max_patch_files\":1000,\"max_patch_size\":4096,\"protect_top_level_dot_folders\":true,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"DESIGN.md\",\"README.md\",\"CONTRIBUTING.md\",\"CHANGELOG.md\",\"SECURITY.md\",\"CODE_OF_CONDUCT.md\",\"opencode.jsonc\",\"AGENTS.md\"],\"protected_files_policy\":\"allowed\",\"title_prefix\":\"[bot] \"},\"create_report_incomplete_issue\":{},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"report_incomplete\":{}}"
+          GH_AW_CI_TRIGGER_TOKEN: ${{ secrets.GH_AW_CI_TRIGGER_TOKEN }}
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
@@ -1944,39 +1733,14 @@ jobs:
             setupGlobals(core, github, context, exec, io, getOctokit);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/process_safe_outputs.cjs');
             await main();
-
-  subject:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      issues: read
-      pull-requests: read
-    outputs:
-      conclusion: ${{ steps.subject.outputs.conclusion }}
-      found: ${{ steps.subject.outputs.found }}
-      issue: ${{ steps.subject.outputs.issue }}
-      pr: ${{ steps.subject.outputs.pr }}
-    steps:
-      - name: Configure GH_HOST for enterprise compatibility
-        id: ghes-host-config
-        shell: bash
-        run: | # zizmor: ignore[github-env] - GITHUB_SERVER_URL is set by GitHub Actions, not user input.
-          # Derive GH_HOST from GITHUB_SERVER_URL so the gh CLI targets the correct
-          # GitHub instance (GHES/GHEC). On github.com this is a harmless no-op.
-          GH_HOST="${GITHUB_SERVER_URL#https://}"
-          GH_HOST="${GH_HOST#http://}"
-          echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - name: Checkout workflow actions
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Upload Safe Outputs Items
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          persist-credentials: false
-      - name: Identify the pull request, its issue, and the CI verdict
-        id: subject
-        uses: ./.github/actions/identify-gate-subject
-        with:
-          ci-conclusion: ${{ inputs.ci-conclusion }}
-          linked-issue: ${{ inputs.linked-issue }}
-          pr-number: ${{ inputs.pr-number }}
-          require-label: ${{ env.IMPLEMENT_LABEL }}
-          token: ${{ github.token }}
+          name: ${{ needs.activation.outputs.artifact_prefix }}safe-outputs-items
+          path: |
+            /tmp/gh-aw/safe-output-items.jsonl
+            /tmp/gh-aw/temporary-id-map.json
+            /tmp/gh-aw/process-safe-outputs.stdout.log
+            /tmp/gh-aw/process-safe-outputs.stderr.log
+          if-no-files-found: ignore
