@@ -19,3 +19,5 @@
 
 # Generated; keep out of diffs and language stats.
 pnpm-lock.yaml linguist-generated=true -diff
+
+.github/workflows/*.lock.yml linguist-generated=true merge=ours
