@@ -95,6 +95,12 @@ pre-agent-steps:
   - name: Install workspace dependencies
     run: pnpm install --frozen-lockfile
 
+  - name: Install OpenSpec CLI
+    run: |
+      set -euo pipefail
+      npm install -g "@fission-ai/openspec@1.8.0"
+      openspec --version
+
   - name: Merge the CI-only OpenCode provider into opencode.jsonc
     run: |
       set -euo pipefail
