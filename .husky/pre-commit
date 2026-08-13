@@ -1,3 +1,5 @@
 #!/usr/bin/env sh
 pnpm exec lint-staged
 node scripts/compile-agent-workflows.mjs
+git add -- .github/workflows/*.lock.yml
+[ ! -f .github/actions/actions-lock.json ] || git add -- .github/actions/actions-lock.json
