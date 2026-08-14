@@ -17,11 +17,17 @@
       "/home/runner/work/_temp/gh-aw/**": "allow"
     }
   },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
   "provider": {
     "plainconcepts": {
       "api": "http://172.30.0.30:10000",
       "options": {
-        "apiKey": "awf-openai-proxy"
+        "apiKey": "awf-openai-proxy",
+        "setCacheKey": true
       },
       "models": {
         "glm-5-2": {
