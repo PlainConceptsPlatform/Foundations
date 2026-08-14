@@ -1,7 +1,6 @@
 ---
 # Managed by @plainconceptsplatform/workflows. Source: loops/workflows/agent-implement.md. Update with `workflows update --force`; consumer edits may be overwritten.
 env:
-  VERIFY_COMMANDS: "pnpm verify"
   REPO_RULES: "Implement only the selected issue. Follow repository documentation and existing conventions. Do not weaken tests, lower coverage thresholds, or bypass checks. Run the project's full verification suite before creating a pull request."
   IMPLEMENT_LABEL: implement
   WORKING_LABEL: bot-working
@@ -30,6 +29,7 @@ name: "Agent: Implement Issue"
 # Shared: network policy only. This workflow owns its Safe Outputs and OpenCode configuration.
 # permissions, engine, model and runs-on cannot be shared , see shared/platform-defaults.md.
 imports:
+  - github/gh-aw/.github/workflows/shared/opencode.md@v0.86.2
   - shared/platform-defaults.md
   - shared/opencode-ci.md
 
@@ -239,23 +239,29 @@ timeout-minutes: 90
    a. Load the `ob-plan-goal` skill. It defines a mandatory, gate-sequenced pipeline:
       `explore · propose · apply · verify · archive · evidence · output · report`
 
-   b. Execute every phase in order. Each phase loads its own sub-skill (`ob-plan-explore`,
-      `ob-plan-propose`, `ob-plan-apply`, `ob-repo-verify`, `ob-plan-archive`,
-      `ob-ops-evidence`) and owns its procedure. You must not skip a phase, merge phases,
-      or replace the pipeline with your own ad-hoc checklist.
+   b. **Refined-issue fast path:** If the issue context at `${{ env.ISSUE_CONTEXT_PATH }}`
+      already contains structured acceptance criteria (e.g. "## Acceptance criteria",
+      "### Scenario:", Gherkin blocks), affected artifacts, and design decisions, the
+      `ob-plan-goal` skill will skip the explore and propose phases and go directly to
+      apply. Do not override this: re-exploring a pre-refined issue wastes tokens.
 
-   c. The `apply` phase uses `ob-plan-apply` which delegates implementation to specialist
+   c. Execute every phase in order. Each phase loads its own sub-skill (`ob-plan-explore`,
+      `ob-plan-propose`, `ob-plan-apply`, `ob-repo-verify`, `ob-plan-archive`,
+      `ob-ops-evidence`) and owns its procedure. You must not skip a phase unless the
+      pipeline's refined-issue detection says to.
+
+   d. The `apply` phase uses `ob-plan-apply` which delegates implementation to specialist
       subagent waves. Let it own worker resolution, concurrency, and retry , do not
       implement the tasks yourself unless `ob-plan-apply` instructs you to.
 
-   d. Implement only what the issue asks for: a vague sentence is not licence to redesign
+   e. Implement only what the issue asks for: a vague sentence is not licence to redesign
       a module. Never read outside this repository root. The issue context at
       `${{ env.ISSUE_CONTEXT_PATH }}` defines acceptance criteria that the pipeline must
       satisfy.
 
-     e. Follow repository documentation and established conventions. Keep changes focused,
-        protect secrets, do not bypass checks, and do not modify generated files unless the issue requires it.
-        Adhere to ${{ env.REPO_RULES }}.
+   f. Follow repository documentation and established conventions. Keep changes focused,
+      protect secrets, do not bypass checks, and do not modify generated files unless the issue requires it.
+      Adhere to ${{ env.REPO_RULES }}.
 
 4. Verify before you conclude. From the repository root:
 
