@@ -11,6 +11,7 @@ set -euo pipefail
 readonly AUDIT_CRON="17 1 * * 1"
 readonly AUDIT_CLOSE_CRON="43 3 * * *"
 readonly CLEANUP_ARTIFACTS_CRON="0 6 * * *"
+readonly RECONCILE_BOT_PR_RUNS_CRON="*/15 * * * *"
 readonly STALE_RECOVERY_CRON="0 */2 * * *"
 # Daily, but it proposes far less often than daily: the worker holds one open
 # proposal at a time and skips while that slot is filled. The cron is a heartbeat,
@@ -34,19 +35,27 @@ classify_route() {
     issues)
       if [ "${ACTION:-}" = "labeled" ]; then
         case "${LABEL:-}" in
-          refine)
-            route="refine"
-            refine_mode="first"
-            issue_number="${EVENT_ISSUE_NUMBER:-}"
+          bot-working)
+            # Bot adds bot-working → route based on which work label is present
+            if has_label implement; then
+              route="implement"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+            elif has_label refine; then
+              route="refine"
+              refine_mode="first"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+            elif has_label direct; then
+              route="direct"
+              direct_mode="first"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+            else
+              error="bot-working added but no work label (implement/refine/direct) found"
+            fi
             ;;
-          implement)
-            route="implement"
-            issue_number="${EVENT_ISSUE_NUMBER:-}"
-            ;;
-          direct)
-            route="direct"
-            direct_mode="first"
-            issue_number="${EVENT_ISSUE_NUMBER:-}"
+          refine | implement | direct)
+            # Human adds work label → authorize-bot-work.yml handles this
+            # Route to none here; the bot will add bot-working which triggers the actual work
+            error="waiting for bot to add bot-working label"
             ;;
         esac
       fi
@@ -77,7 +86,17 @@ classify_route() {
       ;;
 
     pull_request_target)
-      route="bot-approve"
+      if [ "${ACTION:-}" = "labeled" ] && [ "${LABEL:-}" = "merge-gate" ]; then
+        # Human adds merge-gate label to bot PR → triggers merge-gate with human actor
+        # This bypasses gh-aw's bot membership check since the actor is human
+        route="merge-gate"
+        pr_number="${EVENT_PR_NUMBER:-}"
+        # CI status will be fetched by the merge-gate workflow
+        ci_conclusion=""
+        ci_run_id=""
+      else
+        route="bot-approve"
+      fi
       ;;
 
     workflow_run)
@@ -97,6 +116,7 @@ classify_route() {
         "$AUDIT_CRON") route="audit" ;;
         "$AUDIT_CLOSE_CRON") route="audit-close" ;;
         "$CLEANUP_ARTIFACTS_CRON") route="cleanup-artifacts" ;;
+        "$RECONCILE_BOT_PR_RUNS_CRON") route="reconcile-bot-pr-runs" ;;
         "$STALE_RECOVERY_CRON") route="stale-recovery" ;;
         "$PROPOSE_CRON") route="propose" ;;
         *) error="no route for cron '${SCHEDULE:-}'" ;;
@@ -141,7 +161,7 @@ classify_route() {
           route="${OPERATION}"
           trigger_kind="${INPUT_TRIGGER_KIND:-manual}"
           ;;
-        audit-close | cleanup-artifacts | stale-recovery | validate)
+        audit-close | cleanup-artifacts | reconcile-bot-pr-runs | stale-recovery | validate)
           route="${OPERATION}"
           ;;
         *)
