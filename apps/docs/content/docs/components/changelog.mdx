@@ -1,0 +1,100 @@
+---
+title: Changelog
+description: A CTA + modal showing implemented issues from a bundled JSON source.
+---
+
+import { ChangelogDemo } from "@/components/previews/changelog-demo"
+
+<ComponentPreview block>
+  <ChangelogDemo />
+</ComponentPreview>
+
+## When to use
+
+When a Platform app needs to surface recently implemented issues to its users in a non-intrusive way: a button in the sidebar or topbar that opens a modal listing the latest changes, grouped by date with type badges.
+
+## How it works
+
+The package ships a `data.json` file bundled at build time — no runtime fetch, no server endpoint, no `public/` setup. Each entry has a title, type (`feature` / `bugfix` / `improvement`), date, and a markdown body.
+
+To add a new entry, edit `packages/ui-components/src/changelog/data.json`, publish a new version of the package, and consuming apps pick it up on their next `pnpm update`.
+
+## Platform notes
+
+Like `DataTable`, this component is **slot-based**: it carries no hard dependency on shadcn, lucide, or any i18n library. The consuming app passes its own `Dialog`, `Button`, and icon components as slots, along with localised strings, a markdown renderer, and a date formatter. This means it works identically across apps that use different UI primitives (e.g. Numa uses `@tabler/icons-react` while the docs app uses `lucide-react`).
+
+The `renderMarkdown` slot lets each app decide how rich the entry bodies are — `react-markdown`, a custom MDX pipeline, or a lightweight inline parser. The `formatDate` slot lets each app format dates per its locale and i18n settings.
+
+State is **controllable**: pass `open` + `onOpenChange` for full control (e.g. when wiring to a sidebar button), or leave them unset for uncontrolled internal state driven by the trigger button.
+
+## Install
+
+```bash
+pnpm add @plainconceptsplatform/ui-components
+```
+
+Import from the sub-path:
+
+```tsx
+import { Changelog } from "@plainconceptsplatform/ui-components/changelog";
+import type { ChangelogEntry } from "@plainconceptsplatform/ui-components/changelog";
+```
+
+## Slot contract
+
+```tsx
+<Changelog
+  entries={entries}        // optional: override the bundled data.json
+  slots={{
+    Dialog,                 // Radix Dialog root
+    DialogContent,          // shadcn DialogContent (supports showCloseButton)
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    Button,                 // shadcn Button (variant, size, asChild)
+    ScrollArea,             // optional: shadcn ScrollArea; falls back to a div
+  }}
+  texts={{
+    trigger: "What's new",
+    title: "Latest changes",
+    description: "Recently implemented issues and improvements.",
+    noEntries: "No entries yet.",
+    typeLabels: {
+      feature: "Feature",
+      bugfix: "Bugfix",
+      improvement: "Improvement",
+    },
+  }}
+  icons={{ IconSparkles }}
+  renderMarkdown={(md) => <MyMarkdownRenderer source={md} />}
+  formatDate={(d) => format(new Date(d), "MMM d, yyyy")}
+  open={open}
+  onOpenChange={setOpen}
+/>
+```
+
+## Entry schema
+
+```json
+[
+  {
+    "id": "42",
+    "title": "Export quotes to PDF",
+    "type": "feature",
+    "date": "2025-01-15",
+    "text": "## What's new\n\nMarkdown **supported** here."
+  }
+]
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | `string` | yes | Stable identifier (GitHub issue number) |
+| `title` | `string` | yes | Short one-liner shown in the card header |
+| `type` | `"feature" \| "bugfix" \| "improvement"` | yes | Controls the badge colour |
+| `date` | `string` | yes | ISO 8601 date (`YYYY-MM-DD`) |
+| `text` | `string` | yes | Markdown body rendered via the `renderMarkdown` slot |
+
+## Full API
+
+[`packages/ui-components` README](https://github.com/PlainConceptsPlatform/Foundations/blob/main/packages/ui-components/README.md)

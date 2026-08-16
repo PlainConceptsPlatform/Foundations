@@ -20,6 +20,11 @@
       "types": "./dist/data-table/data-table.d.ts",
       "import": "./dist/data-table/data-table.js",
       "default": "./src/data-table/data-table.tsx"
+    },
+    "./changelog": {
+      "types": "./dist/changelog/changelog.d.ts",
+      "import": "./dist/changelog/changelog.js",
+      "default": "./src/changelog/changelog.tsx"
     }
   },
   "sideEffects": ["**/*.css", "**/*.ts", "**/*.tsx"],

@@ -1,3 +1,4 @@
+import { ChangelogSidebarItem } from "@/components/previews/changelog-demo";
 import { ChartDemo } from "@/components/previews/chart-demo";
 import { DataTableDemo } from "@/components/previews/data-table-demo";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,10 @@ export function ThemedScreen() {
               </span>
             ))}
           </nav>
+          <div className="flex-1" />
+          <div className="border-sidebar-border border-t pt-2">
+            <ChangelogSidebarItem />
+          </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col bg-background">

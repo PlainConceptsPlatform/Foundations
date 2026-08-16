@@ -1,0 +1,9 @@
+[
+  {
+    "id": "welcome",
+    "title": "Changelog component added",
+    "type": "feature",
+    "date": "2025-01-15",
+    "text": "## What's new\n\nThis **changelog component** is now available as part of `@plainconceptsplatform/ui-components`.\n\n- Displays implemented issues from a bundled JSON source\n- Supports markdown in entry bodies\n- Slot-based: works with any Dialog, Button, and icon library\n\nEdit `data.json` in the package and publish a new version to surface new entries."
+  }
+]
