@@ -43,7 +43,7 @@ on:
 
 jobs:
   eligibility:
-    runs-on: ubuntu-latest
+    runs-on: RunnerLandingZone
     permissions:
       issues: read
     outputs:
@@ -70,7 +70,7 @@ jobs:
   reserve:
     needs: eligibility
     if: needs.eligibility.outputs.eligible == 'true'
-    runs-on: ubuntu-latest
+    runs-on: RunnerLandingZone
     permissions:
       contents: read
       issues: write
@@ -102,7 +102,7 @@ jobs:
     if: >
       needs.agent.result == 'success' &&
       needs.safe_outputs.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: RunnerLandingZone
     permissions:
       contents: read
       issues: write
@@ -138,7 +138,7 @@ jobs:
       always() &&
       needs.eligibility.outputs.eligible == 'true' &&
       needs.agent.result != 'success'
-    runs-on: ubuntu-latest
+    runs-on: RunnerLandingZone
     permissions:
       contents: read
       issues: write
@@ -177,8 +177,8 @@ jobs:
 
 if: inputs.issue-number != '' && needs.eligibility.outputs.eligible == 'true'
 
-runs-on: ubuntu-latest
-runs-on-slim: ubuntu-latest
+runs-on: RunnerLandingZone
+runs-on-slim: RunnerLandingZone
 
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -256,6 +256,12 @@ timeout-minutes: 90
    f. Follow repository documentation and established conventions. Keep changes focused,
       protect secrets, do not bypass checks, and do not modify generated files unless the issue requires it.
       Adhere to ${{ env.REPO_RULES }}.
+
+   g. **DECISIVE IMPLEMENTATION.** When a design choice is ambiguous, pick the most
+      standard interpretation and implement it immediately. Do not deliberate between
+      options for more than one turn. Do not ask clarifying questions — the issue author
+      expects you to use good judgment. If two approaches are equally valid, pick one and
+      proceed. You can always iterate based on PR feedback.
 
 4. Verify before you conclude. From the repository root:
 
