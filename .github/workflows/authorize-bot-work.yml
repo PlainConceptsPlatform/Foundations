@@ -24,7 +24,7 @@ jobs:
        github.event.label.name == 'direct') &&
       !contains(github.event.issue.labels.*.name, 'bot-working') &&
       !endsWith(github.actor, '[bot]')
-    runs-on: RunnerLandingZone
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read

@@ -18,7 +18,7 @@ concurrency:
 jobs:
   check:
     name: Lint, typecheck, build (node ${{ matrix.node }})
-    runs-on: RunnerLandingZone
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
