@@ -19,7 +19,15 @@ import {
   AppSidebarSpacer,
   AppSidebarUserCard,
 } from "@plainconceptsplatform/ui-components/app-sidebar";
-import { FolderKanban, LayoutDashboard, Search, Settings, Users } from "lucide-react";
+import {
+  FolderKanban,
+  LayoutDashboard,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Settings,
+  Users,
+} from "lucide-react";
 
 /**
  * One realistic Platform screen, composed from demos that already exist.
@@ -83,8 +91,19 @@ export function ThemedScreen() {
             <AppSidebarFooter>
               <ChangelogSidebarItem />
               <AppSidebarSeparator />
-              <AppSidebarUserCard name="Jane Doe" email="jane@example.com" initials="JD" />
-              <AppSidebarCollapseButton />
+              <AppSidebarUserCard
+                name="Jane Doe"
+                subtitle="jane@example.com"
+                avatar={
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                    JD
+                  </span>
+                }
+              />
+              <AppSidebarCollapseButton
+                expandIcon={<PanelLeftOpen className="size-4" />}
+                collapseIcon={<PanelLeftClose className="size-4" />}
+              />
             </AppSidebarFooter>
           </AppSidebar>
 

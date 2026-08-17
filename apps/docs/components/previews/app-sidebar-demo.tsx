@@ -1,14 +1,25 @@
 "use client";
 
-import { FolderKanban, LayoutDashboard, Settings, Sparkles, Users } from "lucide-react";
+import {
+  FolderKanban,
+  LayoutDashboard,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  Sparkles,
+  Users,
+} from "lucide-react";
 
+import { Avatar } from "@/components/ui/avatar";
 import {
   AppSidebar,
+  AppSidebarActions,
   AppSidebarBrand,
   AppSidebarCollapseButton,
   AppSidebarContent,
   AppSidebarFooter,
   AppSidebarHeader,
+  AppSidebarIconButton,
   AppSidebarNav,
   AppSidebarNavGroup,
   AppSidebarNavItem,
@@ -31,6 +42,13 @@ export function AppSidebarDemo() {
       <AppSidebar>
         <AppSidebarHeader>
           <AppSidebarBrand name="Platform" logo={<span className="text-primary">P</span>} />
+          <AppSidebarActions>
+            <AppSidebarIconButton icon={<Sparkles className="size-4" />} label="What's new" />
+            <AppSidebarCollapseButton
+              expandIcon={<PanelLeftOpen className="size-4" />}
+              collapseIcon={<PanelLeftClose className="size-4" />}
+            />
+          </AppSidebarActions>
         </AppSidebarHeader>
         <AppSidebarSeparator />
         <AppSidebarContent>
@@ -48,9 +66,13 @@ export function AppSidebarDemo() {
             </AppSidebarNavGroup>
           </AppSidebarNav>
         </AppSidebarContent>
+        <AppSidebarSpacer />
         <AppSidebarFooter>
-          <AppSidebarUserCard name="Jane Doe" email="jane@example.com" initials="JD" />
-          <AppSidebarCollapseButton />
+          <AppSidebarUserCard
+            name="Jane Doe"
+            subtitle="jane@example.com"
+            avatar={<Avatar className="size-8">JD</Avatar>}
+          />
         </AppSidebarFooter>
       </AppSidebar>
       <div className="flex flex-1 items-center justify-center bg-background p-6 text-sm text-muted-foreground">
