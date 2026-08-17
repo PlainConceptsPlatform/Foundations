@@ -1,6 +1,6 @@
 {
   "name": "@plainconceptsplatform/ui-theme",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shared design tokens and theme (Platform styleguide) for Platform frontend apps. For shadcn/ui + Tailwind v4.",
   "type": "module",
   "license": "MIT",

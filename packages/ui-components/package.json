@@ -1,6 +1,6 @@
 {
   "name": "@plainconceptsplatform/ui-components",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Shared React components for Platform frontend apps (Plain logo and more).",
   "type": "module",
   "license": "MIT",
