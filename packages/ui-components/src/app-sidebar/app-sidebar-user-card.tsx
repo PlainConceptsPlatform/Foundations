@@ -42,10 +42,15 @@ export function AppSidebarUserCard({
         <div
           data-sidebar="user-menu"
           className={cn(
-            "absolute bottom-full left-0 right-0 mb-1.5 rounded-lg border border-sidebar-border bg-popover p-1 shadow-lg",
-            collapsed && "left-auto right-0 min-w-[200px]",
+            "absolute bottom-full left-0 right-0 mb-[6px] rounded-md border border-sidebar-border bg-popover p-[6px] shadow-lg z-[200]",
+            collapsed && "fixed left-auto right-auto min-w-[200px]",
           )}
           role="menu"
+          style={
+            collapsed
+              ? { position: "fixed", left: "calc(64px + 6px)", bottom: "14px", right: "auto" }
+              : undefined
+          }
         >
           {dropdown}
         </div>
@@ -56,7 +61,7 @@ export function AppSidebarUserCard({
         className={cn(
           "flex items-center gap-2.5 rounded-md border border-sidebar-border bg-muted/50 p-2 cursor-pointer select-none outline-none w-full text-left",
           "hover:bg-sidebar-hover focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-1",
-          collapsed && "justify-center",
+          collapsed && "justify-center p-1.5",
         )}
         title={collapsed ? name : undefined}
         aria-haspopup={dropdown ? "true" : undefined}
@@ -96,8 +101,9 @@ export function AppSidebarUserMenuItem({
       type="button"
       role="menuitem"
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-popover-foreground",
-        "hover:bg-sidebar-hover cursor-pointer border-none bg-transparent text-left",
+        "flex w-full items-center gap-2 rounded-md px-1.5 py-1.5 text-[12.5px] text-muted-foreground",
+        "hover:bg-sidebar-hover hover:text-sidebar-foreground cursor-pointer border-none bg-transparent text-left",
+        "transition-colors duration-150",
         className,
       )}
       onClick={onClick}
@@ -109,7 +115,7 @@ export function AppSidebarUserMenuItem({
 }
 
 export function AppSidebarUserMenuDivider({ className }: { className?: string }) {
-  return <div className={cn("my-1 h-px bg-sidebar-border", className)} />;
+  return <div className={cn("my-1.5 h-px bg-sidebar-border", className)} />;
 }
 
 type AppSidebarThemeToggleProps = {
@@ -138,13 +144,13 @@ export function AppSidebarThemeToggle({
   const options: Array<"light" | "dark" | "system"> = ["light", "dark", "system"];
 
   return (
-    <fieldset className={cn("flex gap-1 px-1 py-0.5", className)}>
+    <fieldset className={cn("flex gap-1 px-0.5 py-0.5", className)}>
       {options.map((pref) => (
         <button
           key={pref}
           type="button"
           className={cn(
-            "flex flex-1 items-center justify-center gap-1 rounded border border-transparent bg-transparent px-1 py-1.5 text-[11px] text-muted-foreground cursor-pointer transition-colors",
+            "flex flex-1 items-center justify-center rounded border border-transparent bg-transparent px-1 py-1.5 text-[11px] text-muted-foreground cursor-pointer transition-colors duration-150",
             "hover:bg-sidebar-hover hover:text-sidebar-foreground",
             value === pref && "bg-sidebar-accent text-sidebar-primary border-sidebar-primary/30",
           )}

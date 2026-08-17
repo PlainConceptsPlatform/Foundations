@@ -19,9 +19,10 @@ export function AppSidebar({ children, className, id }: AppSidebarProps) {
       data-sidebar="root"
       data-collapsed={collapsed}
       className={cn(
-        "flex h-screen flex-col gap-[14px] overflow-y-auto border-r border-sidebar-border bg-sidebar p-[14px] px-3 sticky top-0",
+        "flex h-screen flex-col gap-[14px] overflow-y-auto border-r border-sidebar-border bg-sidebar sticky top-0",
         "transition-[width,padding] duration-200 ease-linear",
-        collapsed ? "w-16 px-2" : "w-[280px]",
+        collapsed ? "w-16 px-2" : "w-[280px] p-[14px] px-3",
+        collapsed && "px-2",
         className,
       )}
     >

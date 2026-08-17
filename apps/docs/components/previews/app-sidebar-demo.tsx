@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  BarChart3,
+  Bell,
+  FileText,
   FolderKanban,
   LayoutDashboard,
   LayoutGrid,
@@ -10,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  ShieldCheck,
   Sparkles,
   Sun,
   Users,
@@ -36,13 +40,6 @@ import {
   AppSidebarUserMenuDivider,
   AppSidebarUserMenuItem,
 } from "@plainconceptsplatform/ui-components/app-sidebar";
-
-const navItems = [
-  { label: "Overview", icon: LayoutDashboard, active: true },
-  { label: "Projects", icon: FolderKanban, active: false },
-  { label: "Team", icon: Users, active: false },
-  { label: "Settings", icon: Settings, active: false },
-];
 
 function Avatar({ initials }: { initials: string }) {
   return (
@@ -72,7 +69,7 @@ export function AppSidebarDemo() {
   );
 
   return (
-    <AppSidebarProvider className="overflow-hidden rounded-md border">
+    <AppSidebarProvider className="overflow-hidden rounded-md border" defaultCollapsed={false}>
       <AppSidebar>
         <AppSidebarHeader>
           <AppSidebarBrand
@@ -88,22 +85,39 @@ export function AppSidebarDemo() {
           </AppSidebarActions>
         </AppSidebarHeader>
         <AppSidebarSeparator />
+
         <AppSidebarContent>
           <AppSidebarNav>
             <AppSidebarNavGroup label="Navigation">
-              {navItems.map((item) => (
-                <AppSidebarNavItem
-                  key={item.label}
-                  to="#"
-                  active={item.active}
-                  icon={item.icon}
-                  label={item.label}
-                />
-              ))}
+              <AppSidebarNavItem to="#" active icon={LayoutDashboard} label="Dashboard" />
+              <AppSidebarNavItem to="#" icon={FolderKanban} label="Projects" />
+              <AppSidebarNavItem to="#" icon={Users} label="Team" />
+            </AppSidebarNavGroup>
+          </AppSidebarNav>
+
+          <div className="my-1.5" />
+
+          <AppSidebarNav>
+            <AppSidebarNavGroup label="Compliance">
+              <AppSidebarNavItem to="#" icon={ShieldCheck} label="Audit readiness" />
+              <AppSidebarNavItem to="#" icon={FileText} label="Policies" />
+              <AppSidebarNavItem to="#" icon={Bell} label="Findings" />
+            </AppSidebarNavGroup>
+          </AppSidebarNav>
+
+          <div className="my-1.5" />
+
+          <AppSidebarNav>
+            <AppSidebarNavGroup label="Reports">
+              <AppSidebarNavItem to="#" icon={BarChart3} label="Overview" />
+              <AppSidebarNavItem to="#" icon={FileText} label="Reports" />
+              <AppSidebarNavItem to="#" icon={Settings} label="Settings" />
             </AppSidebarNavGroup>
           </AppSidebarNav>
         </AppSidebarContent>
+
         <AppSidebarSpacer />
+
         <AppSidebarFooter>
           <AppSidebarUserCard
             name="Jane Doe"

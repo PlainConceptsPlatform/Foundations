@@ -36,7 +36,7 @@ export function AppSidebarNavGroup({ label, children, className }: AppSidebarNav
       >
         {label}
       </div>
-      <div className="mt-1 flex flex-col gap-px">{children}</div>
+      <div className="mt-[4px] flex flex-col gap-[1px]">{children}</div>
     </div>
   );
 }
@@ -88,9 +88,9 @@ export function AppSidebarNavItem({
   const itemClass = cn(
     "flex h-[33px] items-center gap-2.5 rounded-md border-none bg-transparent px-2.5 py-[7px]",
     "text-[13.5px] font-normal cursor-pointer text-left w-full",
-    "transition-colors duration-150 hover:no-underline",
+    "transition-colors duration-150 ease-out hover:no-underline",
     isActive
-      ? "bg-sidebar-accent text-sidebar-primary font-medium [&_span:first-child]:text-sidebar-primary"
+      ? "bg-sidebar-accent text-sidebar-primary font-medium"
       : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground",
     collapsed && "justify-center !gap-0 !px-0",
     className,
