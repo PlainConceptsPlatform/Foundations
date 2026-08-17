@@ -41,15 +41,15 @@ export function AppSidebarBrand({ logo, name, href, onClick, className }: AppSid
       <span
         className={cn("flex flex-col leading-[1.1] text-sidebar-foreground", collapsed && "hidden")}
       >
-        <span className="text-sidebar-primary tracking-widest font-bold uppercase">{name}</span>
+        <span className="text-[16px] font-semibold tracking-tight">{name}</span>
       </span>
     </>
   );
 
   const baseClass = cn(
-    "flex flex-1 items-center gap-2.5 rounded-md bg-transparent px-2 py-1.5 text-base font-semibold tracking-tight text-sidebar-foreground",
+    "flex flex-1 items-center gap-2.5 rounded-md bg-transparent px-2 py-1.5 text-left",
     "hover:bg-sidebar-hover focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-1",
-    "min-w-0 cursor-pointer text-left border-none",
+    "min-w-0 cursor-pointer border-none",
     className,
   );
 

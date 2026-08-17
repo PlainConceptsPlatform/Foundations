@@ -11,7 +11,7 @@ type AppSidebarNavProps = {
 
 export function AppSidebarNav({ children, className }: AppSidebarNavProps) {
   return (
-    <nav data-sidebar="nav" className={cn("flex flex-col gap-px", className)}>
+    <nav data-sidebar="nav" className={cn("flex flex-col gap-[1px]", className)}>
       {children}
     </nav>
   );
@@ -88,10 +88,10 @@ export function AppSidebarNavItem({
   const itemClass = cn(
     "flex h-[33px] items-center gap-2.5 rounded-md border-none bg-transparent px-2.5 py-[7px]",
     "text-[13.5px] font-normal cursor-pointer text-left w-full",
-    "transition-colors hover:no-underline",
+    "transition-colors duration-150 hover:no-underline",
     isActive
-      ? "bg-sidebar-accent text-sidebar-primary font-medium"
-      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-foreground",
+      ? "bg-sidebar-accent text-sidebar-primary font-medium [&_span:first-child]:text-sidebar-primary"
+      : "text-sidebar-foreground/80 hover:bg-sidebar-hover hover:text-sidebar-foreground",
     collapsed && "justify-center !gap-0 !px-0",
     className,
   );

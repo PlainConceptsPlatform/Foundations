@@ -54,7 +54,7 @@ export function AppSidebarUserCard({
         type="button"
         data-sidebar="user-card"
         className={cn(
-          "flex items-center gap-2.5 rounded-lg border border-sidebar-border bg-muted/50 p-2 cursor-pointer select-none outline-none w-full text-left",
+          "flex items-center gap-2.5 rounded-md border border-sidebar-border bg-muted/50 p-2 cursor-pointer select-none outline-none w-full text-left",
           "hover:bg-sidebar-hover focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-1",
           collapsed && "justify-center",
         )}

@@ -25,7 +25,7 @@ export function AppSidebarCollapseButton({
     <button
       type="button"
       className={cn(
-        "flex size-7 items-center justify-center rounded-md bg-transparent text-muted-foreground",
+        "flex size-8 items-center justify-center rounded-md bg-transparent text-muted-foreground",
         "hover:bg-sidebar-hover hover:text-sidebar-foreground",
         "focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-1",
         "cursor-pointer border-none",
@@ -58,7 +58,7 @@ export function AppSidebarIconButton({
     <button
       type="button"
       className={cn(
-        "flex size-7 items-center justify-center rounded-md bg-transparent text-muted-foreground",
+        "flex size-8 items-center justify-center rounded-md bg-transparent text-muted-foreground",
         "hover:bg-sidebar-hover hover:text-sidebar-foreground",
         "focus-visible:outline-2 focus-visible:outline-sidebar-ring focus-visible:outline-offset-1",
         "cursor-pointer border-none",
