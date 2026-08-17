@@ -208,27 +208,6 @@ jobs:
         with:
           token: ${{ github.token }}
 
-  call-refine:
-    needs: [classify, authorize]
-    if: needs.classify.outputs.route == 'refine' && needs.authorize.outputs.trusted == 'true'
-    uses: ./.github/workflows/agent-refine.lock.yml
-    concurrency:
-      group: refine-${{ needs.classify.outputs.issue-number }}
-      cancel-in-progress: false
-    # write-all, not a narrower map: every worker's agent job declares `permissions: read-all`,
-    # which requests read on every scope. A caller granting less cannot satisfy it, and GitHub
-    # rejects the call with a startup failure before any job is created. The real boundary is the
-    # worker's own read-all plus safe-outputs, not this grant.
-    permissions: write-all
-    with:
-      issue-number: ${{ needs.classify.outputs.issue-number }}
-      mode: ${{ needs.classify.outputs.refine-mode }}
-    secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
-      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
-      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
   call-implement:
     needs: [classify, authorize]
     if: needs.classify.outputs.route == 'implement' && needs.authorize.outputs.trusted == 'true'
@@ -256,76 +235,6 @@ jobs:
     with:
       issue-number: ${{ needs.classify.outputs.issue-number }}
       mode: ${{ needs.classify.outputs.direct-mode }}
-    secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
-      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
-      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
-  call-apply-review:
-    needs: [classify, authorize]
-    if: needs.classify.outputs.route == 'apply-review' && needs.authorize.outputs.trusted == 'true'
-    uses: ./.github/workflows/agent-apply-review.lock.yml
-    concurrency:
-      group: pr-feedback-${{ needs.classify.outputs.pr-number }}
-      cancel-in-progress: false
-    permissions: write-all
-    with:
-      pr-number: ${{ needs.classify.outputs.pr-number }}
-      linked-issue: ${{ needs.classify.outputs.linked-issue }}
-    secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
-      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
-      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
-  # Shares the write-pipeline group with implement so the two never race on one issue.
-  # Falls back to the pull request number only when the closing issue cannot be resolved.
-  call-merge-gate:
-    needs: classify
-    if: needs.classify.outputs.route == 'merge-gate'
-    uses: ./.github/workflows/agent-merge-gate.lock.yml
-    concurrency:
-      group: write-pipeline-${{ needs.classify.outputs.linked-issue || format('pr-{0}', needs.classify.outputs.pr-number) }}
-      cancel-in-progress: false
-    permissions: write-all
-    with:
-      pr-number: ${{ needs.classify.outputs.pr-number }}
-      linked-issue: ${{ needs.classify.outputs.linked-issue }}
-      ci-conclusion: ${{ needs.classify.outputs.ci-conclusion }}
-      ci-run-id: ${{ needs.classify.outputs.ci-run-id }}
-    secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
-      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
-      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
-  call-audit:
-    needs: classify
-    if: needs.classify.outputs.route == 'audit'
-    uses: ./.github/workflows/agent-audit.lock.yml
-    concurrency:
-      group: audit
-      cancel-in-progress: false
-    permissions: write-all
-    with:
-      trigger-kind: ${{ needs.classify.outputs.trigger-kind }}
-    secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
-      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
-      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
-
-  call-propose:
-    needs: classify
-    if: needs.classify.outputs.route == 'propose'
-    uses: ./.github/workflows/agent-propose.lock.yml
-    concurrency:
-      group: propose
-      cancel-in-progress: false
-    permissions: write-all
-    with:
-      trigger-kind: ${{ needs.classify.outputs.trigger-kind }}
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
