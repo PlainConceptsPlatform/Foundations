@@ -1,5 +1,34 @@
 # @plainconceptsplatform/ui-components
 
+## 1.3.0
+
+### Minor Changes
+
+- `AppSidebar` now matches the Atlas shell it was modelled on: header actions beside the brand, an
+  avatar element in the user card, a dropdown carrying the theme toggle and sign-out, and corrected
+  collapsed-state styling.
+
+- `AppSidebarNavItem` takes a new optional **`iconClassName`**. The icon wrapper forced
+  `text-muted-foreground` when inactive and the accent colour when active, which is right for an icon
+  that only identifies a destination and wrong for one whose colour carries meaning — the violet that
+  marks every AI feature, for instance. Passing `iconClassName` keeps that colour in both states.
+  Default behaviour is unchanged.
+
+Two notes for anyone consuming this package, because both failed silently rather than erroring:
+
+- The nav item prop is **`isActive`**, not `active`. With the wrong name no item is ever highlighted
+  and nothing reports a problem.
+- **`AppSidebarProvider` renders no element of its own**, so it accepts no `className`. Wrap it in
+  your own layout element.
+
+Also worth knowing if the components look almost-but-not-quite right in your app: Tailwind must be
+told to scan this package, or any class used only inside it is never generated. The element carries
+the class and nothing applies.
+
+```css
+@source "../node_modules/@plainconceptsplatform/ui-components/dist/**/*.js";
+```
+
 ## 1.0.0
 
 ### Minor Changes
