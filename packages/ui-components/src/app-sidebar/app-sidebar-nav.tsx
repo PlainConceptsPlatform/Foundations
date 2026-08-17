@@ -50,6 +50,13 @@ type AppSidebarNavItemProps = {
   isActive?: boolean;
   onClick?: () => void;
   className?: string;
+  /**
+   * Overrides the icon colour. The default follows the item's state, which is right for
+   * an icon that only identifies a destination. Pass this when the icon carries meaning
+   * of its own — a colour that marks every AI feature, for instance — so it stays that
+   * colour whether or not the item is active.
+   */
+  iconClassName?: string;
   as?: ComponentType<{
     to: string;
     className: string;
@@ -67,6 +74,7 @@ export function AppSidebarNavItem({
   isActive = false,
   onClick,
   className,
+  iconClassName,
   as: LinkComponent,
 }: AppSidebarNavItemProps) {
   const { collapsed } = useAppSidebar();
@@ -77,6 +85,7 @@ export function AppSidebarNavItem({
         className={cn(
           "flex size-4 shrink-0 items-center justify-center",
           isActive ? "text-sidebar-primary" : "text-muted-foreground",
+          iconClassName,
         )}
       >
         <Icon size={16} />

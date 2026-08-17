@@ -42,13 +42,36 @@ import {
 
 ## Components
 
-- **`AppSidebarProvider`** - Context provider that manages collapsed state and persists it to a cookie. Must wrap the sidebar.
+- **`AppSidebarProvider`** - Context provider that manages collapsed state and persists it to `localStorage`. Renders no element of its own, so it takes no `className`: wrap it in your own layout element. Must wrap the sidebar.
 - **`AppSidebar`** - The `<aside>` container. Handles width transition and collapse.
 - **`AppSidebarHeader`** - Top section for brand/logo.
 - **`AppSidebarBrand`** - Brand text + logo combo.
+- **`AppSidebarActions`** - Right side of the header, for icon buttons.
+- **`AppSidebarIconButton`** - A single icon button. Takes `icon` and a `label` used as the accessible name.
 - **`AppSidebarContent`** - Middle scrollable section for nav.
 - **`AppSidebarNav`** / **`AppSidebarNavGroup`** / **`AppSidebarNavItem`** - Nav list with groups and items (NavLink-compatible).
 - **`AppSidebarSeparator`** - Horizontal divider between sections.
+- **`AppSidebarSpacer`** - Pushes everything after it to the bottom.
 - **`AppSidebarFooter`** - Bottom section, pinned.
-- **`AppSidebarUserCard`** - Avatar + name + dropdown menu.
-- **`AppSidebarCollapseButton`** - Toggle button that collapses to icon-only (64px) mode.
+- **`AppSidebarUserCard`** - Avatar + name + dropdown menu. Takes `name`, `avatar` and optional `subtitle` and `dropdown`.
+- **`AppSidebarThemeToggle`** / **`AppSidebarUserMenuItem`** / **`AppSidebarUserMenuDivider`** - Pieces for the user card's `dropdown`.
+- **`AppSidebarCollapseButton`** - Toggle button that collapses to icon-only (64px) mode. `expandIcon` and `collapseIcon` are required, so the icon set stays the consuming app's choice.
+
+### Marking the active item
+
+`AppSidebarNavItem` takes **`isActive`**, not `active`. The wrong name is not a type error in
+every setup and produces a sidebar where nothing is ever highlighted.
+
+By default the icon follows the item's state, muted when inactive and the accent colour when
+active. Pass **`iconClassName`** when the icon carries its own meaning — a colour shared by every
+AI feature, say — and it keeps that colour in both states.
+
+```tsx
+<AppSidebarNavItem
+  to="/ai/team-usage"
+  label="Team AI Usage"
+  icon={Sparkles}
+  iconClassName="text-violet-500"
+  isActive={pathname === "/ai/team-usage"}
+/>
+```

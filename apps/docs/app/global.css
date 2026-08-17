@@ -13,6 +13,13 @@
 /* Let Tailwind scan Fumadocs UI so its classes are generated. */
 @source "../node_modules/fumadocs-ui/dist/**/*.js";
 
+/* And the component package this site documents. Without it, any class used only
+   inside ui-components is never generated: the element carries it and nothing
+   applies. That failed silently and selectively — `text-[11px]` worked because the
+   docs app happens to use it too, while `text-[13.5px]` and `h-[33px]` did not,
+   so components rendered at inherited sizes and looked almost right. */
+@source "../../../packages/ui-components/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Fumadocs styles its own chrome (navbar, sidebar, TOC, search, code blocks)
