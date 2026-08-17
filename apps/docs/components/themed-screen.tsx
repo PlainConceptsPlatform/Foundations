@@ -1,3 +1,5 @@
+"use client";
+
 import { ChangelogSidebarItem } from "@/components/previews/changelog-demo";
 import { ChartDemo } from "@/components/previews/chart-demo";
 import { DataTableDemo } from "@/components/previews/data-table-demo";
