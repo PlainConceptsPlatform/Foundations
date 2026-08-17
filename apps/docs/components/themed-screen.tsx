@@ -6,28 +6,39 @@ import { DataTableDemo } from "@/components/previews/data-table-demo";
 import { Badge } from "@/components/ui/badge";
 import {
   AppSidebar,
+  AppSidebarActions,
   AppSidebarBrand,
   AppSidebarCollapseButton,
   AppSidebarContent,
   AppSidebarFooter,
   AppSidebarHeader,
+  AppSidebarIconButton,
   AppSidebarNav,
   AppSidebarNavGroup,
   AppSidebarNavItem,
   AppSidebarProvider,
   AppSidebarSeparator,
   AppSidebarSpacer,
+  AppSidebarThemeToggle,
   AppSidebarUserCard,
+  AppSidebarUserMenuDivider,
+  AppSidebarUserMenuItem,
 } from "@plainconceptsplatform/ui-components/app-sidebar";
 import {
   FolderKanban,
   LayoutDashboard,
+  LayoutGrid,
+  LogOut,
+  Monitor,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   Search,
   Settings,
+  Sun,
   Users,
 } from "lucide-react";
+import { useState } from "react";
 
 /**
  * One realistic Platform screen, composed from demos that already exist.
@@ -62,6 +73,24 @@ const ACTIVITY = [
 ];
 
 export function ThemedScreen() {
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
+
+  const userDropdown = (
+    <>
+      <AppSidebarThemeToggle
+        value={theme}
+        onChange={setTheme}
+        icons={{
+          light: <Sun className="size-3.5" />,
+          dark: <Moon className="size-3.5" />,
+          system: <Monitor className="size-3.5" />,
+        }}
+      />
+      <AppSidebarUserMenuDivider />
+      <AppSidebarUserMenuItem icon={<LogOut className="size-4" />}>Sign out</AppSidebarUserMenuItem>
+    </>
+  );
+
   return (
     <div className="not-prose overflow-hidden rounded-lg border border-border">
       <AppSidebarProvider>
@@ -69,7 +98,17 @@ export function ThemedScreen() {
           {/* Sidebar: uses the AppSidebar component from ui-components */}
           <AppSidebar className="hidden sm:flex">
             <AppSidebarHeader>
-              <AppSidebarBrand name="Platform" logo={<span className="text-primary">P</span>} />
+              <AppSidebarBrand
+                name="Platform"
+                logo={<span className="text-sidebar-primary font-bold">P</span>}
+              />
+              <AppSidebarActions>
+                <AppSidebarIconButton icon={<LayoutGrid className="size-4" />} label="App Hub" />
+                <AppSidebarCollapseButton
+                  expandIcon={<PanelLeftOpen className="size-4" />}
+                  collapseIcon={<PanelLeftClose className="size-4" />}
+                />
+              </AppSidebarActions>
             </AppSidebarHeader>
             <AppSidebarSeparator />
             <AppSidebarContent>
@@ -93,16 +132,13 @@ export function ThemedScreen() {
               <AppSidebarSeparator />
               <AppSidebarUserCard
                 name="Jane Doe"
-                subtitle="jane@example.com"
+                subtitle="Admin"
                 avatar={
-                  <span className="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-primary border border-sidebar-border">
                     JD
                   </span>
                 }
-              />
-              <AppSidebarCollapseButton
-                expandIcon={<PanelLeftOpen className="size-4" />}
-                collapseIcon={<PanelLeftClose className="size-4" />}
+                dropdown={userDropdown}
               />
             </AppSidebarFooter>
           </AppSidebar>
