@@ -94,6 +94,9 @@
   --sidebar-accent-foreground: var(--pc-blue-700);
   --sidebar-border: var(--pc-neutral-200);
   --sidebar-ring: var(--pc-blue-500);
+  /* Sidebar hover: neutral surface for non-active item hover (darker than sidebar bg).
+     Atlas uses --surface-3 for this; we map to neutral-200 for comparable contrast. */
+  --sidebar-hover: var(--pc-neutral-200);
 
   /* Categorical data-viz ramp. Every entry clears 3:1 against --background, so a
      thin line or a small legend swatch stays visible, which the 500-level cyan,
@@ -149,6 +152,7 @@
   --sidebar-accent-foreground: #dce6ff;
   --sidebar-border: #2a2c33;
   --sidebar-ring: var(--pc-blue-400);
+  --sidebar-hover: #2a2c33;
 
   /* Same hue order as light, but on near-black the 500 steps are the legible
      ones (5.1-12.3:1) and the 700s would be too dark. Brand blue lifts to 400. */
@@ -195,6 +199,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-hover: var(--sidebar-hover);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

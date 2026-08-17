@@ -25,6 +25,11 @@
       "types": "./dist/changelog/changelog.d.ts",
       "import": "./dist/changelog/changelog.js",
       "default": "./src/changelog/changelog.tsx"
+    },
+    "./app-sidebar": {
+      "types": "./dist/app-sidebar/index.d.ts",
+      "import": "./dist/app-sidebar/index.js",
+      "default": "./src/app-sidebar/index.ts"
     }
   },
   "sideEffects": ["**/*.css", "**/*.ts", "**/*.tsx"],
