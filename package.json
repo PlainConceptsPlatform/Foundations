@@ -14,7 +14,8 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "typecheck": "pnpm -r typecheck",
-    "release": "pnpm typecheck && pnpm --filter @plainconceptsplatform/ui-components build && cd packages/theme && npm publish --access public && cd ../ui-components && npm publish --access public",
+    "release:theme": "pnpm typecheck && cd packages/theme && npm publish --access public",
+    "release:components": "pnpm typecheck && pnpm --filter @plainconceptsplatform/ui-components build && cd packages/ui-components && npm publish --access public",
     "prepare": "husky"
   },
   "lint-staged": {
