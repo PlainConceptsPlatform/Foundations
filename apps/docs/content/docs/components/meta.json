@@ -3,6 +3,7 @@
   "pages": [
     "---Platform---",
     "plain-logo",
+    "app-sidebar",
     "data-table",
     "changelog",
     "---shadcn/ui---",
