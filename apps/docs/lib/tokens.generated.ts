@@ -6,7 +6,7 @@ export type SemanticSlot = { token: string; hex: string; ref: string | null };
 export type TypeStep = { name: string; weight: number; size: number; lineHeight: number };
 
 /** Published version of @plainconceptsplatform/ui-theme, shown in the site nav. */
-export const themeVersion = "0.2.0";
+export const themeVersion = "0.3.1";
 
 export const tokens = {
   "ramps": {
@@ -323,6 +323,11 @@ export const tokens = {
         "ref": "--pc-blue-500"
       },
       {
+        "token": "--sidebar-hover",
+        "hex": "#e9eaf2",
+        "ref": "--pc-neutral-200"
+      },
+      {
         "token": "--chart-1",
         "hex": "#2f69ff",
         "ref": "--pc-blue-500"
@@ -513,6 +518,11 @@ export const tokens = {
         "token": "--sidebar-ring",
         "hex": "#5282ff",
         "ref": "--pc-blue-400"
+      },
+      {
+        "token": "--sidebar-hover",
+        "hex": "#2a2c33",
+        "ref": null
       },
       {
         "token": "--chart-1",

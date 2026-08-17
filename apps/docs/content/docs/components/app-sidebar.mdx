@@ -1,0 +1,54 @@
+---
+title: AppSidebar
+description: "A composable, collapsible app sidebar with provider, nav groups, user card, and collapse button."
+---
+
+import { AppSidebarDemo } from "@/components/previews/app-sidebar-demo"
+
+<ComponentPreview block>
+  <AppSidebarDemo />
+</ComponentPreview>
+
+## When to use
+
+`AppSidebar` is the Platform's own sidebar component: a persistent, collapsible nav rail with a brand header, nav groups, a user card pinned to the bottom, and a collapse button that toggles to icon-only mode. It uses the `--sidebar-*` token group and integrates with `react-i18next` for labels.
+
+Use it when you need the Platform app shell. For simpler navigation surfaces (command menus, menubars, or temporary sheets), use the corresponding shadcn/ui component instead.
+
+## Install
+
+```bash
+pnpm add @plainconceptsplatform/ui-components
+```
+
+## Usage
+
+```tsx
+import {
+  AppSidebarProvider,
+  AppSidebar,
+  AppSidebarHeader,
+  AppSidebarBrand,
+  AppSidebarContent,
+  AppSidebarNav,
+  AppSidebarNavGroup,
+  AppSidebarNavItem,
+  AppSidebarSeparator,
+  AppSidebarFooter,
+  AppSidebarUserCard,
+  AppSidebarCollapseButton,
+} from "@plainconceptsplatform/ui-components/app-sidebar";
+```
+
+## Components
+
+- **`AppSidebarProvider`** - Context provider that manages collapsed state and persists it to a cookie. Must wrap the sidebar.
+- **`AppSidebar`** - The `<aside>` container. Handles width transition and collapse.
+- **`AppSidebarHeader`** - Top section for brand/logo.
+- **`AppSidebarBrand`** - Brand text + logo combo.
+- **`AppSidebarContent`** - Middle scrollable section for nav.
+- **`AppSidebarNav`** / **`AppSidebarNavGroup`** / **`AppSidebarNavItem`** - Nav list with groups and items (NavLink-compatible).
+- **`AppSidebarSeparator`** - Horizontal divider between sections.
+- **`AppSidebarFooter`** - Bottom section, pinned.
+- **`AppSidebarUserCard`** - Avatar + name + dropdown menu.
+- **`AppSidebarCollapseButton`** - Toggle button that collapses to icon-only (64px) mode.

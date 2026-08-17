@@ -51,7 +51,7 @@ export function Changelog(props: ChangelogProps) {
   );
 
   const ScrollWrapper = ScrollArea ?? "div";
-  const scrollClassName = ScrollArea ? "max-h-[60vh]" : "max-h-[60vh] overflow-y-auto pr-1";
+  const scrollClassName = ScrollArea ? "max-h-[calc(80vh-8rem)]" : "max-h-[calc(80vh-8rem)] overflow-y-auto pr-1";
 
   return (
     <>
@@ -61,7 +61,7 @@ export function Changelog(props: ChangelogProps) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-2xl" showCloseButton>
+        <DialogContent className="max-h-[80vh] max-w-[90vw] overflow-hidden sm:max-w-2xl" showCloseButton>
           <DialogHeader>
             <DialogTitle>{texts.title}</DialogTitle>
             <DialogDescription>{texts.description}</DialogDescription>
