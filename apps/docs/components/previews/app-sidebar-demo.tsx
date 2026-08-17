@@ -30,7 +30,7 @@ export function AppSidebarDemo() {
     <AppSidebarProvider className="overflow-hidden rounded-md border">
       <AppSidebar>
         <AppSidebarHeader>
-          <AppSidebarBrand name="Platform" />
+          <AppSidebarBrand name="Platform" logo={<span className="text-primary">P</span>} />
         </AppSidebarHeader>
         <AppSidebarSeparator />
         <AppSidebarContent>
@@ -39,8 +39,9 @@ export function AppSidebarDemo() {
               {navItems.map((item) => (
                 <AppSidebarNavItem
                   key={item.label}
+                  to="#"
                   active={item.active}
-                  icon={<item.icon className="size-4" />}
+                  icon={item.icon}
                   label={item.label}
                 />
               ))}

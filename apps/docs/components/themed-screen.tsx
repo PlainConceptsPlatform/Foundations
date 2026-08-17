@@ -59,7 +59,7 @@ export function ThemedScreen() {
           {/* Sidebar: uses the AppSidebar component from ui-components */}
           <AppSidebar className="hidden sm:flex">
             <AppSidebarHeader>
-              <AppSidebarBrand name="Platform" />
+              <AppSidebarBrand name="Platform" logo={<span className="text-primary">P</span>} />
             </AppSidebarHeader>
             <AppSidebarSeparator />
             <AppSidebarContent>
@@ -68,8 +68,9 @@ export function ThemedScreen() {
                   {NAV.map((item) => (
                     <AppSidebarNavItem
                       key={item.label}
+                      to="#"
                       active={item.active}
-                      icon={<item.icon className="size-4" />}
+                      icon={item.icon}
                       label={item.label}
                     />
                   ))}
