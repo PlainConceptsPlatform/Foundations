@@ -76,43 +76,66 @@ export function setAppSidebarCollapsed(collapsed: boolean): void {
 type AppSidebarProviderProps = {
   children: ReactNode;
   defaultCollapsed?: boolean;
+  /** Controlled mode: external collapsed state */
+  collapsed?: boolean;
+  /** Controlled mode: external toggle function */
+  onCollapsedChange?: (collapsed: boolean) => void;
 };
 
 export function AppSidebarProvider({
   children,
   defaultCollapsed = false,
+  collapsed: controlledCollapsed,
+  onCollapsedChange,
 }: AppSidebarProviderProps) {
-  const collapsed = useAppSidebarCollapsed();
+  const internalCollapsed = useAppSidebarCollapsed();
+  const isControlled = controlledCollapsed !== undefined;
+  const collapsed = isControlled ? controlledCollapsed : internalCollapsed;
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!initialized) {
+    if (!initialized && !isControlled) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === null) {
         setCollapsedInternal(defaultCollapsed);
       }
       setInitialized(true);
     }
-  }, [defaultCollapsed, initialized]);
+  }, [defaultCollapsed, initialized, isControlled]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        toggleAppSidebar();
+        if (isControlled && onCollapsedChange) {
+          onCollapsedChange(!collapsed);
+        } else {
+          toggleAppSidebar();
+        }
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isControlled, onCollapsedChange, collapsed]);
 
-  const setCollapsed = useCallback((value: boolean) => {
-    setCollapsedInternal(value);
-  }, []);
+  const setCollapsed = useCallback(
+    (value: boolean) => {
+      if (isControlled && onCollapsedChange) {
+        onCollapsedChange(value);
+      } else {
+        setCollapsedInternal(value);
+      }
+    },
+    [isControlled, onCollapsedChange],
+  );
 
   const toggle = useCallback(() => {
-    toggleAppSidebar();
-  }, []);
+    if (isControlled && onCollapsedChange) {
+      onCollapsedChange(!collapsed);
+    } else {
+      toggleAppSidebar();
+    }
+  }, [isControlled, onCollapsedChange, collapsed]);
 
   const value = useMemo<AppSidebarContextValue>(
     () => ({
