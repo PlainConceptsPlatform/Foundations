@@ -1,6 +1,6 @@
 // Managed by @plainconceptsplatform/workflows. Source: loops/scripts/compile-agent-workflows.mjs. Update with `workflows update --force`; consumer edits may be overwritten.
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const workflowDirectory = existsSync("loops/workflows") ? "loops/workflows" : ".github/workflows";
@@ -11,16 +11,23 @@ function resolveGhPath() {
   if (process.platform !== "win32") return "gh";
   const result = spawnSync("where", ["gh"], { encoding: "utf8", shell: false });
   if (result.status === 0) {
-    const first = result.stdout.split("\n").map((s) => s.trim()).find(Boolean);
+    const first = result.stdout
+      .split("\n")
+      .map((s) => s.trim())
+      .find(Boolean);
     if (first) return first;
   }
   return "gh";
 }
 
-const compile = spawnSync(resolveGhPath(), ["aw", "compile", "--strict", "--dir", workflowDirectory], {
-  stdio: "inherit",
-  shell: false,
-});
+const compile = spawnSync(
+  resolveGhPath(),
+  ["aw", "compile", "--strict", "--dir", workflowDirectory],
+  {
+    stdio: "inherit",
+    shell: false,
+  },
+);
 
 if (compile.error?.code === "ENOENT" || compile.status === null) {
   process.stderr.write("Could not run `gh aw compile`. Install githubnext/gh-aw first.\n");
@@ -35,13 +42,19 @@ for (const file of readdirSync(workflowDirectory)) {
   const path = join(workflowDirectory, file);
   const content = readFileSync(path, "utf8");
   const patched = content
-    .replaceAll("opencode run --print-logs --log-level DEBUG", "opencode run --port 4096 --log-level ERROR")
-    .replaceAll("opencode run --print-logs --log-level ERROR", "opencode run --port 4096 --log-level ERROR")
+    .replaceAll(
+      "opencode run --print-logs --log-level DEBUG",
+      "opencode run --port 4096 --log-level ERROR",
+    )
+    .replaceAll(
+      "opencode run --print-logs --log-level ERROR",
+      "opencode run --port 4096 --log-level ERROR",
+    )
     .replaceAll("opencode run --log-level ERROR", "opencode run --port 4096 --log-level ERROR")
     .replaceAll("--log-level DEBUG", "--log-level ERROR")
     .replace(/GH_AW_INFO_MODEL: "[^"]*"/g, 'GH_AW_INFO_MODEL: "per-agent"')
     .replace(/OPENCODE_MODEL: [^\n]+/g, "OPENCODE_MODEL: ''")
-    .replace(/GH_AW_INFO_MODEL_COSTS: '[^']*'/g, 'GH_AW_INFO_MODEL_COSTS: \'{"providers":{}}\'');
+    .replace(/GH_AW_INFO_MODEL_COSTS: '[^']*'/g, "GH_AW_INFO_MODEL_COSTS: '{\"providers\":{}}'");
 
   if (patched !== content) writeFileSync(path, patched);
 }

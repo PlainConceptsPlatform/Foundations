@@ -40,6 +40,16 @@ export const COMPONENTS = {
     platformNotes:
       'The Platform copy diverges from upstream in a way worth knowing: `AlertDialogAction` and `AlertDialogCancel` render through the `Button` component, so they accept `variant` and `size` directly (`variant="destructive"` on the action for a delete, which pulls `--destructive`), and there is an extra `AlertDialogMedia` slot plus `size="sm"` on the content. Nothing dismisses it by outside click and there is no close icon, which is the point, so the two button labels carry the whole decision: make them specific verbs, and make them i18next messages, not `t("ok")`. Enter and exit come from tw-animate-css and the theme\'s base layer already collapses them under `prefers-reduced-motion: reduce`, so do not layer a transition on top.',
   },
+  "app-sidebar": {
+    title: "AppSidebar",
+    description:
+      "A composable, collapsible app sidebar with provider, nav groups, user card, and collapse button.",
+    demo: "AppSidebarDemo",
+    block: true,
+    source: "package",
+    group: "platform",
+    handwritten: true,
+  },
   "aspect-ratio": {
     title: "Aspect Ratio",
     description: "Displays content within a desired ratio.",
@@ -143,6 +153,15 @@ export const COMPONENTS = {
       "A carousel suits browsable, order-agnostic content: screenshots, onboarding slides, a strip of promo cards on a dashboard. Anything a user must not miss or needs to compare goes in a `DataTable` or a wrapped grid, and a long list of peers scrolls better inside a `ScrollArea`.",
     platformNotes:
       "Autoplay is out of bounds: the motion contract in DESIGN.md rules out auto-rotating carousels, so do not add `embla-carousel-autoplay`, and slides move only on a click, swipe or arrow key. Embla animates with JavaScript transforms, which the theme's CSS `prefers-reduced-motion` block cannot neutralise, so pass `opts.duration: 0` when that query matches. The `sr-only` labels on `CarouselPrevious` and `CarouselNext` are English literals in the vendored file and are the only names a screen reader gets, so replace them with i18next messages. Watch the geometry too: the arrows sit at `-left-12` and `-right-12`, outside the frame, so give the wrapper horizontal room or move them inside at small breakpoints.",
+  },
+  changelog: {
+    title: "Changelog",
+    description: "A CTA + modal showing implemented issues from a bundled JSON source.",
+    demo: "ChangelogDemo",
+    block: true,
+    source: "package",
+    group: "platform",
+    handwritten: true,
   },
   chart: {
     title: "Chart",
