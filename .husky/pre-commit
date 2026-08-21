@@ -3,3 +3,13 @@ pnpm exec lint-staged
 node scripts/compile-agent-workflows.mjs
 git add -- .github/workflows/*.lock.yml
 [ ! -f .github/actions/actions-lock.json ] || git add -- .github/actions/actions-lock.json
+
+# Same idea as the workflow locks above: regenerate the committed generated docs
+# and stage the result, so the tree you commit is the tree CI will regenerate.
+#
+# CI asserts this with `git diff --exit-code` after running the same command, and
+# `prebuild` only runs gen:tokens, so a changed component preview used to reach main
+# with its page still stale. That failed the CI gate on main twice, and because the
+# deploy only runs after a green CI run, both times it silently blocked publishing.
+pnpm --filter @plainconceptsplatform/docs gen
+git add -- apps/docs/content/docs/components apps/docs/lib/tokens.generated.ts

@@ -1,6 +1,6 @@
 import { ThemedScreen } from "@/components/themed-screen";
 import { source } from "@/lib/source";
-import { AppWindow, Bot, Boxes, Palette, Rocket, Server, Workflow } from "lucide-react";
+import { AppWindow, Bot, Boxes, Palette, Rocket, Route, Server, Workflow } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -29,6 +29,15 @@ const DESTINATIONS: Destination[] = [
     fallback: {
       title: "Getting started",
       description: "Install the theme and get a themed app running.",
+    },
+  },
+  {
+    slug: ["how-we-work"],
+    href: "/docs/how-we-work",
+    icon: Route,
+    fallback: {
+      title: "How we work",
+      description: "The three phases a Platform app goes through, and who starts a change in each.",
     },
   },
   {
