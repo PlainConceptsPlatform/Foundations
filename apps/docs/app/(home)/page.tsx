@@ -1,6 +1,16 @@
 import { ThemedScreen } from "@/components/themed-screen";
 import { source } from "@/lib/source";
-import { AppWindow, Bot, Boxes, Palette, Rocket, Route, Server, Workflow } from "lucide-react";
+import {
+  Activity,
+  AppWindow,
+  Bot,
+  Boxes,
+  Palette,
+  Rocket,
+  Route,
+  Server,
+  Workflow,
+} from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -38,6 +48,16 @@ const DESTINATIONS: Destination[] = [
     fallback: {
       title: "How we work",
       description: "The three phases a Platform app goes through, and who starts a change in each.",
+    },
+  },
+  {
+    slug: ["how-we-work", "metrics"],
+    href: "/docs/how-we-work/metrics",
+    icon: Activity,
+    fallback: {
+      title: "DORA in an agentic world",
+      description:
+        "What DORA still measures once agents ship the changes, and what has to be added.",
     },
   },
   {

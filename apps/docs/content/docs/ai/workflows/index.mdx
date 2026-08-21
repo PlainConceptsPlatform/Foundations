@@ -21,8 +21,29 @@ gh extension install github/gh-aw
 npx skills add plainconceptsplatform/foundations
 ```
 
-Copyable examples live in [`ai/workflows/`](https://github.com/PlainConceptsPlatform/Foundations/tree/main/ai/workflows)
-in this repository. Two are documented below:
+The maintained catalog lives in
+[**PlainConceptsPlatform/Agentic-Workflows**](https://github.com/PlainConceptsPlatform/Agentic-Workflows),
+which is public. It ships the routes, the workers, the composite actions, and the CLI that installs
+and updates them, so a repository does not copy these by hand:
+
+```bash
+npx @plainconceptsplatform/workflows
+```
+
+That opens a TUI listing every route and template with its install status. Installing any route brings
+the whole managed set: actions, workers, the router, the compile script, and the mandatory
+`opencode.ci.json`. The router, classifier, and route matrix are
+[derived from the installed route set](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/docs/ownership.md),
+so adding or removing a route regenerates them and the router always references exactly the workers on
+disk.
+
+Install the harness first: the workers call the skills and commands
+[agent-harness](https://github.com/PlainConceptsPlatform/agent-harness) provides.
+
+The full route set is `refine`, `implement`, `direct`, `apply-review`, `merge-gate`, `audit`,
+`propose`, and `triage`, each a
+[worker in `loops/workflows/`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/loops/workflows).
+Two of them are documented below:
 
 | Workflow | What it does |
 |---|---|
@@ -162,7 +183,13 @@ cheaper, and cannot hallucinate. Push work down as far as it will go.
 | 6 | Worker | `safe-outputs` | Every write, validated |
 
 The full rung-by-rung contract is in the
-[`platform-agentic-workflows` skill](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-agentic-workflows).
+[`workflow-author`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills/workflow-author)
+skill, which also covers the frontmatter contract, safe outputs, the OpenCode engine, diagrams, and
+verification. Its companion
+[`workflow-consumer`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills/workflow-consumer)
+covers the other side: installing, configuring, compiling, and updating these workflows in a consumer
+repository. Both live in
+[Agentic-Workflows/skills](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills).
 
 Note what happens to rung 1 under a router. gh-aw's own filters (`names`, `roles`, `skip-bots`)
 are compiled into the *activation* job and evaluated against a triggering event. A
@@ -423,8 +450,9 @@ stopped resolving.
 ## Refine
 
 <Callout type="info" title="The source">
-  [`ai/workflows/refine.md`](https://github.com/PlainConceptsPlatform/Foundations/tree/main/ai/workflows/refine.md),
-  copyable as-is. It needs `shared/platform-defaults.md` and `opencode.ci.json` alongside it.
+  [`loops/workflows/agent-refine.md`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/loops/workflows/agent-refine.md)
+  in Agentic-Workflows. Install it with `npx @plainconceptsplatform/workflows@latest add refine`,
+  which brings the shared imports and `opencode.ci.json` with it.
 </Callout>
 
 Somebody opens an issue saying *"the quote total is wrong on fixed price"*. That is not
@@ -610,8 +638,9 @@ finding more work.
 ## Implement
 
 <Callout type="info" title="The source">
-  [`ai/workflows/implement.md`](https://github.com/PlainConceptsPlatform/Foundations/tree/main/ai/workflows/implement.md),
-  copyable as-is. It needs `shared/platform-defaults.md` and `opencode.ci.json` alongside it.
+  [`loops/workflows/agent-implement.md`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/loops/workflows/agent-implement.md)
+  in Agentic-Workflows. Install it with `npx @plainconceptsplatform/workflows@latest add implement`,
+  which brings the shared imports and `opencode.ci.json` with it.
 </Callout>
 
 Given an issue with a real user story on it, this workflow writes the code, runs the full

@@ -13,14 +13,21 @@ description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-la
   it first is the wrong instinct.
 </Callout>
 
-Alongside that recommendation, Platform maintains three open-source tools. They put our harness
-into a codebase, and cover the cases Actions cannot.
+Alongside that recommendation, Platform maintains five tools. They put our harness into a codebase,
+supply the workflows that run it, cover the cases Actions cannot, and measure the result.
+`agent-harness`, `Agentic-Workflows` and `loop-task` are public; `Project-Health` and `orbion` are
+internal and their links need organisation access.
 
 | Tool | What it does | When to use it |
 |---|---|---|
 | [**agent-harness**](https://github.com/PlainConceptsPlatform/agent-harness) | Installs the Plain Concepts Platform Harness into a codebase | Always, whichever runner you end up on |
+| [**Agentic-Workflows**](https://github.com/PlainConceptsPlatform/Agentic-Workflows) | The router and worker catalog, plus the CLI that installs and updates it | Whenever the work reacts to a repository event, which is most of it |
+| [**Project-Health**](https://github.com/PlainConceptsPlatform/Project-Health) | Delivery and agent metrics collected from GitHub, published as a static site | Once a project ships anywhere and you want the numbers |
 | [**loop-task**](https://github.com/PlainConceptsPlatform/loop-task) | Run any command on a cadence | **Fallback only**: no repository event to react to, or no runner available |
 | [**orbion**](https://github.com/PlainConceptsPlatform/orbion) | Desktop control plane for loop-task instances | Only if you are already running loop-task |
+
+The workflow catalog has its own page ([Agentic workflows](/docs/ai/workflows)), and what to do with
+the metrics is in [DORA in an agentic world](/docs/how-we-work/metrics).
 
 ## How to run agents on a cadence
 
