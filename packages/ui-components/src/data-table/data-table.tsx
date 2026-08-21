@@ -129,6 +129,8 @@ export type DataTableTexts = {
   dragReorder: string;
   /** e.g. "Column grouping" */
   columnGrouping: string;
+  /** e.g. "Drag to resize column" — tooltip for the resize handle. Optional. */
+  resizeColumn?: string;
 };
 
 /** Icon components the consumer must provide. */
@@ -296,12 +298,14 @@ export function DataTable<T>(props: DataTableProps<T>) {
     `dt:${tableId}:group`,
     defaultGroupBy ?? [],
   );
+  const [widths, setWidths] = usePersistedState<Record<string, number>>(`dt:${tableId}:widths`, {});
 
   const [sort, setSort] = useState<SortState | null>(defaultSort ?? null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [groupDropActive, setGroupDropActive] = useState(false);
+  const [resizingKey, setResizingKey] = useState<string | null>(null);
 
   const visible = useMemo(() => new Set(visibleKeys), [visibleKeys]);
   const orderedColumns = useMemo(() => applyColumnOrder(columns, order), [columns, order]);
@@ -409,7 +413,8 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   // --- column drag-to-reorder + drop-onto-grouping-bar -------------------------
   const thDragProps = (c: DataTableColumn<T>) => ({
-    draggable: true,
+    // Suspend native drag-to-reorder while any column is being resized.
+    draggable: resizingKey == null,
     onDragStart: (e: DragEvent) => {
       e.dataTransfer.setData("text/plain", c.key);
       setDragKey(c.key);
@@ -446,6 +451,63 @@ export function DataTable<T>(props: DataTableProps<T>) {
   });
 
   const fullColSpan = Math.max(1, visibleColumns.length);
+
+  // --- column drag-to-resize ---------------------------------------------------
+  const MIN_COLUMN_WIDTH = 60;
+  const DEFAULT_COLUMN_WIDTH = 160;
+  // Resolve every column to a concrete pixel width. A user-set width wins over the
+  // column's static width; string widths are parsed, and anything unresolved falls
+  // back to a sensible default so the table can size to the exact sum of columns.
+  const setColumnWidth = (column: DataTableColumn<T>): number => {
+    const rawWidth = widths[column.key] ?? column.width;
+    if (typeof rawWidth === "number") return rawWidth;
+    if (typeof rawWidth === "string") {
+      const parsedWidth = Number.parseFloat(rawWidth);
+      return Number.isFinite(parsedWidth) ? parsedWidth : DEFAULT_COLUMN_WIDTH;
+    }
+    return DEFAULT_COLUMN_WIDTH;
+  };
+  const startResize = (e: React.MouseEvent, key: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const th = (e.currentTarget as HTMLElement).parentElement;
+    const startX = e.clientX;
+    const startWidth = th ? th.getBoundingClientRect().width : MIN_COLUMN_WIDTH;
+    setResizingKey(key);
+    const prevCursor = document.body.style.cursor;
+    const prevSelect = document.body.style.userSelect;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (ev: MouseEvent) => {
+      const next = Math.max(MIN_COLUMN_WIDTH, startWidth + ev.clientX - startX);
+      setWidths((prev) => ({ ...prev, [key]: Math.round(next) }));
+    };
+
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = prevCursor;
+      document.body.style.userSelect = prevSelect;
+      setResizingKey(null);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+  // Accessibility - Keyboard resize: arrow keys nudge the focused column's width.
+  const nudgeWidth = (c: DataTableColumn<T>, delta: number) => {
+    const current = setColumnWidth(c);
+    setWidths((prev) => ({ ...prev, [c.key]: Math.max(MIN_COLUMN_WIDTH, current + delta) }));
+  };
+  // The last visible column has no fixed width: it flexes to fill any leftover space.
+  const lastColumnKey = visibleColumns.at(-1)?.key;
+  // Minimum table width = fixed columns + a minimum for the flexible last column.
+  // With the table at width:100% this lets the last column fill slack
+  const minTableWidth = visibleColumns.reduce(
+    (sum, c) => sum + (c.key === lastColumnKey ? MIN_COLUMN_WIDTH : setColumnWidth(c)),
+    0,
+  );
 
   return (
     <div className="flex flex-col gap-2 p-3">
@@ -529,22 +591,30 @@ export function DataTable<T>(props: DataTableProps<T>) {
         />
       </div>
 
-      <Table>
+      <Table className="table-fixed" {...{ style: { minWidth: minTableWidth } }}>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             {visibleColumns.map((c) => {
               const sortable = c.sortable !== false && !!c.sortValue;
               const active = sort?.by === c.key;
+              // Last column flexes to fill leftover space, so it has no fixed
+              // width and no resize handle.
+              const isLast = c.key === lastColumnKey;
               return (
                 <TableHead
                   key={c.key}
                   className={cn(
+                    "relative",
                     c.className,
                     sortable && "cursor-pointer select-none",
                     dragOverKey === c.key && "bg-primary/10 ring-1 ring-primary",
                     active && "text-foreground",
                   )}
-                  style={{ textAlign: c.align, width: c.width, cursor: "grab" }}
+                  style={{
+                    textAlign: c.align,
+                    width: isLast ? undefined : setColumnWidth(c),
+                    cursor: "grab",
+                  }}
                   // Only sortable columns advertise a sort state. Emitting
                   // aria-sort="none" on a fixed column tells screen readers it is
                   // sortable when it is not.
@@ -564,24 +634,55 @@ export function DataTable<T>(props: DataTableProps<T>) {
                     <button
                       type="button"
                       className={cn(
-                        "inline-flex items-center gap-1 bg-transparent border-0 p-0 font-medium text-inherit hover:text-foreground",
+                        "inline-flex max-w-full items-center gap-1 truncate bg-transparent border-0 p-0 font-medium text-inherit hover:text-foreground",
                       )}
                       style={{ textAlign: c.align ?? "left" }}
                       onClick={() => onHeaderSortClick(c)}
                     >
-                      {c.label}
+                      <span className="truncate">{c.label}</span>
                       {active ? (
                         sort.order === "asc" ? (
-                          <IconSortAscending className="size-3.5" />
+                          <IconSortAscending className="size-3.5 shrink-0" />
                         ) : (
-                          <IconSortDescending className="size-3.5" />
+                          <IconSortDescending className="size-3.5 shrink-0" />
                         )
                       ) : (
-                        <IconArrowsSort className="size-3.5 opacity-0 group-hover:opacity-50" />
+                        <IconArrowsSort className="size-3.5 shrink-0 opacity-0 group-hover:opacity-50" />
                       )}
                     </button>
                   ) : (
-                    c.label
+                    <span className="block truncate">{c.label}</span>
+                  )}
+                  {/* Drag-to-resize handle on the right edge of the header.
+                      Not rendered on the last (flexible) column. */}
+                  {!isLast && (
+                    <button
+                      type="button"
+                      aria-label={texts.resizeColumn ?? "Drag to resize column"}
+                      draggable={false}
+                      onMouseDown={(e) => startResize(e, c.key)}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowLeft") {
+                          e.preventDefault();
+                          nudgeWidth(c, -10);
+                        } else if (e.key === "ArrowRight") {
+                          e.preventDefault();
+                          nudgeWidth(c, 10);
+                        }
+                      }}
+                      className={cn(
+                        "group/resize absolute top-0 right-0 z-10 flex h-full w-2 cursor-col-resize touch-none select-none items-stretch justify-center border-0 bg-transparent p-0",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "my-1 w-px rounded-full bg-border transition-colors group-hover/resize:bg-primary",
+                          resizingKey === c.key && "bg-primary",
+                        )}
+                      />
+                    </button>
                   )}
                 </TableHead>
               );
@@ -647,9 +748,10 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 {visibleColumns.map((c, idx) => (
                   <TableCell
                     key={c.key}
-                    className={c.className}
+                    className={cn("overflow-hidden text-ellipsis", c.className)}
                     style={{
                       textAlign: c.align,
+                      width: c.key === lastColumnKey ? undefined : setColumnWidth(c),
                       paddingLeft:
                         idx === 0 && grouped ? 12 + activeGroupBy.length * 18 : undefined,
                     }}

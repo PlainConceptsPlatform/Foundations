@@ -65,6 +65,7 @@ const texts: DataTableTexts = {
   dragReorderOrGroup: "Drag to reorder or group",
   dragReorder: "Drag to reorder",
   columnGrouping: "Column grouping",
+  resizeColumn: "Drag to resize column",
 };
 
 // Lucide icon adapters.
