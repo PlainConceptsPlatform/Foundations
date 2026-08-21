@@ -48,7 +48,7 @@ Do not hand-edit `apps/docs/content/docs/components/*.mdx`, `apps/docs/content/d
 `apps/docs/lib/tokens.generated.ts`. Run `pnpm --filter @plainconceptsplatform/docs gen` and commit
 the result.
 
-`ARCHITECTURE.md` and `DESIGN.md` follow the `opencode-onboard` skills. Regenerate them rather than
+`ARCHITECTURE.md` and `DESIGN.md` follow the Platform Harness skills. Regenerate them rather than
 rewriting large sections by hand.
 
 ### Adding a component to the catalog

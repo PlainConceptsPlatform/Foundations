@@ -210,7 +210,7 @@ Key patterns:
 - **`maxRuns: 5`** on verify, **`maxRuns: 3`** on CI wait — bounded retries before the issue is relabeled `code:review` for a human.
 - **Recovery tasks** reset the git tree (`git reset --hard`, `git clean -fd`, `git switch main`) and relabel the issue before halting.
 - `exit 75` on `dev-pick` signals "no issues to pick" and routes to the idle `dev-nothing` task.
-- `/repo-verify` and `/plan-goal` from opencode-onboard drive the AI implementation and verification phases.
+- `/repo-verify` and `/plan-goal` from agent-harness drive the AI implementation and verification phases.
 
 ### Refine loop
 

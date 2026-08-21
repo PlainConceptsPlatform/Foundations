@@ -79,13 +79,14 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
 - **Loop-engineering (fallback):** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task)
   for work with no repository event to react to, or that cannot run on a runner. Do not reach for it
   when the trigger is a repository event.
-- **Agent onboarding:** [`PlainConceptsPlatform/opencode-onboard`](https://github.com/PlainConceptsPlatform/opencode-onboard)
-  for the `make-architecture` / `make-design` onboarding skills.
-- **Optimizations (recommended to enable):** RTK check, opencode-quota plugin, caveman concise
-  mode, codegraph semantic index, agentmemory local memory server, humanizer skill.
+- **Platform Harness:** [`PlainConceptsPlatform/agent-harness`](https://github.com/PlainConceptsPlatform/agent-harness)
+  installs the harness this repository runs on, including the `make-architecture` and
+  `make-design` skills.
+- **Optimizations (recommended to enable):** RTK check, opencode-quota plugin, Simple English
+  concise mode, codegraph semantic index, agentmemory local memory server, humanizer skill.
 
 ## Regenerating the docs
 
-`ARCHITECTURE.md` and `DESIGN.md` follow the `opencode-onboard` skills (`ob-make-architecture`,
-`ob-make-design`). Regenerate them from the codebase rather than hand-editing large sections;
+`ARCHITECTURE.md` and `DESIGN.md` follow the Platform Harness skills (`pc-make-architecture`,
+`pc-make-design`). Regenerate them from the codebase rather than hand-editing large sections;
 `src/theme.css` remains the source of truth for design tokens.

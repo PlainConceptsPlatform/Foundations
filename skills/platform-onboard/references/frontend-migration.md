@@ -207,4 +207,4 @@ mode works, Playwright visual tests pass with updated baselines.
 2. Run `pnpm lint`, `pnpm test`, `pnpm build`. All must pass.
 3. Run Steiger: `pnpm lint:fsd`. Must pass.
 4. Update `ARCHITECTURE.md` and `DESIGN.md` via `/make-architecture` and `/make-design` to reflect the migrated stack.
-5. Update `ob-guardrails-project` via `/make-guardrails` to include the frontend discipline rules (FSD, inversify-hooks, react-i18next, no magic strings, no catch-all files, no comment slop).
+5. Update `pc-guardrails-project` via `/make-guardrails` to include the frontend discipline rules (FSD, inversify-hooks, react-i18next, no magic strings, no catch-all files, no comment slop).
