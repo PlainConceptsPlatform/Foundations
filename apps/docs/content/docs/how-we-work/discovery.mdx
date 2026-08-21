@@ -1,0 +1,76 @@
+---
+title: 1. Discovery
+description: "The phase that decides what to build and which constraints the build will encode. The least codified of the three, and the one whose decisions cost the most to revisit."
+---
+
+Discovery is the work of deciding what the app should do, done with the departments that will use it
+rather than on their behalf. PlainConcepts is a consultancy, so this is usually a mix of product
+people, the department that owns the process being automated, and the engineers who will build it.
+
+<Callout type="info" title="The least codified phase">
+  Phases 2 and 3 run on tooling that is documented in detail. This one runs on conversations. What is
+  written down is the shape of its **outputs**, not a method for producing them, and that is a
+  deliberate choice rather than an omission we are about to fix: the useful part varies too much per
+  client to standardise.
+</Callout>
+
+## What it decides
+
+Three kinds of decision come out of discovery, and they are not equally reversible.
+
+- **The product decision.** What problem the app solves, for whom, and what it deliberately does not
+  do. Reversible, and expected to change.
+- **The integrations.** Which systems it has to talk to, who owns them, what they can be trusted to
+  return, and what happens when they are down. Expensive to change once code depends on them.
+- **The constraints.** Who may see what, what has to be auditable, which data cannot leave which
+  boundary, and what the business rules actually are. These become guardrails in phase 2, and
+  changing one later means changing the thing that enforces it everywhere.
+
+The third group is why discovery is worth doing properly. A constraint identified here costs a
+paragraph. The same constraint discovered in phase 3 costs a migration, a re-audit, and a conversation
+about why the last six months of automated changes did not respect it.
+
+## A track, not a gate
+
+Discovery does not finish and hand over. It runs continuously alongside the other two phases, which
+is the standard
+[dual-track](https://www.productboard.com/glossary/dual-track-agile/) arrangement: one track
+validating what to build, one track building it.
+
+This matters for phase 3. When a request arrives that is too large for a small change, the answer is
+not to force it through the pipeline. It goes back into discovery as a planning issue, which is why
+the feature request template refuses anything above Medium and says so on the form.
+
+## What it produces
+
+Discovery is finished for a given capability when it has produced artifacts the next phase can act on.
+We use the same four throughout, so the handover has a known shape:
+
+- **A proposal.** Why the change is worth making, what changes, which capabilities are affected, and
+  the impact. This is the document a department can read and disagree with.
+- **A design.** How it will be done: the technical decisions, the alternatives that were rejected, the
+  risks, the migration path, and the questions still open.
+- **A decision record** for anything structural. A new bounded context, a new external integration, a
+  new core dependency, or a non-additive change to the data model each get a short, dated record with
+  its context, the decision, and the consequences.
+- **Specifications**, written as observable behaviour with Given/When/Then scenarios rather than as
+  schema fields and routes. The test is whether an auditor or a new engineer could verify the
+  requirement without reading the implementation.
+
+Behaviour goes in the specification. Schema, routes, and persistence go in the design of the change
+that proposes them. Keeping that split is what stops the specification decaying into a second, worse
+copy of the code.
+
+Where an app has a visual design system, the rendered designs are part of this output too, and they
+win against the implementation until a new one ships. An agent asked to build a screen matches the
+design rather than improving the spacing on its own initiative.
+
+## The handover to phase 2
+
+The signal that discovery has done its job is that phase 2 can start encoding rather than asking. If
+the build has to stop and find out who is allowed to approve a quote, that decision belonged here.
+
+<Cards>
+  <Card title="2. Foundations" href="/docs/how-we-work/foundations" description="Where those constraints turn into guardrails an agent cannot bypass." />
+  <Card title="Backend conventions" href="/docs/backend" description="The .NET reference architecture the design usually targets." />
+</Cards>

@@ -1,0 +1,80 @@
+---
+title: The three phases
+description: "How Platform apps get built: discovery with the departments that will use the app, an agentic build of the foundations, then a maintenance mode where non-engineers request changes directly."
+---
+
+Most Platform apps pass through three phases. They are not a project schedule. What separates them is
+**who is allowed to start a change**, and each phase hands that right to a wider group.
+
+<Mermaid chart={String.raw`flowchart LR
+    D["<b>1. Discovery</b><br/>departments and engineers<br/>decide what to build"]
+    F["<b>2. Foundations</b><br/>engineers and agents build<br/>the app and its guardrails"]
+    M["<b>3. Maintenance mode</b><br/>the business files requests,<br/>agents implement them"]
+    D --> F --> M
+    M -.->|"too large for a small change"| D
+    classDef phase fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
+    class D,F,M phase`} />
+
+| Phase | Who starts a change | What the phase produces |
+|---|---|---|
+| **1. Discovery** | Departments, with engineers | The product decision, the integrations it needs, and the constraints |
+| **2. Foundations** | Engineers, with agents | Working software, and the guardrails that bind everything after it |
+| **3. Maintenance mode** | Anyone in the business | Small changes, shipped continuously and measured |
+
+## Phase 2 exists to make phase 3 safe
+
+The claim worth paying attention to is not that agents write code. It is that in phase 3 someone who
+has never opened the repository can file a request and have it implemented, reviewed and merged with
+no engineer in the loop.
+
+That is only acceptable because of what phase 2 built. Layering rules that fail the build when
+crossed. A specification that has to be updated when behaviour changes. A test-quality gate that
+rejects tests asserting nothing. An audit trail no code path can skip. Each one is a constraint an
+agent cannot argue its way past, and together they are what buys the autonomy.
+
+So the order is not a preference:
+
+<Callout type="warn" title="You cannot skip phase 2 and arrive at phase 3">
+  Pointing agents at a repository with no enforced boundaries does not produce a maintenance mode. It
+  produces a fast way to generate incidents. The guardrails are the product of phase 2, not a tax on
+  it.
+</Callout>
+
+This is the same finding DORA published in 2025: AI amplifies what a team already has, good practices
+and bad ones alike. See the
+[2025 State of AI-assisted Software Development](https://dora.dev/dora-report-2025/).
+
+## Outcomes belong to the business, means belong to engineering
+
+Phase 3 works because that line is written down and enforced by the intake itself, not renegotiated
+for every request.
+
+Anyone can ask for a change to an **outcome**: how a screen behaves, what a workflow does, what the
+wording says, what a business rule or a formula should compute. Requests about **means** stay with
+engineering: architecture, infrastructure, deployment, authentication, data models, APIs.
+
+The line is drawn by category rather than by size. A small, clear, well-tested request to change how
+the app authenticates is still an engineering decision, and it is refused on those grounds.
+
+## The phases overlap
+
+A project is rarely in a single phase. The same app can be in maintenance mode for its screens while
+a new integration is still being worked out in discovery, and the foundations for that integration
+get built while everything else keeps shipping. Discovery in particular never really closes: it runs
+alongside delivery rather than in front of it.
+
+What does not vary is the sequence for any one capability. A capability reaches maintenance mode only
+after its guardrails exist.
+
+<Callout type="info" title="Not the same as Principles">
+  [Principles](/docs/principles) answers a narrower question: what belongs in the shared foundation
+  and what does not. This section is about how we build the apps that consume it.
+</Callout>
+
+## The phases in detail
+
+<Cards>
+  <Card title="1. Discovery" href="/docs/how-we-work/discovery" description="Deciding what to build, and which constraints the build will have to encode." />
+  <Card title="2. Foundations" href="/docs/how-we-work/foundations" description="Guardrails as the deliverable, interactive and unattended agents, and the determinism ladder." />
+  <Card title="3. Maintenance mode" href="/docs/how-we-work/maintenance" description="Two intake doors, the eligibility boundary, and measuring it without flattering the numbers." />
+</Cards>
