@@ -20,7 +20,7 @@ written for the apps that depend on it.
 ## The six domains
 
 ```
-1. AGENTIC INFRA          opencode-onboard + .opencode/ + agents + skills/
+1. AGENTIC INFRA          Platform Harness + .opencode/ + agents + skills/
 2. ARCHITECTURE DOCS      ARCHITECTURE.md + DESIGN.md + guardrails
 3. OPENSPEC               openspec/ change management
 4. FRONTEND STACK         pnpm -> Next -> Tailwind v4 -> shadcn -> Biome
@@ -42,7 +42,7 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 
 | Check | How to detect | Pass condition |
 |---|---|---|
-| opencode-onboard config | `.opencode/opencode-onboard.json` exists | File present with valid JSON |
+| Harness config | `.opencode/harness.json` exists | File present with valid JSON |
 | Agent definitions | `.opencode/agents/` has at least 3 `.md` files | frontend, backend, fullstack |
 | Command definitions | `.opencode/commands/` has `.md` files | At least init, plan-propose, plan-apply |
 | Skill installation | `skills/` exists | Directory contains the project skills |
@@ -54,7 +54,7 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 |---|---|---|
 | ARCHITECTURE.md | `ARCHITECTURE.md` or `ai/ARCHITECTURE.md` exists | Not a placeholder (more than 10 lines) |
 | DESIGN.md | `DESIGN.md` or `ai/DESIGN.md` exists | Not a placeholder (more than 10 lines) |
-| Project guardrails | `skills/ob-guardrails-project/SKILL.md` exists | File present when project guardrails are used |
+| Project guardrails | `skills/pc-guardrails-project/SKILL.md` exists | File present when project guardrails are used |
 
 ### Domain 3: OpenSpec
 
@@ -125,9 +125,13 @@ Process domains in order. For each domain:
 
 ### Domain 1: Agentic infra
 
-Run `npx @plainconceptsplatform/opencode-onboard@latest` in the repository root. This generates `.opencode/` with agents,
-commands, and `opencode-onboard.json`. Then run `/repo-initialize` to generate the architecture and
-design documentation for a brownfield project and activate the agent team.
+Run `npx @plainconceptsplatform/agent-harness@latest` in the repository root. That installs the
+Plain Concepts Platform Harness: `.opencode/` with agents and commands, the `pc-*` skills, and
+`harness.json`. Then run `/repo-initialize` to generate the architecture and design documentation
+for a brownfield project and activate the agent team.
+
+On a repository that already has the harness, `npx @plainconceptsplatform/agent-harness@latest update`
+pulls in the current release without prompting and preserves files anyone has edited by hand.
 
 Keep reusable project skills in `skills/`. The agent definitions should include at minimum:
 `fullstack-engineer.md`, `frontend-engineer.md`, and `backend-engineer.md`.
