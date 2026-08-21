@@ -659,6 +659,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
                     <button
                       type="button"
                       aria-label={texts.resizeColumn ?? "Drag to resize column"}
+                      title={texts.resizeColumn ?? "Drag to resize column"}
                       draggable={false}
                       onMouseDown={(e) => startResize(e, c.key)}
                       onClick={(e) => e.stopPropagation()}
