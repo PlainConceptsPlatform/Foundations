@@ -29,7 +29,7 @@ cannot.
 The two that are missing both depend on knowing that a release caused a problem in production. DORA
 defines a failed deployment as one requiring immediate intervention afterwards, which is a fact about
 the running service and not about the repository. A red pipeline is a different thing and would be a
-misleading stand-in: across every production deployment in Numa and Atlas, not one is recorded as
+misleading stand-in: across every production deployment collected so far, not one is recorded as
 failed, so a pipeline-based change fail rate would read zero forever.
 
 Rework rate survives because it is a property of a single release in isolation. It asks whether a
@@ -73,7 +73,7 @@ Getting those right turned out to be most of the work, and the traps are worth k
 all inflate or deflate quietly.
 
 - **Totals are a floor, and are labelled as one.** A run only reports usage if it reached the model
-  and uploaded its artifact. In one month of Numa, 14 of 23 agent runs did. The site prints
+  and uploaded its artifact. In one month on one project, 14 of 23 agent runs did. The site prints
   "measured N of M" beside the totals instead of presenting a partial sum as complete.
 - **Find runs by evidence, not by title.** Run titles leak: an issue-triggered run and a dispatched
   one are titled differently, so a per-kind title list missed triage and merge-gate entirely and half
@@ -107,10 +107,10 @@ seven open pull requests all raised by dependabot, so a single count would claim
 attention when it was seven dependency bumps. Sorting by "waiting on a human" ignores bot pull
 requests for the same reason.
 
-Which labels mean a person must look differs per repository, so the label set is configuration. Numa
-uses `review`, while Atlas uses `needs-human-review`, `needs-maintainer-validation`, `needs-info` and
-`changes-requested`. Each is queried separately, because asking GitHub for several at once requires an
-issue to carry all of them.
+Which labels mean a person must look differs per repository, so the label set is configuration. One
+project gets by with a single `review`, while another needs `needs-human-review`,
+`needs-maintainer-validation`, `needs-info` and `changes-requested`. Each is queried separately,
+because asking GitHub for several at once requires an issue to carry all of them.
 
 <Callout type="info" title="Collected server side, on purpose">
   The obvious alternative is for the page to call the GitHub API from the browser. It will not: these

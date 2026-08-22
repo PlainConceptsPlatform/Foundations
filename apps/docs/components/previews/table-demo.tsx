@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 
 const rows = [
-  { app: "Numa", stack: "React", status: "Active" },
+  { app: "Studio", stack: "React", status: "Active" },
   { app: "Docs", stack: "Next.js", status: "Active" },
   { app: "Legacy", stack: ".NET", status: "Deprecated" },
 ];

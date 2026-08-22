@@ -16,7 +16,7 @@ type App = {
 const apps: App[] = [
   {
     id: "1",
-    name: "Numa",
+    name: "Studio",
     stack: "React",
     status: "Active",
     team: "Platform",
@@ -48,7 +48,7 @@ const apps: App[] = [
   },
   {
     id: "5",
-    name: "Atlas",
+    name: "Console",
     stack: "React",
     status: "Active",
     team: "Platform",

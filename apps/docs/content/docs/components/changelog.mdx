@@ -21,7 +21,7 @@ To add a new entry, edit `packages/ui-components/src/changelog/data.json`, publi
 
 ## Platform notes
 
-Like `DataTable`, this component is **slot-based**: it carries no hard dependency on shadcn, lucide, or any i18n library. The consuming app passes its own `Dialog`, `Button`, and icon components as slots, along with localised strings, a markdown renderer, and a date formatter. This means it works identically across apps that use different UI primitives (e.g. Numa uses `@tabler/icons-react` while the docs app uses `lucide-react`).
+Like `DataTable`, this component is **slot-based**: it carries no hard dependency on shadcn, lucide, or any i18n library. The consuming app passes its own `Dialog`, `Button`, and icon components as slots, along with localised strings, a markdown renderer, and a date formatter. This means it works identically across apps that use different UI primitives (e.g. one app uses `@tabler/icons-react` while the docs app uses `lucide-react`).
 
 The `renderMarkdown` slot lets each app decide how rich the entry bodies are — `react-markdown`, a custom MDX pipeline, or a lightweight inline parser. The `formatDate` slot lets each app format dates per its locale and i18n settings.
 
