@@ -176,7 +176,7 @@ Which path you take depends on the repository, and the choice is not a preferenc
    Platform App that lifecycle writes are attributed to.
 4. Author or adapt workflows with the self-contained `workflow-author` and `workflow-consumer`
    skills from
-   [`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+   [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
 5. Create the GitHub labels the workflows read and write:
    `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
 6. Compile, lint, and then **watch one real event end to end**. `gh aw compile --strict` and

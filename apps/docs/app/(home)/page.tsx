@@ -114,9 +114,8 @@ const DESTINATIONS: Destination[] = [
 
 /**
  * The four repositories the whole way of working rests on. Listed here rather than
- * only in the docs because they are the most important artifacts we have, and the
- * front door should say so. Three are public; Project-Health carries an `internal`
- * tag so an outside reader is not sent to a 404. Copy is written here because these
+ * only in the docs because they are the most important artifacts we have, all four
+ * are public, and the front door should say so. Copy is written here because these
  * point at GitHub rather than at a page with frontmatter to read.
  */
 type Pillar = {
@@ -125,8 +124,6 @@ type Pillar = {
   href: string;
   icon: typeof Rocket;
   description: string;
-  /** Project-Health holds client delivery data, so its repository is not public. */
-  internal?: boolean;
 };
 
 const PILLARS: Pillar[] = [
@@ -146,20 +143,19 @@ const PILLARS: Pillar[] = [
       "Installs the Platform Harness into a repository: skills, commands, an agent team, and an OpenSpec workspace.",
   },
   {
-    name: "Agentic-Workflows",
-    repo: "PlainConceptsPlatform/Agentic-Workflows",
-    href: "https://github.com/PlainConceptsPlatform/Agentic-Workflows",
+    name: "agentic-workflows",
+    repo: "PlainConceptsPlatform/agentic-workflows",
+    href: "https://github.com/PlainConceptsPlatform/agentic-workflows",
     icon: GitBranch,
     description:
       "The router and worker catalog that runs the pipeline, plus the CLI that installs and updates it.",
   },
   {
-    name: "Project-Health",
-    repo: "PlainConceptsPlatform/Project-Health",
-    href: "https://github.com/PlainConceptsPlatform/Project-Health",
+    name: "project-health",
+    repo: "PlainConceptsPlatform/project-health",
+    href: "https://github.com/PlainConceptsPlatform/project-health",
     icon: Gauge,
     description: "Delivery and agent metrics, collected from GitHub and published as a site.",
-    internal: true,
   },
 ];
 
@@ -232,8 +228,8 @@ export default function HomePage() {
               How we work
             </Link>
             . Foundations sets the conventions, agent-harness puts them into a repository as
-            something agents can act on, Agentic-Workflows runs the agents against it, and
-            Project-Health reports on what came out.
+            something agents can act on, agentic-workflows runs the agents against it, and
+            project-health reports on what came out.
           </p>
 
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -248,14 +244,7 @@ export default function HomePage() {
                     rel="noreferrer"
                     className="flex h-full flex-col rounded-lg border border-border bg-card p-5 transition-colors duration-150 hover:border-primary/40 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <span className="flex items-center gap-2">
-                      <Icon aria-hidden className="size-5 text-primary" />
-                      {pillar.internal ? (
-                        <span className="ml-auto rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                          internal
-                        </span>
-                      ) : null}
-                    </span>
+                    <Icon aria-hidden className="size-5 text-primary" />
                     <span className="mt-3 font-semibold text-card-foreground">{pillar.name}</span>
                     <span className="mt-1 text-sm text-muted-foreground">{pillar.description}</span>
                     <span className="mt-3 font-mono text-xs text-muted-foreground">

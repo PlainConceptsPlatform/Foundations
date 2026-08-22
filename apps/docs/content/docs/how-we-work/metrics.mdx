@@ -8,18 +8,10 @@ forty pull requests in a week and mean nothing by it. So the measurement has to 
 still needs a person, what the agents actually cost, and a habit of refusing to report what cannot be
 known.
 
-[**Project Health**](https://github.com/PlainConceptsPlatform/Project-Health) is where that lives. It
+[**Project Health**](https://github.com/PlainConceptsPlatform/project-health) is where that lives. It
 collects delivery and agent metrics for Platform projects from the GitHub API, stores them as JSON in
 its own repository, and publishes a static site. Nothing in it talks to a monitoring system, and
 where GitHub cannot answer a question it says so rather than estimating.
-
-<Callout type="info" title="Project Health is an internal repository">
-  Unlike [agent-harness](https://github.com/PlainConceptsPlatform/agent-harness) and
-  [Agentic-Workflows](https://github.com/PlainConceptsPlatform/Agentic-Workflows), this one is
-  private, because it holds delivery data for client projects. The links here need organisation
-  access. Everything the rest of this page describes is method rather than data, so it stands on its
-  own without opening them.
-</Callout>
 
 ## What survives from classic DORA
 
@@ -149,7 +141,7 @@ about the data, not a gap to fill with a plausible number.
 
 The list of collected repositories is an explicit allowlist in `projects.json` rather than a scan of
 the organisation, so adding a project is a pull request against
-[that file](https://github.com/PlainConceptsPlatform/Project-Health/blob/main/projects.json).
+[that file](https://github.com/PlainConceptsPlatform/project-health/blob/main/projects.example.json).
 
 Each entry names which environments count as production and staging, because the names genuinely
 differ across the organisation and one hardcoded pattern would mark healthy projects as irregular. A
@@ -157,7 +149,7 @@ project with no production environment yet has its production metrics skipped ra
 zero, and a planned project is listed but never collected.
 
 <Cards>
-  <Card title="Project Health" href="https://github.com/PlainConceptsPlatform/Project-Health" description="The collector, the config, and the published site." />
+  <Card title="Project Health" href="https://github.com/PlainConceptsPlatform/project-health" description="The collector, the config, and the published site." />
   <Card title="3. Maintenance mode" href="/docs/how-we-work/maintenance" description="The phase these numbers are measuring." />
   <Card title="Agentic workflows" href="/docs/ai/workflows" description="The router and worker shape the agent metrics are read from." />
 </Cards>

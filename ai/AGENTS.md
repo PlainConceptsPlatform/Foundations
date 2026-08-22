@@ -73,7 +73,7 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
   instead of a hand-rolled mutex. The shape is **one router that owns every trigger and workers that
    have none**: copy the templates from [`ai/workflows`](./workflows). Reusable workflow skills and
    copyable loops live in
-   [`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+   [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
    Use its self-contained `workflow-author` and `workflow-consumer` skills. Self-hosted runners are
    supported but not the default, and must never be attached to a **public** repository.
 - **Loop-engineering (fallback):** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task)

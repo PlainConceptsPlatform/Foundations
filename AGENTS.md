@@ -5,7 +5,7 @@ project's documentation bundle and source of truth for conventions, architecture
 and agent definitions. Reusable migration skills live in [`skills/`](skills/).
 
 Reusable GitHub Agentic Workflow skills and copyable loops have moved to
-[`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+[`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
 Use its self-contained `workflow-author` and `workflow-consumer` skills to create or adopt
 workflows.
 

@@ -22,7 +22,7 @@ npx skills add plainconceptsplatform/foundations
 ```
 
 The maintained catalog lives in
-[**PlainConceptsPlatform/Agentic-Workflows**](https://github.com/PlainConceptsPlatform/Agentic-Workflows),
+[**PlainConceptsPlatform/agentic-workflows**](https://github.com/PlainConceptsPlatform/agentic-workflows),
 which is public. It ships the routes, the workers, the composite actions, and the CLI that installs
 and updates them, so a repository does not copy these by hand:
 
@@ -33,7 +33,7 @@ npx @plainconceptsplatform/workflows
 That opens a TUI listing every route and template with its install status. Installing any route brings
 the whole managed set: actions, workers, the router, the compile script, and the mandatory
 `opencode.ci.json`. The router, classifier, and route matrix are
-[derived from the installed route set](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/docs/ownership.md),
+[derived from the installed route set](https://github.com/PlainConceptsPlatform/agentic-workflows/blob/main/docs/ownership.md),
 so adding or removing a route regenerates them and the router always references exactly the workers on
 disk.
 
@@ -42,7 +42,7 @@ Install the harness first: the workers call the skills and commands
 
 The full route set is `refine`, `implement`, `direct`, `apply-review`, `merge-gate`, `audit`,
 `propose`, and `triage`, each a
-[worker in `loops/workflows/`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/loops/workflows).
+[worker in `loops/workflows/`](https://github.com/PlainConceptsPlatform/agentic-workflows/tree/main/loops/workflows).
 Two of them are documented below:
 
 | Workflow | What it does |
@@ -183,13 +183,13 @@ cheaper, and cannot hallucinate. Push work down as far as it will go.
 | 6 | Worker | `safe-outputs` | Every write, validated |
 
 The full rung-by-rung contract is in the
-[`workflow-author`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills/workflow-author)
+[`workflow-author`](https://github.com/PlainConceptsPlatform/agentic-workflows/tree/main/skills/workflow-author)
 skill, which also covers the frontmatter contract, safe outputs, the OpenCode engine, diagrams, and
 verification. Its companion
-[`workflow-consumer`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills/workflow-consumer)
+[`workflow-consumer`](https://github.com/PlainConceptsPlatform/agentic-workflows/tree/main/skills/workflow-consumer)
 covers the other side: installing, configuring, compiling, and updating these workflows in a consumer
 repository. Both live in
-[Agentic-Workflows/skills](https://github.com/PlainConceptsPlatform/Agentic-Workflows/tree/main/skills).
+[agentic-workflows/skills](https://github.com/PlainConceptsPlatform/agentic-workflows/tree/main/skills).
 
 Note what happens to rung 1 under a router. gh-aw's own filters (`names`, `roles`, `skip-bots`)
 are compiled into the *activation* job and evaluated against a triggering event. A
@@ -450,8 +450,8 @@ stopped resolving.
 ## Refine
 
 <Callout type="info" title="The source">
-  [`loops/workflows/agent-refine.md`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/loops/workflows/agent-refine.md)
-  in Agentic-Workflows. Install it with `npx @plainconceptsplatform/workflows@latest add refine`,
+  [`loops/workflows/agent-refine.md`](https://github.com/PlainConceptsPlatform/agentic-workflows/blob/main/loops/workflows/agent-refine.md)
+  in agentic-workflows. Install it with `npx @plainconceptsplatform/workflows@latest add refine`,
   which brings the shared imports and `opencode.ci.json` with it.
 </Callout>
 
@@ -638,8 +638,8 @@ finding more work.
 ## Implement
 
 <Callout type="info" title="The source">
-  [`loops/workflows/agent-implement.md`](https://github.com/PlainConceptsPlatform/Agentic-Workflows/blob/main/loops/workflows/agent-implement.md)
-  in Agentic-Workflows. Install it with `npx @plainconceptsplatform/workflows@latest add implement`,
+  [`loops/workflows/agent-implement.md`](https://github.com/PlainConceptsPlatform/agentic-workflows/blob/main/loops/workflows/agent-implement.md)
+  in agentic-workflows. Install it with `npx @plainconceptsplatform/workflows@latest add implement`,
   which brings the shared imports and `opencode.ci.json` with it.
 </Callout>
 

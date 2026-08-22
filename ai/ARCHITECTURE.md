@@ -77,7 +77,7 @@ Foundations/
 │   ├── theme/                 # @plainconceptsplatform/ui-theme (design tokens, CSS only)
 │   └── ui-components/         # @plainconceptsplatform/ui-components (shared React components)
 ├── ai/                        # ARCHITECTURE.md (incl. Stack), DESIGN.md, AGENTS.md (source of truth)
-│   └── workflows/             # README linking to the Agentic-Workflows repo
+│   └── workflows/             # README linking to the agentic-workflows repo
 ├── biome.json · tsconfig.base.json · pnpm-workspace.yaml · package.json
 └── .github/workflows/         # CI (Biome), deploy (Fumadocs → Azure), agentic workflows
 ```

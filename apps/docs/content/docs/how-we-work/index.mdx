@@ -23,19 +23,19 @@ Most Platform apps pass through three phases. They are not a project schedule. W
 
 ## The four pillars
 
-Four repositories carry all of this. They are the reference when a page here is not specific enough,
-and three of the four are public.
+Four repositories carry all of this. They are all public, so the source is the real reference when a
+page here is not specific enough.
 
 <Cards>
   <Card title="Foundations" href="https://github.com/PlainConceptsPlatform/Foundations" description="The theme, the conventions, the reference architecture, and this site. Used in all three phases." />
   <Card title="agent-harness" href="https://github.com/PlainConceptsPlatform/agent-harness" description="Installs the Platform Harness into a repository: skills, commands, an agent team, and an OpenSpec workspace. Phase 2." />
-  <Card title="Agentic-Workflows" href="https://github.com/PlainConceptsPlatform/Agentic-Workflows" description="The router and worker catalog that runs the pipeline, plus the CLI that installs and updates it. Phases 2 and 3." />
-  <Card title="Project-Health" href="https://github.com/PlainConceptsPlatform/Project-Health" description="Delivery and agent metrics collected from GitHub. Phase 3. Internal, so the link needs organisation access." />
+  <Card title="agentic-workflows" href="https://github.com/PlainConceptsPlatform/agentic-workflows" description="The router and worker catalog that runs the pipeline, plus the CLI that installs and updates it. Phases 2 and 3." />
+  <Card title="project-health" href="https://github.com/PlainConceptsPlatform/project-health" description="Delivery and agent metrics collected from GitHub, published as a static site. Phase 3." />
 </Cards>
 
 Taken in order they form a chain, which is the clearest way to see why there are four and not one:
 **Foundations** sets the conventions, **agent-harness** puts them into a repository as something
-agents can act on, **Agentic-Workflows** runs the agents against it, and **Project-Health** reports on
+agents can act on, **agentic-workflows** runs the agents against it, and **project-health** reports on
 what came out. Drop any one and the phase it carries stops working.
 
 ## Phase 2 exists to make phase 3 safe

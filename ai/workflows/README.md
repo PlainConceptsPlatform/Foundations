@@ -1,7 +1,7 @@
 # Agentic workflows
 
 Workflow templates, the CLI, and the router live in
-[`PlainConceptsPlatform/Agentic-Workflows`](https://github.com/PlainConceptsPlatform/Agentic-Workflows).
+[`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
 
 ## What moved
 

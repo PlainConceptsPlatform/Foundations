@@ -1,6 +1,6 @@
 ---
 title: How to
-description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway is the recommendation, with agent-harness installing the Platform Harness, plus loop-task and orbion around it."
+description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway is the recommendation, with agent-harness installing the Platform Harness, and loop-task as the fallback."
 ---
 
 <Callout type="info" title="The recommendation, up front">
@@ -13,18 +13,16 @@ description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-la
   it first is the wrong instinct.
 </Callout>
 
-Alongside that recommendation, Platform maintains five tools. They put our harness into a codebase,
-supply the workflows that run it, cover the cases Actions cannot, and measure the result.
-`agent-harness`, `Agentic-Workflows` and `loop-task` are public; `Project-Health` and `orbion` are
-internal and their links need organisation access.
+Alongside that recommendation, Platform maintains four tools. They put our harness into a codebase,
+supply the workflows that run it, cover the cases Actions cannot, and measure the result. All four
+repositories are public.
 
 | Tool | What it does | When to use it |
 |---|---|---|
 | [**agent-harness**](https://github.com/PlainConceptsPlatform/agent-harness) | Installs the Plain Concepts Platform Harness into a codebase | Always, whichever runner you end up on |
-| [**Agentic-Workflows**](https://github.com/PlainConceptsPlatform/Agentic-Workflows) | The router and worker catalog, plus the CLI that installs and updates it | Whenever the work reacts to a repository event, which is most of it |
-| [**Project-Health**](https://github.com/PlainConceptsPlatform/Project-Health) | Delivery and agent metrics collected from GitHub, published as a static site | Once a project ships anywhere and you want the numbers |
+| [**agentic-workflows**](https://github.com/PlainConceptsPlatform/agentic-workflows) | The router and worker catalog, plus the CLI that installs and updates it | Whenever the work reacts to a repository event, which is most of it |
+| [**project-health**](https://github.com/PlainConceptsPlatform/project-health) | Delivery and agent metrics collected from GitHub, published as a static site | Once a project ships anywhere and you want the numbers |
 | [**loop-task**](https://github.com/PlainConceptsPlatform/loop-task) | Run any command on a cadence | **Fallback only**: no repository event to react to, or no runner available |
-| [**orbion**](https://github.com/PlainConceptsPlatform/orbion) | Desktop control plane for loop-task instances | Only if you are already running loop-task |
 
 The workflow catalog has its own page ([Agentic workflows](/docs/ai/workflows)), and what to do with
 the metrics is in [DORA in an agentic world](/docs/how-we-work/metrics).
@@ -286,51 +284,27 @@ curl -N http://127.0.0.1:8845/api/loops/abc123/logs/stream   # live log followin
 
 Swagger UI at `/api/docs`, OpenAPI spec at `/api/openapi.json`. Bind host configurable via `loop-task http-host` (default `0.0.0.0`; set to `local` for loopback only).
 
-## orbion
-
-The open-source control plane for loop engineering. A desktop app (Electron + React 19) that manages multiple [loop-task](https://github.com/PlainConceptsPlatform/loop-task) instances from a single interface.
-
-### What it does
-
-- **Instances** — register any number of loop-task daemons by HTTP API URL (e.g. `http://127.0.0.1:8845`), with connection health dots. Persisted locally.
-- **Loops** — live list per instance (status, interval, runs, last exit, next run), filterable from the bottom bar.
-- **Logs** — per-loop log viewer with live follow via SSE streams.
-- **Projects** — view projects and their loops across all instances.
-
-Read-only in v1: no pause, trigger, or edit actions yet. Binary releases are planned; currently run from source.
-
-### Run from source
-
-```bash
-git clone https://github.com/PlainConceptsPlatform/orbion.git
-cd orbion
-pnpm install
-pnpm dev        # Electron app (hot reload)
-pnpm dev:web    # renderer only, with mocked data (no Electron/daemon)
-```
-
-Requires **Node.js 20 or higher** and [pnpm](https://pnpm.io). A running loop-task daemon with the HTTP API (loop-task >= 2.1) is needed for real data.
-
-### Remote instances (VMs)
-
-The loop-task daemon binds its HTTP API to `0.0.0.0` by default, so a daemon on a VM is reachable from Orbion out of the box. Secure access at the network layer (VPN, SSH tunnel, or firewall), since the API is unauthenticated.
-
 ## Using them together
 
-The three tools compose into a pipeline. Use any one alone, or chain them:
+The tools compose into a pipeline. Use any one alone, or chain them:
 
 ```text
-agent-harness               loop-task                orbion
-(install the harness)       (schedule AI runs)       (manage all loops)
-        │                          │                       │
-        ▼                          ▼                       ▼
-  npx @plainconceptsplatform/   loop-task new 30m --    register instance
-  agent-harness@latest      opencode run "..."      watch loops + logs
+agent-harness                    agentic-workflows            loop-task
+(install the harness)            (run agents on events)       (fallback: run on a clock)
+        │                                │                            │
+        ▼                                ▼                            ▼
+  npx @plainconceptsplatform/      npx @plainconceptsplatform/   loop-task new 30m --
+  agent-harness@latest             workflows                     opencode run "..."
   /repo-initialize
 ```
 
-1. **Install the harness once** — run agent-harness in your repo to wire agents, OpenSpec, and the full command set, then `update` as we ship releases.
-2. **Schedule recurring work** — create a loop-task loop that invokes `opencode run` on a cadence, so an AI agent chips away at a backlog or sync job unattended.
-3. **Manage from one place** — register the loop-task daemon(s) in orbion and watch every loop across every machine, with live logs.
+1. **Install the harness once.** Run agent-harness in your repository to wire agents, OpenSpec, and
+   the full command set, then `update` as we ship releases.
+2. **Install the workflows.** The CLI brings the router, the workers, and the compile script, so
+   agents run on repository events rather than on a timer.
+3. **Add a loop only where an event will not do.** Health checks, data syncs, deploy polls, or
+   anything a runner cannot reach.
 
-Each tool holds its own: agent-harness is what gets the harness into a repository in the first place, loop-task works with any shell command (not just AI), and orbion is the observability layer.
+Each tool holds its own: agent-harness gets the harness into a repository in the first place,
+agentic-workflows runs the agents against it, and loop-task works with any shell command rather than
+only with AI.
