@@ -82,7 +82,7 @@ The design has **no shadows**. Elevation is a border plus a surface: `border-bor
 The theme enforces this rather than relying on discipline. Tailwind's shadow scale
 (`--shadow-*`, `--inset-shadow-*`, `--drop-shadow-*`, `--text-shadow-*`) is overridden to a fully
 transparent value, so `shadow-sm`, `shadow-lg` and friends still compile but paint nothing. That
-means you can run `npx shadcn@latest add` and copy upstream component source in **unmodified** — the
+means you can run `npx shadcn@latest add` and copy upstream component source in **unmodified**: the
 `shadow-*` classes it ships with are inert here, and the component still looks like a Platform app.
 
 Focus rings are unaffected. Tailwind composes rings into the same `box-shadow` declaration, so the
