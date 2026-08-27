@@ -9,7 +9,7 @@ import {
   GitBranch,
   Layers,
   Palette,
-  Rocket,
+  type Rocket,
   Route,
   Server,
   Workflow,
@@ -18,8 +18,9 @@ import {
 import Link from "next/link";
 
 /**
- * The front door is a lobby, not a pitch: say what this is, then route the three
- * audiences (React app teams, .NET teams, agent tooling) to where they need to go.
+ * The front door is a lobby, not a pitch: say what this is, then route the two
+ * readers (anyone curious how the department works, and an engineer setting up
+ * a Platform project) to where they need to go.
  *
  * Card copy is read from each target page's frontmatter rather than written here,
  * so the homepage cannot drift from the pages it describes. Everything is built
@@ -36,15 +37,6 @@ type Destination = {
 };
 
 const DESTINATIONS: Destination[] = [
-  {
-    slug: ["getting-started"],
-    href: "/docs/getting-started",
-    icon: Rocket,
-    fallback: {
-      title: "Getting started",
-      description: "Install the theme and get a themed app running.",
-    },
-  },
   {
     slug: ["how-we-work"],
     href: "/docs/how-we-work",
@@ -84,8 +76,9 @@ const DESTINATIONS: Destination[] = [
     href: "/docs/ai",
     icon: Bot,
     fallback: {
-      title: "How to",
-      description: "Tools that prepare a codebase for agents and run them on a cadence.",
+      title: "Run agents",
+      description:
+        "How agents run against a repository: the workflows, the harness, and the metrics.",
     },
   },
   {
@@ -175,25 +168,27 @@ export default function HomePage() {
       <div className="w-full max-w-5xl">
         <section className="max-w-2xl">
           <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-            The shared foundation for Platform apps
+            The way Platform builds software
           </h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            Platform Foundations keeps many independent apps consistent without a heavy in-house
-            framework. It ships tokens and conventions, not a component library.
+            Platform is a department at Plain Concepts. Its apps share one look through tokens,
+            follow the same conventions, and are maintained by agents inside guardrails that make
+            that safe. This site is the method written down: read it to see how we work, or follow
+            it to set up a project of your own.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/docs/getting-started"
+              href="/docs/how-we-work"
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-[var(--pc-blue-600)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              Get started
+              How we work
             </Link>
             <Link
-              href="/docs"
+              href="/docs/how-we-work/start"
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              Read the docs
+              Start a project
             </Link>
           </div>
         </section>

@@ -3,8 +3,8 @@ import { HomeLayout } from "fumadocs-ui/layouts/home";
 import Link from "next/link";
 
 const LINKS = [
-  { href: "/docs/getting-started", label: "Getting started" },
-  { href: "/docs/frontend", label: "Frontend" },
+  { href: "/docs/how-we-work", label: "How we work" },
+  { href: "/docs/how-we-work/start", label: "Start a project" },
   { href: "/docs/components", label: "Components" },
 ];
 

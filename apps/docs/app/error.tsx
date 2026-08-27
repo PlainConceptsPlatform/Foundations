@@ -35,7 +35,7 @@ export default function ErrorPage({
           Try again
         </button>
         <Link
-          href="/docs"
+          href="/docs/how-we-work"
           className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Back to docs

@@ -1,0 +1,152 @@
+---
+title: Start a project
+description: "The day-one sequence for a new Platform project: theme, harness, workflows, and metrics, each with the reason it is there. Written for our engineers, usable by anyone."
+---
+
+This page is the practical door into everything the rest of this section describes. It is written
+for a Plain Concepts engineer setting up a Platform project, and it works without a badge: every
+package is public on npm and every repository is public on GitHub, so an outside reader can follow
+along and end up with the same setup.
+
+The order below is not alphabetical. Each step is a prerequisite for the one after it, and together
+they are [phase 2](/docs/how-we-work/foundations) in miniature: make the app look like a Platform
+app, give agents something to act on, put the agents on repository events, and then measure what
+comes out.
+
+## A new app
+
+<Steps>
+
+<Step>
+
+### Install the theme
+
+<Tabs groupId="package-manager" persist items={["pnpm", "npm", "yarn", "bun"]}>
+
+```bash tab="pnpm"
+pnpm add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+```bash tab="npm"
+npm install @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+```bash tab="yarn"
+yarn add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+```bash tab="bun"
+bun add @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components tailwindcss
+```
+
+</Tabs>
+
+Then initialize it:
+
+```bash
+npx @plainconceptsplatform/ui-theme@latest init
+```
+
+This copies `components.json`, adds the theme import to your global stylesheet, and shows you how
+to wire the Outfit font in your root layout. Both packages are public npm packages; there is no
+registry configuration and no access token.
+
+**Why this is first.** The tokens are the only shared artifact between Platform apps. Everything
+else on this page produces code that has to look right, and it can only look right if the semantic
+tokens exist before the first screen is built. From here on,
+`npx shadcn@latest add button card dialog` gives you components that already look like a Platform
+app, unmodified. The stack and the patterns are on [Frontend](/docs/frontend); the .NET side is on
+[Backend](/docs/backend).
+
+</Step>
+
+<Step>
+
+### Install the harness
+
+```bash
+npx @plainconceptsplatform/agent-harness@latest
+```
+
+Then open OpenCode in the repository and run `/repo-initialize`.
+
+The wizard wires the agent team, the `pc-*` skills, the slash commands, and an OpenSpec workspace,
+and the bootstrap generates `ARCHITECTURE.md` and `DESIGN.md`. For a greenfield repository it
+leaves those as placeholders to fill in as the architecture appears.
+
+**Why before the workflows.** Unattended agents are only as good as what they find in the
+repository. The harness is what turns our conventions from pages on this site into files an agent
+reads on every run, so installing it first means the very first automated change already follows
+the rules. Details and the full command set are on [Run agents](/docs/ai).
+
+</Step>
+
+<Step>
+
+### Install the workflows
+
+```bash
+npx @plainconceptsplatform/workflows
+```
+
+The CLI installs the router, the workers for the routes you pick, the compile script, and the
+OpenCode CI config. Add the secrets (`OPENAI_API_KEY` for Forge, `BOT_APP_ID` and
+`BOT_PRIVATE_KEY` for the Platform App), create the labels, compile, and watch one real event go
+through before you trust it.
+
+**Why this shape.** From this point the repository maintains itself on events: a label added to an
+issue triggers refinement or implementation, changes arrive as pull requests, and a merge gate
+holds anything that needs a person. The full contract, including the label state machine and the
+determinism ladder, is on [Agentic workflows](/docs/ai/workflows).
+
+</Step>
+
+<Step>
+
+### Add the project to the metrics
+
+Register the repository in
+[project-health](https://github.com/PlainConceptsPlatform/project-health), which collects delivery
+and agent metrics from the GitHub API and publishes them as a static site.
+
+**Why bother on day one.** The numbers are only comparable if collection starts before the
+interesting period, not after. What the metrics mean, and which ones we refuse to fake, is on
+[DORA in an agentic world](/docs/how-we-work/metrics).
+
+</Step>
+
+</Steps>
+
+## An app that already exists
+
+Nothing above requires a rewrite. Adopt in the order that gives the most value for the least risk:
+theme first, since importing the tokens is the single change that makes an app look like the rest
+of the Platform; then shadcn components as you next touch each piece of UI; then the
+[frontend architecture](/docs/frontend) as you split or add features, with new code following the
+convention while old code migrates gradually; and the harness and workflows once the repository is
+somewhere an agent can be trusted to work.
+
+For a brownfield application that needs the full stack rather than incremental adoption, use the
+[`platform-onboard` skill](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-onboard).
+It runs a binary preflight across six domains, then migrates one domain at a time as separate
+OpenSpec changes, and it requires Playwright characterization tests before touching the frontend so
+behaviour is pinned before anything moves.
+
+## What not to do
+
+- Do not wrap the shadcn components in your own abstractions. That is how proprietary component
+  libraries start, and [principle 2](/docs/principles) exists to prevent them.
+- Do not fork the theme. Bump the package version to pick up changes.
+- Do not move app-specific components into the foundation. The bar is the same need in more than
+  one app; [Contributing](/docs/contributing) covers it.
+- Do not point agents at the repository before the guardrails exist.
+  [Phase 2](/docs/how-we-work/foundations) explains why that order cannot be skipped.
+
+## Where to go next
+
+<Cards>
+  <Card title="Frontend" href="/docs/frontend" description="Architecture, theming, dependency injection, i18n, and the everyday patterns." />
+  <Card title="Run agents" href="/docs/ai" description="The harness in detail, and how agents run against a repository." />
+  <Card title="Agentic workflows" href="/docs/ai/workflows" description="The router and worker shape, the label state machine, and the determinism ladder." />
+  <Card title="Principles" href="/docs/principles" description="What belongs in the foundation, and what deliberately does not." />
+</Cards>
