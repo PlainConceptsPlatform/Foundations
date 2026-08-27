@@ -4,9 +4,8 @@ description: "Working GitHub Agentic Workflows with Mermaid diagrams: one router
 ---
 
 <Callout type="info" title="This is the recommendation">
-  For work that reacts to a repository event, Agentic Workflows on `ubuntu-latest` with
-  `engine: opencode` against the Forge gateway is the Platform default. [`loop-task` is the
-  fallback](/docs/ai), for work with no event to react to.
+  Agentic Workflows on `ubuntu-latest` with `engine: opencode` against the Forge gateway is the
+  Platform default for running agents against a repository.
 </Callout>
 
 A workflow is a single markdown file in `.github/workflows/`. **The body is the prompt** and the
@@ -97,7 +96,7 @@ entry point, add an operation to the router's `workflow_dispatch` instead.
 
 Labels are the state machine. They are how a human sees where an issue is, and how a workflow
 decides what to pick next. This is a deliberately smaller set than
-[the loop-task recipes use](/docs/ai/recipes): those namespace every state
+the polling loops we ran before used: those namespaced every state
 (`refine:pick`, `refine:doing`, `refine:done`), which an event-driven workflow does not need
 because the event carries the transition.
 
@@ -790,3 +789,12 @@ On failure both labels come off and a human has to re-add `implement` to retry. 
 deliberate choice against automatic retries: a bot that retries a broken attempt burns tokens
 producing the same failure, and the second identical comment is what makes people stop reading the
 bot's comments entirely.
+
+## If the repository is not on GitHub
+
+<Callout type="info" title="No GitHub Actions? loop-task exists">
+  Everything on this page assumes GitHub. For a repository that lives somewhere without Actions
+  (Azure DevOps, GitLab, or no CI at all),
+  [loop-task](https://github.com/PlainConceptsPlatform/loop-task) runs the same kind of agent work
+  on a schedule from any machine.
+</Callout>

@@ -1,6 +1,6 @@
 ---
 name: platform-onboard
-description: Onboard a brownfield project onto the Plain Concepts Platform stack. Use when the user says "onboard this project", "adopt platform standards", "migrate to Platform Foundations", "align with Frontend-Foundations", or wants to add pnpm, Next.js, shadcn/ui, FSD, inversify-hooks, react-i18next, Biome, loop-task automation, or OpenSpec to an existing project. Also use when another skill needs to reference the onboarding sequence or preflight checks.
+description: Onboard a brownfield project onto the Plain Concepts Platform stack. Use when the user says "onboard this project", "adopt platform standards", "migrate to Platform Foundations", "align with Frontend-Foundations", or wants to add pnpm, Next.js, shadcn/ui, FSD, inversify-hooks, react-i18next, Biome, or OpenSpec to an existing project. Also use when another skill needs to reference the onboarding sequence or preflight checks.
 ---
 
 # Platform Onboard
@@ -100,8 +100,9 @@ A self-hosted runner is optional, and only for private or internal repositories.
 one to a public repository: a pull request from a fork would execute arbitrary code on it, with
 whatever credentials it holds.
 
-`loop-task` remains the fallback for work with no repository event to react to, not a
-substitute for public repositories.
+For a repository that is not on GitHub at all,
+[loop-task](https://github.com/PlainConceptsPlatform/loop-task) runs the same work on a
+schedule from any machine.
 
 ### Domain 6: Backend guardrails (.NET only)
 
@@ -162,9 +163,8 @@ Each step is an OpenSpec change. Capture Playwright characterization tests befor
 
 ### Domain 5: Agent automation
 
-Which path you take depends on the repository, and the choice is not a preference.
-
-**Private or internal repository: Agentic Workflows on `ubuntu-latest`.**
+The Platform default is **Agentic Workflows on `ubuntu-latest`**, public repositories
+included.
 
 1. Run `gh aw init --no-mcp --no-skill --no-agent`. The extra flags matter: the scaffolding
    they suppress is for authoring workflows with GitHub Copilot Chat, which Platform does not
@@ -186,15 +186,10 @@ A self-hosted runner is supported for repositories that need one, but it is no l
 default: the model comes from Forge either way, so the runner was only ever providing a queue
 of one.
 
-**Work with no repository event: `loop-task` recipes.** Anything genuinely driven by a clock or
-an external system rather than something happening in the repository. Read
-`references/loop-recipes.md`, create the labels, and add YAML recipes with an embedded Mermaid
-`diagram` field to `.loops/recipes/`. Do not reach for it because a repository is public;
-`ubuntu-latest` covers that case.
-
-Keep `.loops/recipes/` in place while migrating a repository from one path to the other. The
-recipes are the reference for what the workflows must reproduce, and deleting them early loses
-the only record of the behaviour.
+If the repository is not on GitHub,
+[loop-task](https://github.com/PlainConceptsPlatform/loop-task) covers the same ground on a
+schedule. When migrating a repository that still has `.loops/recipes/`, keep the recipes until
+the workflows reproduce their behaviour; they are the record of what to reproduce.
 
 ### Domain 6: Backend guardrails
 
@@ -215,9 +210,6 @@ Each rule below comes from a real migration. Skipping one causes rework.
 4. FSD layers use canonical names: `app/`, `pages/`, `widgets/`, `features/`, `entities/`, `shared/`. Do not use underscore-prefixed names like `_app/` or `_pages/`.
 5. inversify-hooks registration uses `cid` as the second argument to `addSingleton` for minification safety: `container.addSingleton<IContract>(HttpContract, cid.IContract)`.
 6. react-i18next from the first day of migration. Zero magic strings. Every user-facing text element must be a translation message.
-7. Loop recipes are YAML and include an embedded Mermaid `diagram` field. Use the `code:pick` /
-   `code:doing` / `code:done` / `code:review` lifecycle labels; leave work needing human judgment in
-   `code:review`.
-8. Biome is the sole linter. Remove ESLint config before adding Biome to avoid conflicts.
-9. Next.js uses `output: "export"` for static SPA hosting served by the backend API.
-10. The container is built at module-load time in a `'use client'` module, never inside `useEffect` (render runs first and `useInject` throws).
+7. Biome is the sole linter. Remove ESLint config before adding Biome to avoid conflicts.
+8. Next.js uses `output: "export"` for static SPA hosting served by the backend API.
+9. The container is built at module-load time in a `'use client'` module, never inside `useEffect` (render runs first and `useInject` throws).

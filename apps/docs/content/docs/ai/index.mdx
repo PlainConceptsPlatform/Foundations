@@ -1,6 +1,6 @@
 ---
 title: How to
-description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway is the recommendation, with agent-harness installing the Platform Harness, and loop-task as the fallback."
+description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway, with agent-harness installing the Platform Harness and project-health measuring the result."
 ---
 
 <Callout type="info" title="The recommendation, up front">
@@ -8,30 +8,21 @@ description: "How Platform runs AI agents: GitHub Agentic Workflows on ubuntu-la
   [**GitHub Agentic Workflows**](https://github.github.io/gh-aw/) on `ubuntu-latest` with
   `engine: opencode` against the Forge gateway. That is the Platform default, and it is not one of
   our tools.
-
-  **`loop-task` is the fallback**, for work that has no repository event to react to. Reaching for
-  it first is the wrong instinct.
 </Callout>
 
-Alongside that recommendation, Platform maintains four tools. They put our harness into a codebase,
-supply the workflows that run it, cover the cases Actions cannot, and measure the result. All four
-repositories are public.
+Alongside that recommendation, Platform maintains three tools. They put our harness into a codebase,
+supply the workflows that run it, and measure the result. All three repositories are public.
 
 | Tool | What it does | When to use it |
 |---|---|---|
 | [**agent-harness**](https://github.com/PlainConceptsPlatform/agent-harness) | Installs the Plain Concepts Platform Harness into a codebase | Always, whichever runner you end up on |
 | [**agentic-workflows**](https://github.com/PlainConceptsPlatform/agentic-workflows) | The router and worker catalog, plus the CLI that installs and updates it | Whenever the work reacts to a repository event, which is most of it |
 | [**project-health**](https://github.com/PlainConceptsPlatform/project-health) | Delivery and agent metrics collected from GitHub, published as a static site | Once a project ships anywhere and you want the numbers |
-| [**loop-task**](https://github.com/PlainConceptsPlatform/loop-task) | Run any command on a cadence | **Fallback only**: no repository event to react to, or no runner available |
 
 The workflow catalog has its own page ([Agentic workflows](/docs/ai/workflows)), and what to do with
 the metrics is in [DORA in an agentic world](/docs/how-we-work/metrics).
 
-## How to run agents on a cadence
-
-Read this before picking a tool, because the default is not one of ours.
-
-### Recommended: Agentic Workflows on `ubuntu-latest`
+## How to run agents
 
 For work that lives in a GitHub repository, the recommended practice is
 [GitHub Agentic Workflows](https://github.github.io/gh-aw/) on **`ubuntu-latest`, with
@@ -39,7 +30,7 @@ For work that lives in a GitHub repository, the recommended practice is
 `.github/workflows/`, compiled to Actions YAML.
 
 The shape is [one router that owns every trigger and workers that have none](/docs/ai/workflows).
-Four things make this work for us rather than a compromise:
+Five things make this work for us rather than a compromise:
 
 - **Event triggers instead of polling.** A workflow fires on the issue comment or review that
   should have started it. A 20-minute interval means up to 20 minutes of latency and a run every
@@ -67,7 +58,7 @@ Four things make this work for us rather than a compromise:
 - **Guardrails.** Safe Outputs, staged approval, changes arriving as pull requests, and an audit
   trail in Actions.
 
-#### If you run self-hosted instead
+### If you run self-hosted instead
 
 A self-hosted runner is still supported, and was the earlier default. The model comes from Forge
 either way, so the runner was only ever providing a queue of one. Choosing it brings costs the
@@ -89,25 +80,6 @@ hosted path does not have.
   nothing failing.
 - **The workspace persists between runs.** A `.npmrc` written with a token stays, and a build
   output directory from a previous run is still there to be mistaken for this run's.
-
-### The alternative: loop-task
-
-`loop-task` is what you use when you **cannot depend on the above**. It is a deliberate fallback,
-not a preference:
-
-- **The work is not repository-shaped.** Health checks, data syncs, deploy polls, report
-  generation. There is no repository event to hang them off.
-- **You are not on GitHub Actions.** Azure DevOps, GitLab, or no CI at all.
-- **The work needs a cadence, not an event.** Something genuinely driven by a clock rather than
-  by anything happening in the repository.
-- **The work needs a specific machine.** Anything a runner cannot reach or cannot be trusted with.
-- **You need to watch it run.** Live logs, pause and resume mid-flight, one board across several
-  machines. Actions gives you logs after the fact.
-- **Sessions are long or stateful** in ways a job timeout does not accommodate.
-
-What decides is whether the trigger is an **event** or a **clock**, and whether the work can leave
-the machine it is on. The two compose: a repository loop can live in Actions while a local loop
-watches something Actions cannot see.
 
 ## agent-harness
 
@@ -153,16 +125,16 @@ npx @plainconceptsplatform/agent-harness --help
 
 The first run is a 10-step wizard:
 
-1. **Source scope** — current repo or sibling source roots
-2. **Clean AI files** — removes stale `AGENTS.md`, `.cursorrules`, `CLAUDE.md`, `.agents/`
-3. **Choose platform** — backlog (GitHub, Azure DevOps, Jira, browser, or None) plus repository (GitHub, Azure DevOps, GitLab, or None). Supports mixed platforms.
-4. **Check platform CLI** — verifies `gh`, `az`, `acli`, or `glab` as needed
-5. **Copy scaffolding** — agents, built-in skills, bootstrap docs, `skills-lock.json`
-6. **Initialize OpenSpec** — `npx @fission-ai/openspec init` for structured change management
-7. **Choose models** — plan, build, and fast tiers from [models.dev](https://models.dev)
-8. **Token optimization** — optional RTK, quota, caveman, codegraph, agentmemory, humanizer
-9. **Install browser plugin** — `@different-ai/opencode-browser` for agent browser automation
-10. **Write harness config** — `.opencode/harness.json`
+1. **Source scope**: current repo or sibling source roots
+2. **Clean AI files**: removes stale `AGENTS.md`, `.cursorrules`, `CLAUDE.md`, `.agents/`
+3. **Choose platform**: backlog (GitHub, Azure DevOps, Jira, browser, or None) plus repository (GitHub, Azure DevOps, GitLab, or None). Supports mixed platforms.
+4. **Check platform CLI**: verifies `gh`, `az`, `acli`, or `glab` as needed
+5. **Copy scaffolding**: agents, built-in skills, bootstrap docs, `skills-lock.json`
+6. **Initialize OpenSpec**: `npx @fission-ai/openspec init` for structured change management
+7. **Choose models**: plan, build, and fast tiers from [models.dev](https://models.dev)
+8. **Token optimization**: optional RTK, quota, caveman, codegraph, agentmemory, humanizer
+9. **Install browser plugin**: `@different-ai/opencode-browser` for agent browser automation
+10. **Write harness config**: `.opencode/harness.json`
 
 ### Bootstrap sequence
 
@@ -183,7 +155,7 @@ rather than a theme-only upgrade.
 
 It starts with a binary preflight across six domains, then creates and completes one OpenSpec change
 per failing domain: agentic infrastructure, architecture documentation, OpenSpec, the frontend
-stack, loop automation, and .NET guardrails where relevant. Frontend work begins with Playwright
+stack, agentic workflows, and .NET guardrails where relevant. Frontend work begins with Playwright
 characterization tests to protect existing behavior and visual parity.
 
 ### Key commands
@@ -206,95 +178,17 @@ Installed as slash commands in `.opencode/commands/`:
 
 Mix backlog and repository platforms. Examples: Jira backlog plus GitHub repository, browser backlog plus GitLab repository. The matching `pc-userstory-*` skill is installed based on your backlog choice; PR operations are injected into `/ops-*` commands based on your repo choice.
 
-## loop-task (fallback)
-
-<Callout type="warn" title="Not the default">
-  Only reach for this once you have established that Agentic Workflows on a runner will not work for
-  the case in hand. If the trigger is a repository event, you are in the wrong section.
-</Callout>
-
-Loop engineering for your terminal. A cross-platform CLI that runs shell commands at human-readable intervals. Create loops in the background, manage them from an interactive TUI board, or run them in the foreground.
-
-### Quick start
-
-```bash
-npm install -g @plainconceptsplatform/loop-task
-loop-task                          # open the board
-loop-task start                    # start the daemon, restore persisted loops
-loop-task new 30m -- npm test      # create a background loop
-loop-task new 30m --now -- opencode run "find missing translations and translate them, 3 max"
-```
-
-The package is scoped; the command it installs is still `loop-task`. Requires **Node.js 20 or
-higher**, or run directly with `npx @plainconceptsplatform/loop-task`.
-
-<Callout type="warn" title="Use the scoped package">
-  The unscoped `loop-task` on npm is an earlier release of the same tool and no longer tracks this
-  one. Installing it gets you a version several minors behind.
-</Callout>
-
-### Concepts
-
-- **Loop** — a schedule (defines *when*). Triggers tasks. Fields: interval, task, description, max runs.
-- **Task** — an executable unit (defines *what*). Fields: name, command, on-success chain, on-failure chain. Reusable across loops.
-- **Project** — organizational scope for loops. Every loop belongs to one project; the board shows only the active project.
-
-### The board
-
-Interactive TUI for managing loops, tasks, and projects. Loops persist to disk and survive reboots. Closing the board or terminal does not stop loops — the daemon keeps running.
-
-Key controls: `↑/↓` move, `Enter` edit, `p` pause/play, `s` stop, `n` new loop, `c` copy command, `/` search, `Esc` quit.
-
-### Chain context sharing
-
-Tasks chain on success or failure. Context flows between them automatically via `{{key}}` template interpolation. A later task references output from an earlier one without re-querying:
-
-```bash
-# Task 1: find an issue
-gh issue list --label "to implement" --json number,title,body --jq '{number: .[0].number, title: .[0].title, body: .[0].body}'
-
-# Task 2 (on-success): mark in-progress
-gh issue edit {{number}} --add-label "implementing" --remove-label "to implement"
-
-# Task 3 (on-success): AI implements it
-opencode run "Implement this GitHub issue... Issue number: {{number}} Title: {{title}} Body: {{body}}" --model "opencode/big-pickle"
-
-# Task 4 (on-success): close the issue
-gh issue edit {{number}} --remove-label "implementing" && gh issue close {{number}}
-```
-
-### Driving AI agents
-
-The core loop-engineering pattern: schedule an AI agent to chip away at a backlog on a cadence, unattended:
-
-```bash
-loop-task new 30m --now -- opencode run "find and implement the next issue, one max"
-```
-
-The daemon runs the `opencode` command every 30 minutes. Use `--max-runs` to bound unattended sessions, and watch the run history on the board.
-
-### HTTP API
-
-The daemon exposes a REST + SSE API on `localhost:8845`:
-
-```bash
-curl http://127.0.0.1:8845/api/loops
-curl -N http://127.0.0.1:8845/api/loops/abc123/logs/stream   # live log following
-```
-
-Swagger UI at `/api/docs`, OpenAPI spec at `/api/openapi.json`. Bind host configurable via `loop-task http-host` (default `0.0.0.0`; set to `local` for loopback only).
-
 ## Using them together
 
 The tools compose into a pipeline. Use any one alone, or chain them:
 
 ```text
-agent-harness                    agentic-workflows            loop-task
-(install the harness)            (run agents on events)       (fallback: run on a clock)
-        │                                │                            │
-        ▼                                ▼                            ▼
-  npx @plainconceptsplatform/      npx @plainconceptsplatform/   loop-task new 30m --
-  agent-harness@latest             workflows                     opencode run "..."
+agent-harness                    agentic-workflows
+(install the harness)            (run agents on events)
+        │                                │
+        ▼                                ▼
+  npx @plainconceptsplatform/      npx @plainconceptsplatform/
+  agent-harness@latest             workflows
   /repo-initialize
 ```
 
@@ -302,9 +196,6 @@ agent-harness                    agentic-workflows            loop-task
    the full command set, then `update` as we ship releases.
 2. **Install the workflows.** The CLI brings the router, the workers, and the compile script, so
    agents run on repository events rather than on a timer.
-3. **Add a loop only where an event will not do.** Health checks, data syncs, deploy polls, or
-   anything a runner cannot reach.
 
 Each tool holds its own: agent-harness gets the harness into a repository in the first place,
-agentic-workflows runs the agents against it, and loop-task works with any shell command rather than
-only with AI.
+agentic-workflows runs the agents against it, and project-health tells you what came out.

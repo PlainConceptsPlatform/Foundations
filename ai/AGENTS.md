@@ -53,11 +53,11 @@ When building a Platform app, read [`/README.md`](../README.md) for the full set
 [`platform-onboard`](../skills/platform-onboard/SKILL.md) brings a brownfield project onto the
 Platform stack. Use it when adopting Platform standards or migrating to Platform Foundations. It
 scans the project before changing it, then progresses through agentic infrastructure, architecture
-docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependency order.
+docs, OpenSpec, frontend stack, agentic workflows, and .NET guardrails in dependency order.
 
 **Workflow**
 - `platform-onboard`: onboard a brownfield project onto the Platform stack (pnpm, Next.js, shadcn,
-  FSD, inversify-hooks, react-i18next, Biome, loop-task, OpenSpec)
+  FSD, inversify-hooks, react-i18next, Biome, OpenSpec)
 - `openspec-propose`: propose a change with design, specs, tasks
 - `openspec-explore`: thinking partner for ideas and investigation
 - `openspec-apply-change`: implement tasks from an OpenSpec change
@@ -76,9 +76,6 @@ docs, OpenSpec, frontend stack, loop automation, and .NET guardrails in dependen
    [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
    Use its self-contained `workflow-author` and `workflow-consumer` skills. Self-hosted runners are
    supported but not the default, and must never be attached to a **public** repository.
-- **Loop-engineering (fallback):** [`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task)
-  for work with no repository event to react to, or that cannot run on a runner. Do not reach for it
-  when the trigger is a repository event.
 - **Platform Harness:** [`PlainConceptsPlatform/agent-harness`](https://github.com/PlainConceptsPlatform/agent-harness)
   installs the harness this repository runs on, including the `make-architecture` and
   `make-design` skills.

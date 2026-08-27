@@ -77,8 +77,8 @@ Full details in [`packages/theme/README.md`](packages/theme/README.md).
 Start with [`AGENTS.md`](AGENTS.md). It points to the [`ai/`](ai/) folder, which has conventions,
 architecture, design rules, and agent definitions. For an existing application that needs the full
 Platform stack, use [`platform-onboard`](skills/platform-onboard/SKILL.md). It assesses six domains
-in dependency order: agentic infrastructure, architecture docs, OpenSpec, frontend stack, loop
-automation, and .NET guardrails.
+in dependency order: agentic infrastructure, architecture docs, OpenSpec, frontend stack, agentic
+workflows, and .NET guardrails.
 
 ### Agentic Workflow migration
 

@@ -24,7 +24,8 @@ npx @plainconceptsplatform/workflows@latest add refine implement direct apply-re
 The CLI installs into `.github/workflows/`, `.github/actions/`, and the repository root. It generates
 the router, classifier, route matrix, and OpenCode CI config for the selected routes only.
 
-## Loop Task
+## If the repository is not on GitHub
 
-For work with no repository event to react to, or that cannot run on a GitHub Actions runner, use
-[`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task).
+For a repository without GitHub Actions,
+[`PlainConceptsPlatform/loop-task`](https://github.com/PlainConceptsPlatform/loop-task) runs the
+same kind of agent work on a schedule from any machine.
