@@ -6,7 +6,7 @@ export type SemanticSlot = { token: string; hex: string; ref: string | null };
 export type TypeStep = { name: string; weight: number; size: number; lineHeight: number };
 
 /** Published version of @plainconceptsplatform/ui-theme, shown in the site nav. */
-export const themeVersion = "1.3.1";
+export const themeVersion = "1.3.2";
 
 export const tokens = {
   "ramps": {
