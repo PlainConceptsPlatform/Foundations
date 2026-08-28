@@ -884,7 +884,7 @@ the test suite takes. That is worse than wasteful: on a constrained runner pool 
 waiting for may be queued behind it.
 
 Splitting it also removes two whole tasks. `impl-await-ci` and `impl-ci-classify` existed to poll
-for a result; a `workflow_run` trigger delivers the result as an event, so the polling and the
+for a result; CI reporting its own conclusion as an event means the polling and the
 classification have nothing left to do.
 
 ### Draining a queue without polling
@@ -896,24 +896,34 @@ Both entry points live on the router, not here:
 on:
   issues:
     types: [labeled]          # a human, or Refine, adds `implement`
-  workflow_run:
-    workflows: ["App: CI"]    # CI finished, which may free the next issue
-    types: [completed]
-    branches: ["fix/*", "bot/*", "feature/*"]
   workflow_dispatch:          # the manual entry point, with an `operation` input
+
+# app-ci.yml — the last job, after every check has settled
+dispatch-merge-gate:
+  needs: [api, web, secret-scan, deps-and-iac-scan, sast-scan, sbom]
+  if: always() && github.event_name == 'pull_request' && endsWith(github.event.pull_request.user.login, '[bot]')
+  steps:
+    - uses: actions/create-github-app-token@… # the bot App, not GITHUB_TOKEN
+    - run: gh workflow run work-router.yml -f operation=merge-gate -f pr-number=… -f ci-conclusion=…
 ```
 
-The `workflow_run` route is what replaces an interval. When CI completes and the gate merges, the
-issue closes and the next labelled issue is already waiting on its own event, so a backlog drains
-at the speed of the work rather than the speed of a cron expression.
+An earlier version of this recipe used a `workflow_run` trigger on the router to hear CI
+completions. It looked right, worked in every manual test, and silently never fired in
+production. The trap: **GitHub does not deliver `workflow_run` (or most other events) for
+workflow runs whose originating event was created with `GITHUB_TOKEN`** — and every bot pull
+request is token-created, so its CI runs are invisible to `workflow_run` listeners. Manual tests
+pass because a human touching the PR becomes the actor, which un-poisons the chain. The reliable
+shape is the one above: CI's own final job reports its conclusion by `workflow_dispatch`, minted
+with the bot App token — `workflow_dispatch` and `repository_dispatch` are the two events exempt
+from the cascade rule.
 
-Three details in that block, each of which has bitten someone:
+Two details that still bite:
 
-- **`workflows:` matches the workflow's `name:`, not its filename.** A wrong value here does not
-  error, it just never fires.
-- **`types: [completed]` includes cancelled and failed.** The gate failing still means the queue
-  may have moved, which is why the `pick` job re-checks rather than trusting the event.
-- **`branches: [main]` is not decoration.** Without it the trigger fires from every branch.
+- **`if: always()`** on the dispatch job, or a failing check swallows the report and the gate
+  never hears about exactly the runs it exists to fix.
+- **A cron reconciler as the belt.** Dispatches can be lost to an outage or a cancelled run; a
+  scheduled sweep that compares each open bot PR's newest CI run against the newest gate verdict
+  re-dispatches anything the event path dropped.
 
 ### One at a time, checked in the right place
 
