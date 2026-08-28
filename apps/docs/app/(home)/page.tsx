@@ -9,10 +9,9 @@ import {
   GitBranch,
   Layers,
   Palette,
-  type Rocket,
+  Rocket,
   Route,
   Server,
-  Workflow,
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
@@ -47,13 +46,22 @@ const DESTINATIONS: Destination[] = [
     },
   },
   {
-    slug: ["how-we-work", "metrics"],
-    href: "/docs/how-we-work/metrics",
+    slug: ["analytics"],
+    href: "/docs/analytics",
     icon: Activity,
     fallback: {
-      title: "DORA in an agentic world",
+      title: "Analytics with DORA",
       description:
         "What DORA still measures once agents ship the changes, and what has to be added.",
+    },
+  },
+  {
+    slug: ["adopt"],
+    href: "/docs/adopt",
+    icon: Rocket,
+    fallback: {
+      title: "Adopt in your project",
+      description: "The day-one sequence: theme, harness, workflows, and metrics.",
     },
   },
   {
@@ -76,19 +84,9 @@ const DESTINATIONS: Destination[] = [
     href: "/docs/ai",
     icon: Bot,
     fallback: {
-      title: "Run agents",
+      title: "AI x SDLC",
       description:
-        "How agents run against a repository: the workflows, the harness, and the metrics.",
-    },
-  },
-  {
-    slug: ["ai", "workflows"],
-    href: "/docs/ai/workflows",
-    icon: Workflow,
-    fallback: {
-      title: "Workflows",
-      description:
-        "GitHub Agentic Workflows: one router and many workers, the label state machine, and the determinism ladder.",
+        "Agents across the lifecycle: the workflows, the harness, and the full router contract.",
     },
   },
   {
@@ -185,7 +183,7 @@ export default function HomePage() {
               How we work
             </Link>
             <Link
-              href="/docs/how-we-work/start"
+              href="/docs/adopt"
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Start a project

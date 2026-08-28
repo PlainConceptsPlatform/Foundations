@@ -2,7 +2,9 @@
   "title": "Platform Foundations",
   "pages": [
     "---How we work---",
-    "...how-we-work",
+    "how-we-work",
+    "analytics",
+    "adopt",
     "---Domains---",
     "frontend",
     "backend",

@@ -1,12 +1,206 @@
 ---
-title: Agentic workflows
-description: "Working GitHub Agentic Workflows with Mermaid diagrams: one router and many workers, the label state machine, the determinism ladder, the frontmatter contract, the ways a workflow goes green and dead, and two complete workflow walkthroughs."
+title: AI x SDLC
+description: "AI across the Platform delivery lifecycle on one page: GitHub Agentic Workflows on ubuntu-latest against the Forge gateway, agent-harness installing the Platform Harness, project-health measuring the result, and the full workflow contract."
 ---
 
-<Callout type="info" title="This is the recommendation">
-  Agentic Workflows on `ubuntu-latest` with `engine: opencode` against the Forge gateway is the
-  Platform default for running agents against a repository.
+<Callout type="info" title="The recommendation, up front">
+  To run an agent against a repository, use
+  [**GitHub Agentic Workflows**](https://github.github.io/gh-aw/) on `ubuntu-latest` with
+  `engine: opencode` against the Forge gateway. That is the Platform default, and it is not one of
+  our tools.
 </Callout>
+
+Alongside that recommendation, Platform maintains three tools. They put our harness into a codebase,
+supply the workflows that run it, and measure the result. All three repositories are public.
+
+| Tool | What it does | When to use it |
+|---|---|---|
+| [**agent-harness**](https://github.com/PlainConceptsPlatform/agent-harness) | Installs the Plain Concepts Platform Harness into a codebase | Always, whichever runner you end up on |
+| [**agentic-workflows**](https://github.com/PlainConceptsPlatform/agentic-workflows) | The router and worker catalog, plus the CLI that installs and updates it | Whenever the work reacts to a repository event, which is most of it |
+| [**project-health**](https://github.com/PlainConceptsPlatform/project-health) | Delivery and agent metrics collected from GitHub, published as a static site | Once a project ships anywhere and you want the numbers |
+
+The workflow shape and catalog are covered in [Agentic workflows](#agentic-workflows), further down
+this page. What to do with the metrics is in
+[Analytics with DORA](/docs/analytics).
+
+## Run agents
+
+For work that lives in a GitHub repository, the recommended practice is
+[GitHub Agentic Workflows](https://github.github.io/gh-aw/) on **`ubuntu-latest`, with
+`engine: opencode` pointed at the Forge gateway**. Workflows are markdown in
+`.github/workflows/`, compiled to Actions YAML.
+
+The shape is [one router that owns every trigger and workers that have none](#one-router-many-workers).
+Five things make this work for us rather than a compromise:
+
+- **Event triggers instead of polling.** A workflow fires on the issue comment or review that
+  should have started it. A 20-minute interval means up to 20 minutes of latency and a run every
+  interval that usually finds nothing to do.
+- **Our gateway and our model, not a vendor's.** gh-aw ships an `opencode` engine, pointed at
+  `forge.plainconcepts.com` rather than at a vendor API. The spend and the model choice stay ours.
+
+  ```yaml
+  engine:
+    id: opencode        # experimental in gh-aw
+    version: "1.2.14"
+    env:
+      OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
+
+  model: openai/glm-5-2   # `openai` only satisfies gh-aw's validation
+  ```
+
+  That `openai` is not a mistake and nothing reaches OpenAI. gh-aw rejects any provider outside a
+  fixed list, so the real provider is declared in `opencode.ci.json` instead and points at
+  gh-aw's own proxy. [Other traps worth knowing](#other-traps-worth-knowing), further down,
+  explains the chain.
+- **A fresh checkout per run.** Most of the recovery machinery in a long-lived local loop exists
+  only because state persists between runs on one machine. It disappears here.
+- **Concurrency is a declared group,** not a hand-rolled mutex. The router keys one group per
+  issue, so implement and the merge gate never operate on the same issue at once.
+- **Guardrails.** Safe Outputs, staged approval, changes arriving as pull requests, and an audit
+  trail in Actions.
+
+### If you run self-hosted instead
+
+A self-hosted runner is still supported, and was the earlier default. The model comes from Forge
+either way, so the runner was only ever providing a queue of one. Choosing it brings costs the
+hosted path does not have.
+
+<Callout type="warn" title="Never attach a self-hosted runner to a public repository">
+  A pull request from a fork would execute arbitrary code on your runner, with whatever credentials
+  it holds. Private and internal repositories only.
+</Callout>
+
+- **Disk, more than you would guess.** Every agentic run pulls gh-aw's firewall containers, every
+  CI run writes a tool cache, and scanners pull their own images. A 29 GB disk running both hit
+  100% and the worker was killed mid-job, which presents as a workflow that hangs rather than one
+  that fails. Budget 64 GB and alert on free space.
+- **More than one runner instance.** One runner serialises everything, so a pull-request check
+  waits behind a 90-minute agent run.
+- **An alert for the runner going offline.** Cancelling a job can leave a stale session
+  (`A session for this runner already exists`), and the symptom is every job queuing forever with
+  nothing failing.
+- **The workspace persists between runs.** A `.npmrc` written with a token stays, and a build
+  output directory from a previous run is still there to be mistaken for this run's.
+
+## agent-harness
+
+The CLI that installs the **Plain Concepts Platform Harness** into a repository and keeps it up to
+date. The harness is ours: the set of files agents work from, being slash commands, `pc-*` skills
+(the `pc-` is Plain Concepts), an agent team, OpenCode plugins, an OpenSpec workspace, and
+generated `ARCHITECTURE.md` and `DESIGN.md`.
+
+Underneath it wires [OpenCode](https://opencode.ai) to [OpenSpec](https://github.com/fission-ai/openspec) for change management, native subagent waves for parallel work, [codegraph](https://github.com/colbymchenry/codegraph) for code intelligence, and [agentmemory](https://github.com/rohitg00/agentmemory) for context that survives between sessions.
+
+### Quick start
+
+```bash
+npx @plainconceptsplatform/agent-harness@latest
+```
+
+Requires **Node.js 18 or higher**.
+
+Once a repository has the harness, `update` pulls in each new release without asking anything. It
+keeps a hash of every file it manages, so it leaves your hand edits alone:
+
+```bash
+npx @plainconceptsplatform/agent-harness@latest update
+```
+
+Individual steps also run on their own:
+
+```bash
+npx @plainconceptsplatform/agent-harness clean        # reset old AI files
+npx @plainconceptsplatform/agent-harness platform     # reconfigure backlog/repository
+npx @plainconceptsplatform/agent-harness optimization # RTK, codegraph, agentmemory, humanizer
+npx @plainconceptsplatform/agent-harness join         # set up a teammate's machine
+npx @plainconceptsplatform/agent-harness --help
+```
+
+<Callout type="warn" title="Repositories onboarded before v2">
+  v2 renamed the config files and the skill prefix (`ob-` became `pc-`), and it does not migrate v1
+  projects. The CLI detects one and refuses to run rather than half-patching it. Re-onboard on a
+  clean branch: remove `.opencode/` and `.agents/skills/ob-*`, then run the wizard again.
+</Callout>
+
+### Installing the harness
+
+The first run is a 10-step wizard:
+
+1. **Source scope**: current repo or sibling source roots
+2. **Clean AI files**: removes stale `AGENTS.md`, `.cursorrules`, `CLAUDE.md`, `.agents/`
+3. **Choose platform**: backlog (GitHub, Azure DevOps, Jira, browser, or None) plus repository (GitHub, Azure DevOps, GitLab, or None). Supports mixed platforms.
+4. **Check platform CLI**: verifies `gh`, `az`, `acli`, or `glab` as needed
+5. **Copy scaffolding**: agents, built-in skills, bootstrap docs, `skills-lock.json`
+6. **Initialize OpenSpec**: `npx @fission-ai/openspec init` for structured change management
+7. **Choose models**: plan, build, and fast tiers from [models.dev](https://models.dev)
+8. **Token optimization**: optional RTK, quota, caveman, codegraph, agentmemory, humanizer
+9. **Install browser plugin**: `@different-ai/opencode-browser` for agent browser automation
+10. **Write harness config**: `.opencode/harness.json`
+
+### Bootstrap sequence
+
+After onboarding, open OpenCode in your project and type:
+
+```
+/repo-initialize
+```
+
+For **brownfield** projects, it generates `ARCHITECTURE.md` and `DESIGN.md` from your actual codebase, archives project history into OpenSpec, and activates the agent team. For **greenfield** projects, it skips documentation generation and leaves placeholder files you can populate later with `/make-architecture` and `/make-design`.
+
+### Platform migration skill
+
+[`platform-onboard`](https://github.com/PlainConceptsPlatform/Foundations/tree/main/skills/platform-onboard)
+is the Platform Foundations skill for migrating a brownfield repository to the recommended stack.
+Use it after the agent setup is in place when the repository needs a deliberate, end-to-end adoption
+rather than a theme-only upgrade.
+
+It starts with a binary preflight across six domains, then creates and completes one OpenSpec change
+per failing domain: agentic infrastructure, architecture documentation, OpenSpec, the frontend
+stack, agentic workflows, and .NET guardrails where relevant. Frontend work begins with Playwright
+characterization tests to protect existing behavior and visual parity.
+
+### Key commands
+
+Installed as slash commands in `.opencode/commands/`:
+
+| Command | Purpose |
+|---|---|
+| `/repo-initialize` | Initialize project (greenfield vs brownfield), activate agent team |
+| `/plan-propose` | Parse a work item URL into proposal, specs, and tasks |
+| `/plan-apply` | Implement tasks in parallel subagent waves |
+| `/plan-goal` | Autonomous full-lifecycle pipeline (explore → propose → apply → archive) |
+| `/ops-ship` | Create a pull request with screenshots |
+| `/make-architecture` | Generate or regenerate `ARCHITECTURE.md` |
+| `/make-design` | Generate or regenerate `DESIGN.md` |
+| `/repo-audit` | Read-only health audit across source roots |
+| `/repo-help` | Show all commands and when to use each |
+
+### Multi-platform
+
+Mix backlog and repository platforms. Examples: Jira backlog plus GitHub repository, browser backlog plus GitLab repository. The matching `pc-userstory-*` skill is installed based on your backlog choice; PR operations are injected into `/ops-*` commands based on your repo choice.
+
+## Using them together
+
+The tools compose, and each one still holds its own. agent-harness gets the harness into a
+repository in the first place, agentic-workflows runs the agents against it, and project-health
+tells you what came out.
+
+```text
+agent-harness                    agentic-workflows
+(install the harness)            (run agents on events)
+        │                                │
+        ▼                                ▼
+  npx @plainconceptsplatform/      npx @plainconceptsplatform/
+  agent-harness@latest             workflows
+  /repo-initialize
+```
+
+The order matters, because the workers call the skills and commands the harness provides. The full
+day-one sequence, with the reason behind each step, is on
+[Adopt in your project](/docs/adopt).
+
+## Agentic workflows
 
 A workflow is a single markdown file in `.github/workflows/`. **The body is the prompt** and the
 YAML frontmatter is the wiring: when it fires, where it runs, and what it is allowed to write.
