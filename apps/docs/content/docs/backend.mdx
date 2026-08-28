@@ -77,6 +77,32 @@ the value-as-errors style makes assertions clean. Fewer **integration** tests th
 through `WebApplicationFactory` against a real database through Testcontainers, so you catch wiring
 and query bugs. A few end-to-end tests over the critical paths. Skill: `csharp-xunit`.
 
+## Azure SQL backups in production
+
+Every production environment manages its database backup policy from Bicep, explicitly, with the
+platform standard values. Restating the defaults is the point: an unmanaged policy is one portal
+click or one implicit reset away from drifting, and a `backupShortTermRetentionPolicies` deployment
+that only sets `retentionDays` silently resets the differential cadence to Azure's 12-hour default
+on every apply.
+
+The standard is a **7-day point-in-time restore window**, one **differential backup every 24
+hours**, and **no long-term retention** unless the domain demands it:
+
+```bicep
+resource backupRetention 'Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies@2023-08-01-preview' = {
+  parent: database
+  name: 'default'
+  properties: {
+    retentionDays: 7              // PITR window, the platform production standard
+    diffBackupIntervalInHours: 24 // stated so an apply cannot reset it to 12
+  }
+}
+```
+
+Wire both values from the environment config (`infra/pro.env`) through the infra workflow, so pro
+carries them and PRE stays on the platform defaults. Verify after the first apply in the portal
+under SQL server, Backups, Retention policies.
+
 ## Observability and security
 
 Structured logging with `ILogger<T>` and OpenTelemetry for traces and metrics. Never log secrets or
