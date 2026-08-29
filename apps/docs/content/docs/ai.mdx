@@ -414,7 +414,7 @@ the agent ran on everything it rejected. Everything stays green.
 Every Platform agentic workflow sets these. The first two are the ones people forget.
 
 ```yaml
-name: "Agent: Refine Issue"        # workflow_run matches this, not the filename
+name: "Agent: Refine Issue"        # automation matches this name, not the filename
 
 imports:
   - shared/platform-defaults.md
@@ -557,12 +557,15 @@ gh-aw's own `awf-proxy/glm-5-2` either way. Verified on gh-aw v0.83.4 by compili
 The model therefore comes from `model:` plus whatever `opencode.ci.json` declares, and the
 provider is selected by gh-aw rather than by you. Do not add `args` expecting to override it.
 
-### `workflow_run` matches the name, not the filename
+### Anything matching workflows matches the name, not the filename
 
 gh-aw title-cases a filename into a workflow name unless you set `name:` explicitly, so
-`merge-gate.md` becomes `Merge Gate`. Referencing the filename in `workflow_run.workflows` is not
-an error: the trigger simply never fires, silently, forever. Set `name:` in every workflow and
-check the references in CI.
+`merge-gate.md` becomes `Merge Gate`. Every reference to a workflow by name (a reconciler
+filtering runs with `.name == "App: CI"`, a `workflow_run` trigger if you still have one) fails
+silently when the name drifts: no error, it just never matches, forever. Set `name:` in every
+workflow and check the references in CI. We no longer use `workflow_run` at all: it is not
+delivered for token-created runs, which is every bot pull request; see
+[draining a queue without polling](#draining-a-queue-without-polling) for what replaced it.
 
 ### Your own bot retriggers you
 
@@ -924,6 +927,27 @@ Two details that still bite:
 - **A cron reconciler as the belt.** Dispatches can be lost to an outage or a cancelled run; a
   scheduled sweep that compares each open bot PR's newest CI run against the newest gate verdict
   re-dispatches anything the event path dropped.
+
+### A feature is many issues, one branch, one pull request
+
+A feature issue lists its stories as `#123` mentions in the body, in execution order. Adding the
+`feature` label starts a chain: the first link creates an integration branch and records it as a
+hidden marker in the feature body — `<!-- feature-branch: feature/39-... -->` — so every later
+link, and any resume after a crash, re-derives the branch from GitHub instead of remembering it.
+
+Each story is then implemented **on top of the previous ones**: the worker starts from the branch
+head, commits in its sandbox, and the workflow replays the patch onto the real branch with the
+bot identity. No pull request and no CI per story, by design: cost and noise scale with features,
+not stories. When no open story remains, a finish pass reviews the accumulated diff, fixes what
+the stories broke in combination, writes the feature's one changelog entry, and opens the single
+pull request that CI and the merge gate actually judge. A partial feature (skipped stories) opens
+as a draft, which nothing auto-merges.
+
+The same marker idea links ordinary issues to their pull requests: implement stamps
+`<!-- implement-pr: N -->` and `<!-- implement-branch: ... -->` on the issue when the PR is born,
+so the duplicate check is an exact lookup (an open marker PR blocks a second implement; a merged
+or closed one allows a legitimate redo), and anything acting on the issue later knows the branch
+without guessing. Removing the `feature` label stops a chain; adding it back resumes idempotently.
 
 ### One at a time, checked in the right place
 
