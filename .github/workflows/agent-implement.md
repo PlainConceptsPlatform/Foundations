@@ -5,6 +5,7 @@ env:
   IMPLEMENT_LABEL: implement
   WORKING_LABEL: bot-working
   REVIEW_LABEL: review
+  PR_PENDING_LABEL: pr-pending
   GIT_AUTHOR_NAME: "github-actions[bot]"
   GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
   GIT_COMMITTER_NAME: "github-actions[bot]"
@@ -132,6 +133,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           pr-number: ${{ needs.safe_outputs.outputs.created_pr_number }}
           issue-number: ${{ inputs.issue-number }}
+      - name: Mark issue as having a pull request pending
+        if: needs.safe_outputs.outputs.created_pr_number != ''
+        uses: ./.github/actions/add-issue-labels
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          issue-number: ${{ inputs.issue-number }}
+          labels: ${{ env.PR_PENDING_LABEL }}
   incomplete:
     needs: [agent, safe_outputs, eligibility]
     if: >
