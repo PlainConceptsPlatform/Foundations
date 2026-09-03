@@ -158,6 +158,41 @@ code. Test a slice through its public API, not its internals, so tests survive r
 covers end-to-end flows. Anything with real logic ships tests; pure presentational wrappers do not
 need them.
 
+## Linting and formatting (Biome)
+
+Biome is the single tool for linting and formatting. Each app has a `biome.json` in its own package
+directory (`apps/web/biome.json`), scoped to the frontend code only. This keeps lint fast — it never
+scans `.NET`, workflow definitions, or infrastructure files — and it avoids the memory spikes that
+killed agent workers on shared 8 GB runners.
+
+### Rules every app follows
+
+- **Scope lint to the web package.** Root `package.json` runs `pnpm -r lint`, which delegates to
+  each package's own `lint` script. Never run `biome check .` at the monorepo root: it scans
+  everything and finds hundreds of pre-existing findings unrelated to your change.
+- **Exclude tool-managed directories.** Every `biome.json` excludes `node_modules`, `.next`, `dist`,
+  `out`, `e2e`, `.codegraph`, `.opencode`, `.agents`, and `.claude` so Biome does not lint generated
+  or agent-managed files.
+- **`biome check` not `pnpx biome`.** Always use the project's installed Biome via `pnpm exec biome`
+  or the `lint` script. `pnpx` downloads a fresh copy and wastes time and memory.
+- **Scoped verification for agents.** When an agent fixes a lint failure, it should verify only the
+  changed files: `pnpm exec biome check <changed-file>` — never the whole repository. Full-repo
+  scans surface pre-existing findings and can exhaust runner memory.
+
+### Formatting conventions
+
+| Setting | Value |
+|---|---|
+| Indent | 2 spaces |
+| Line width | 100 (Foundations) / 120 (consumer apps) |
+| Quotes | Double (Foundations) / Single (consumer apps) |
+| Semicolons | Always |
+| Trailing commas | All |
+| Import sorting | Enabled (`organizeImports: on`) |
+
+Consumer apps may override line width and quote style to match their existing codebase, but the
+structure (scoped biome.json, excludes, scoped lint script) must match.
+
 ## Common pitfalls
 
 - Hardcoding colors or spacing instead of using tokens. It breaks dark mode and theme updates.

@@ -53,7 +53,7 @@ predictable. Prefer these; deviate only with a good reason recorded in the app.
 
 | Concern | Choice | Notes |
 |---|---|---|
-| Lint + format | **Biome** | one tool; see `biome.json` |
+| Lint + format | **Biome** | one tool; scoped `biome.json` per package, never run at monorepo root |
 | Next-specific lint | **`next lint`** | Biome lacks Next rules, run both |
 | Unit / component tests | **Vitest + Testing Library** | |
 | E2E tests | **Playwright** | |
