@@ -208,8 +208,8 @@ pattern (it is one OpenSpec change, not part of the guardrails pass):
 2. Add a `{Project}.AppHost` project: SQL Server with `WithLifetime(ContainerLifetime.Persistent)`
    and `WithDataVolume()`, one database resource per connection name, the API with
    `.WithReference(...).WaitFor(...)` on every resource, and the web frontend via
-   `AddPnpmApp` on its existing fixed dev port. Redis joins with `.WithRedisCommander()` where
-   used.
+   `AddPnpmApp` on its existing fixed dev port with `.WithPnpmPackageInstallation()`. Redis
+   joins with `.WithRedisCommander()` where used.
 3. Swap plain EF Core registration for the Aspire client integration
    (`Aspire.Microsoft.EntityFrameworkCore.SqlServer`) so connection strings are injected by name;
    remove hardcoded dev connection strings from `appsettings.Development.json`.

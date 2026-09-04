@@ -45,6 +45,7 @@ var api = builder.AddProject<Projects.MyApp_Api>("api")
     .WithExternalHttpEndpoints();
 
 builder.AddPnpmApp("web", "../../apps/web", "dev")
+    .WithPnpmPackageInstallation()
     .WithHttpEndpoint(port: 3000, env: "PORT")
     .WithEnvironment("NEXT_PUBLIC_API_URL", api.GetEndpoint("http"))
     .WithExternalHttpEndpoints()
