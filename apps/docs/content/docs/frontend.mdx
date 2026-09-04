@@ -178,6 +178,10 @@ killed agent workers on shared 8 GB runners.
 - **Scoped verification for agents.** When an agent fixes a lint failure, it should verify only the
   changed files: `pnpm exec biome check <changed-file>` — never the whole repository. Full-repo
   scans surface pre-existing findings and can exhaust runner memory.
+- **Pre-commit hook auto-formats.** Every repo has a husky `pre-commit` hook that runs
+  `biome check --write` on staged `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files before the
+  commit is created. This means no commit — human or agent — can introduce a formatting error.
+  The hook re-stages the formatted files automatically.
 
 ### Formatting conventions
 
