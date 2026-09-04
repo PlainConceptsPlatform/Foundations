@@ -82,8 +82,8 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 ### Domain 5: Agent automation
 
 The Platform default is **GitHub Agentic Workflows on `ubuntu-latest`**, with `engine: opencode`
-pointed at the Forge gateway. This applies to public repositories too: the model comes from
-Forge either way, so nothing needs to run on a machine holding credentials.
+pointed at an OpenAI-compatible gateway. This applies to public repositories too: the model comes
+from the configured gateway, so nothing needs to run on a machine holding credentials.
 
 | Check | How to detect | Pass condition |
 |---|---|---|
@@ -172,8 +172,9 @@ included.
 2. Copy the templates from Foundations `ai/workflows`: the router, the two workers, the shared
    components, the composite actions, and `opencode.ci.json`. The shape is **one router that
    owns every trigger and workers that have none**, so do not give a worker its own trigger.
-3. Add the secrets: `OPENAI_API_KEY` for Forge, plus `BOT_APP_ID` and `BOT_PRIVATE_KEY` for the
-   Platform App that lifecycle writes are attributed to.
+3. Add the per-repository `FORGE_API_KEY` for the configured gateway, plus the organization
+   `BOT_APP_ID` and `BOT_PRIVATE_KEY` secrets for the Platform App that lifecycle writes are
+   attributed to. Configure the gateway URL in the worker environment.
 4. Author or adapt workflows with the self-contained `workflow-author` and `workflow-consumer`
    skills from
    [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
