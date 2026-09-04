@@ -1,0 +1,77 @@
+---
+title: "Navigation Menu"
+description: "A collection of links for navigating between pages."
+---
+
+import { NavigationMenuDemo } from "@/components/previews/navigation-menu-demo"
+
+<ComponentPreview block>
+  <NavigationMenuDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `NavigationMenu` for top-level navigation with grouped links, especially when a section needs a short description under its title. For switching panels inside one screen use `Tabs`, and for the shell of an internal Platform tool use `Sidebar`, which is the default there.
+
+## Platform notes
+
+`NavigationMenuLink` renders a plain anchor, so in a Next.js app pass `asChild` with a `next/link` child; the demo uses bare `href` values because the docs routes are static, and copying that pattern into an app costs you client-side navigation. `viewport={false}` (as in the demo) drops the shared animated viewport and positions each panel under its own item, which is what you want when panels differ noticeably in size. Panels use `--popover` for the surface and `--muted-foreground` for descriptions, both already AA against their background. The trigger chevron ships an upstream `transition duration-300`, longer than the 150ms ease-out contract; if you want it in line, change the vendored file rather than layering a second transition over it.
+
+## Install
+
+```bash
+npx shadcn@latest add navigation-menu
+```
+
+## Code
+
+```tsx
+import { Link } from "lucide-react";
+
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+
+export function NavigationMenuDemo() {
+  return (
+    <NavigationMenu viewport={false}>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Overview</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[260px] gap-1 p-1">
+              <li>
+                <NavigationMenuLink href="/docs" className="w-full">
+                  <div className="font-medium">Getting started</div>
+                  <p className="text-muted-foreground">Install the theme package.</p>
+                </NavigationMenuLink>
+              </li>
+              <li>
+                <NavigationMenuLink href="/docs/components" className="w-full">
+                  <div className="font-medium">Components</div>
+                  <p className="text-muted-foreground">Browse the shadcn catalog.</p>
+                </NavigationMenuLink>
+              </li>
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <a href="/docs" className={navigationMenuTriggerStyle()}>
+            <Link className="mr-1 size-4" /> Docs
+          </a>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/navigation-menu](https://ui.shadcn.com/docs/components/navigation-menu)

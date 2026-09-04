@@ -1,0 +1,54 @@
+---
+title: "Radio Group"
+description: "A set of checkable buttons where no more than one can be checked at a time."
+---
+
+import { RadioGroupDemo } from "@/components/previews/radio-group-demo"
+
+<ComponentPreview>
+  <RadioGroupDemo />
+</ComponentPreview>
+
+## When to use
+
+Pick this when a user chooses exactly one option from a short, visible set of roughly two to five. Above that, `Select` or `Combobox` scale better; for a plain on/off, use `Switch` or `Checkbox`.
+
+## Platform notes
+
+A per-item `Label` names the option but not the question, so wrap the group in `FieldSet` with `FieldLegend` to give it an accessible name. The unselected dot is `border-input` only and the selected one adds a `fill-primary` centre, so selection is a small colour-only mark: keep item labels clickable and do not shrink the item below `size-4`. The root is a `grid gap-3`, and `Field` already tightens its own gap when it detects a `data-slot="radio-group"` child, so leave that spacing alone rather than overriding it. As a Radix primitive it needs a `Controller` under react-hook-form.
+
+## Install
+
+```bash
+npx shadcn@latest add radio-group
+```
+
+## Code
+
+```tsx
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+export function RadioGroupDemo() {
+  return (
+    <RadioGroup defaultValue="comfortable" className="gap-3">
+      <div className="flex items-center gap-2">
+        <RadioGroupItem value="default" id="r1" />
+        <Label htmlFor="r1">Default</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <RadioGroupItem value="comfortable" id="r2" />
+        <Label htmlFor="r2">Comfortable</Label>
+      </div>
+      <div className="flex items-center gap-2">
+        <RadioGroupItem value="compact" id="r3" />
+        <Label htmlFor="r3">Compact</Label>
+      </div>
+    </RadioGroup>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/radio-group](https://ui.shadcn.com/docs/components/radio-group)

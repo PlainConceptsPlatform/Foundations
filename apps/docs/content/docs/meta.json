@@ -1,0 +1,22 @@
+{
+  "title": "Platform Foundations",
+  "pages": [
+    "---How we work---",
+    "how-we-work",
+    "analytics",
+    "adopt",
+    "---Domains---",
+    "frontend",
+    "backend",
+    "ai",
+    "---Library---",
+    "tokens",
+    "components",
+    "---Reference---",
+    "...reference",
+    "---Project---",
+    "principles",
+    "contributing",
+    "releases"
+  ]
+}

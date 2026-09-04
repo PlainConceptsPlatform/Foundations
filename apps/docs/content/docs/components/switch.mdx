@@ -1,0 +1,44 @@
+---
+title: "Switch"
+description: "A control that toggles between checked and not checked."
+---
+
+import { SwitchDemo } from "@/components/previews/switch-demo"
+
+<ComponentPreview>
+  <SwitchDemo />
+</ComponentPreview>
+
+## When to use
+
+A setting that takes effect the moment it is flipped belongs here: a notification preference, a feature toggle, a display option. If the value is submitted with the rest of a form, use `Checkbox`; if flipping it is destructive or slow, use a `Button` plus `AlertDialog` so the action stays explicit.
+
+## Platform notes
+
+The unchecked track is filled with `--input`, a low-contrast surface against `--background`, so "off" is carried mostly by thumb position: an associated `Label` is required, and state must be legible as text rather than colour. Because the toggle writes immediately, it owes a pending path and a failure path: disable it while the write is in flight, then revert and surface an error if it fails. The thumb animates `transform` only, which matches the motion contract, and the theme's `base.css` collapses that animation globally under `prefers-reduced-motion`, so no per-component handling is needed.
+
+## Install
+
+```bash
+npx shadcn@latest add switch
+```
+
+## Code
+
+```tsx
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+
+export function SwitchDemo() {
+  return (
+    <div className="flex items-center gap-2">
+      <Switch id="airplane-mode" />
+      <Label htmlFor="airplane-mode">Airplane mode</Label>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/switch](https://ui.shadcn.com/docs/components/switch)

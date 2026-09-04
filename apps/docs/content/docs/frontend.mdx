@@ -1,0 +1,212 @@
+---
+title: Frontend
+description: The frontend stack, the reasoning behind it, and the patterns for everyday work.
+---
+
+The frontend stack is Next.js (App Router), React, and TypeScript. Styling is Tailwind v4 with
+shadcn/ui components, themed by `@plainconceptsplatform/ui-theme`. Icons come from Lucide.
+Dependency injection uses `inversify-hooks`.
+
+The idea behind the foundation: share the **look** and the **conventions**, not a component library.
+Every app installs the same token package and follows the same structure, so a developer moving
+between apps already knows where things live. Apps still own their own components and features.
+
+| Concern | Choice |
+|---|---|
+| Language | TypeScript (strict) |
+| Framework | Next.js (App Router) + React |
+| Components | shadcn/ui on Radix |
+| Styling | Tailwind CSS v4 |
+| Theme | `@plainconceptsplatform/ui-theme` |
+| Icons | Lucide (`lucide-react`) |
+| Dependency injection | inversify-hooks |
+| Internationalization | react-i18next + i18next |
+| Data fetching | TanStack Query (or RSC / Server Actions) |
+| Forms | react-hook-form + zod |
+| Lint and format | Biome |
+| Tests | Vitest + Playwright |
+
+## Architecture
+
+Apps use a pragmatic Feature-Sliced Design on the App Router:
+
+```text
+src/
+  app/        Next.js routing shell (layouts, segments, route handlers) + providers
+  views/      the screen for a route, composed from widgets and features
+  widgets/    self-contained UI blocks (earn it)
+  features/   user interactions and use-cases (earn it)
+  entities/   business models and their api/ui (earn it)
+  shared/     ui (shadcn), lib (cn, formatters), api clients, hooks
+```
+
+Two rules carry most of the value. First, **dependencies point one way**: a layer may import from
+layers below it, never above, and siblings do not import each other. A `feature` can use an
+`entity` and `shared`, but an `entity` never reaches up into a `feature`. This is what keeps slices
+easy to move or delete. Second, **each slice has one public entry** (`index.ts`); import a slice
+through that, never by reaching into its files.
+
+Start a new app with only `app`, `views`, and `shared`. Add the other layers when a real need
+appears, not before. The `views` name is deliberate: it is the Feature-Sliced "pages" layer,
+renamed so it does not collide with the Next.js App Router `app` directory. Full layer rules are in
+[Architecture](/docs/reference/architecture).
+
+## Theming
+
+Tokens flow through three layers. Primitive values (the raw brand palette) feed **semantic tokens**
+(`--primary`, `--background`, `--border`, `--radius`), which are exposed as Tailwind utilities. You
+work with the semantic layer:
+
+```tsx
+// Good: semantic tokens adapt to light/dark and to theme updates
+<div className="rounded-lg border bg-card p-4 text-card-foreground">
+  <button className="bg-primary text-primary-foreground">Save</button>
+</div>
+
+// Avoid: hardcoded values drift from the theme and break dark mode
+<div style={{ background: "#fff", color: "#0d0e0f" }} />
+```
+
+Dark mode is a class on `<html>` (`class="dark"`); the semantic tokens already carry the dark
+values. A future brand variant swaps the primitive palette without touching component code, which is
+why the primitive and semantic layers are kept separate. To roll out a theme change across every
+app, edit the tokens, bump the package version, and let apps update the dependency. See the live
+values on [Tokens](/docs/tokens) and the rules in [Design guidelines](/docs/reference/design).
+
+## Dependency injection
+
+Frontend apps use `inversify-hooks` so that use-cases and API clients sit behind interfaces and can
+be swapped in tests. Depend on an interface, register the implementation once in a composition root
+under `app/`, and resolve it where you need it:
+
+```ts
+// contract lives with the entity/feature
+export interface UserApi {
+  getById(id: string): Promise<User>;
+}
+
+// composition root under app/: bind the interface to an implementation
+container.bind<UserApi>(TYPES.UserApi).to(HttpUserApi);
+```
+
+Components resolve the contract through the hook the library provides, so a test binds a fake
+instead. Because Inversify uses decorators, apps need `experimentalDecorators` and
+`useDefineForClassFields: false` (already set in `tsconfig.base.json`) plus decorator support in the
+Next.js compiler. The exact hook API is in the
+[inversify-hooks](https://github.com/CKGrafico/inversify-hooks) docs. The rule underneath is simple:
+depend on abstractions, not concretions.
+
+## Components
+
+Use shadcn/ui components directly. Do not wrap them in your own abstraction "just in case", and do
+not build a parallel component library. They are themed by the tokens with no extra work. Browse the
+[Components](/docs/components) catalog for each one with usage code.
+
+App-specific components live in the app, in the slice that owns them. A component moves into the
+foundation only after the same real need shows up in more than one app. See
+[Contributing](/docs/contributing) for that bar.
+
+## Data fetching
+
+Prefer the server for server data: fetch in Server Components or Server Actions and pass the result
+down. Reach for **TanStack Query** when you need a client-side cache, background refetching, or
+optimistic updates. Keep query keys structured and colocated with the feature that owns them.
+
+## Forms
+
+Forms use **react-hook-form** with a **zod** schema for validation, wired through the shadcn `Form`
+components:
+
+```tsx
+const schema = z.object({ email: z.string().email() });
+const form = useForm({ resolver: zodResolver(schema) });
+```
+
+Validate on the client and show errors inline. Always design the empty, loading, success, and error
+states, not just the happy path.
+
+## Internationalization
+
+Every user-facing string goes through **react-i18next**. This is mandatory, and the rule is absolute:
+**zero magic strings**. That includes the ones easy to forget, such as `aria-label` on an icon-only
+button, placeholder text, empty-state copy, validation messages, and date format patterns.
+
+```tsx
+const { t } = useTranslation();
+
+// Good
+<Button aria-label={t("invoice.actions.delete")}>
+  <Trash2 />
+</Button>
+
+// Avoid: invisible to translators, and impossible to audit
+<Button aria-label="Delete invoice">
+  <Trash2 />
+</Button>
+```
+
+Two consequences worth planning for. Text expands, often by 30% or more, so verify layouts with a
+longer language rather than only English. And date and number formatting must use the same locale as
+the active language, which means passing the matching `date-fns` locale rather than relying on the
+browser default. For right-to-left languages, wrap the app in the `DirectionProvider` from the
+[Direction](/docs/components/direction) component.
+
+## Testing
+
+Vitest with Testing Library covers unit and component tests, colocated as `*.test.tsx` next to the
+code. Test a slice through its public API, not its internals, so tests survive refactors. Playwright
+covers end-to-end flows. Anything with real logic ships tests; pure presentational wrappers do not
+need them.
+
+## Linting and formatting (Biome)
+
+Biome is the single tool for linting and formatting. Each app has a `biome.json` in its own package
+directory (`apps/web/biome.json`), scoped to the frontend code only. This keeps lint fast — it never
+scans `.NET`, workflow definitions, or infrastructure files — and it avoids the memory spikes that
+killed agent workers on shared 8 GB runners.
+
+### Rules every app follows
+
+- **Scope lint to the web package.** Root `package.json` runs `pnpm -r lint`, which delegates to
+  each package's own `lint` script. Never run `biome check .` at the monorepo root: it scans
+  everything and finds hundreds of pre-existing findings unrelated to your change.
+- **Exclude tool-managed directories.** Every `biome.json` excludes `node_modules`, `.next`, `dist`,
+  `out`, `e2e`, `.codegraph`, `.opencode`, `.agents`, and `.claude` so Biome does not lint generated
+  or agent-managed files.
+- **`biome check` not `pnpx biome`.** Always use the project's installed Biome via `pnpm exec biome`
+  or the `lint` script. `pnpx` downloads a fresh copy and wastes time and memory.
+- **Scoped verification for agents.** When an agent fixes a lint failure, it should verify only the
+  changed files: `pnpm exec biome check <changed-file>` — never the whole repository. Full-repo
+  scans surface pre-existing findings and can exhaust runner memory.
+- **Pre-commit hook auto-formats.** Every repo has a husky `pre-commit` hook that runs
+  `biome check --write` on staged `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files before the
+  commit is created. This means no commit — human or agent — can introduce a formatting error.
+  The hook re-stages the formatted files automatically.
+
+### Formatting conventions
+
+| Setting | Value |
+|---|---|
+| Indent | 2 spaces |
+| Line width | 100 (Foundations) / 120 (consumer apps) |
+| Quotes | Double (Foundations) / Single (consumer apps) |
+| Semicolons | Always |
+| Trailing commas | All |
+| Import sorting | Enabled (`organizeImports: on`) |
+
+Consumer apps may override line width and quote style to match their existing codebase, but the
+structure (scoped biome.json, excludes, scoped lint script) must match.
+
+## Common pitfalls
+
+- Hardcoding colors or spacing instead of using tokens. It breaks dark mode and theme updates.
+- Wrapping shadcn components or forking the theme in an app.
+- Deep-importing across slices instead of going through `index.ts`.
+- Reaching from a lower layer up into a higher one.
+
+## Skills for agents
+
+Install these so an agent writes on-stack code: `vercel-react-best-practices`,
+`feature-sliced-design`, `shadcn`, `tailwind-design-system`, `tanstack-query-best-practices`,
+`typescript-advanced-types`, `vitest-testing`, `accessibility`. The
+[agent-harness](/docs/ai) installs and updates them as part of the Platform Harness.

@@ -1,0 +1,68 @@
+---
+title: "Pagination"
+description: "A component for navigating between pages of content."
+---
+
+import { PaginationDemo } from "@/components/previews/pagination-demo"
+
+<ComponentPreview block>
+  <PaginationDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `Pagination` for server-paged lists where the page belongs in the URL and users need to jump to a specific one. Client-side paging inside a table should use the `DataTable` controls instead, and an unbounded feed is better served by a load-more button.
+
+## Platform notes
+
+It renders anchors, so every page must be a real URL; give `PaginationLink` a `next/link` through `asChild` or you lose client-side navigation on each page change. The vendored source hardcodes `Previous`, `Next`, and the sr-only `More pages`, three user-facing strings that must be routed through react-i18next before the component ships in an app. `isActive` already sets `aria-current="page"` and switches the link to the `outline` button style, so do not add a second current-page marker. The list it pages needs both required states wired up: skeleton rows while the next page loads (never an emptied table) and an empty state when a filter returns nothing.
+
+## Install
+
+```bash
+npx shadcn@latest add pagination
+```
+
+## Code
+
+```tsx
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+export function PaginationDemo() {
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious href="#" />
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationLink href="#" isActive>
+            1
+          </PaginationLink>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationLink href="#">2</PaginationLink>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationEllipsis />
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext href="#" />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/pagination](https://ui.shadcn.com/docs/components/pagination)

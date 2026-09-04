@@ -1,0 +1,76 @@
+---
+title: "Chart"
+description: "Themed charts built on Recharts with shared tokens."
+---
+
+import { ChartDemo } from "@/components/previews/chart-demo"
+
+<ComponentPreview block>
+  <ChartDemo />
+</ComponentPreview>
+
+## When to use
+
+Charts earn their place when a trend or a comparison is faster to read than the numbers, typically two to five series on a dashboard. A single value or a delta reads better as a `Card` with typography. Data that people will scan, sort or export belongs in [Data Table](/docs/components/data-table), not in a chart.
+
+## Platform notes
+
+Series colour comes from the shared ramp `--chart-1` through `--chart-5` and never from `--accent` or another tint token: tints are hover surfaces and disappear against `bg-card`, which is why the demo config uses `var(--chart-1)` and `var(--chart-3)` (domain palettes such as Unit, Area or Teams stay in the app that owns them). That ramp is built from the functional palette, so `--chart-2` is the warning amber and `--chart-4` the error red: avoid both for a neutral series on a screen that also shows status, or the colour reads as an alert. Axis labels, legend entries and tooltip labels are i18next messages, and numbers, dates and units go through `Intl.NumberFormat` or `Intl.DateTimeFormat` for the active locale instead of concatenated strings. Recharts animates series on mount, which is motion without a state change: disable it (`isAnimationActive={false}`) under `prefers-reduced-motion`, and never let hue be the only thing separating two series.
+
+## Install
+
+```bash
+npx shadcn@latest add chart
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+
+const data = [
+  { month: "Jan", theme: 186, components: 80 },
+  { month: "Feb", theme: 205, components: 130 },
+  { month: "Mar", theme: 237, components: 145 },
+  { month: "Apr", theme: 173, components: 110 },
+  { month: "May", theme: 209, components: 160 },
+  { month: "Jun", theme: 214, components: 170 },
+];
+
+// Uses the shared categorical ramp. --accent is a pale tint meant for hover
+// surfaces, so it all but disappeared against the card behind it.
+const chartConfig = {
+  theme: { label: "Theme", color: "var(--chart-1)" },
+  components: { label: "Components", color: "var(--chart-3)" },
+} satisfies ChartConfig;
+
+export function ChartDemo() {
+  return (
+    <ChartContainer config={chartConfig} className="aspect-auto h-[260px] w-full max-w-xl">
+      <BarChart data={data}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="theme" fill="var(--color-theme)" radius={4} />
+        <Bar dataKey="components" fill="var(--color-components)" radius={4} />
+      </BarChart>
+    </ChartContainer>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/chart](https://ui.shadcn.com/docs/components/chart)

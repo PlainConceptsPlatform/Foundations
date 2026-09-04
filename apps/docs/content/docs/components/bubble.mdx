@@ -1,0 +1,66 @@
+---
+title: "Bubble"
+description: "A chat bubble component for messaging UIs."
+---
+
+import { BubbleDemo } from "@/components/previews/bubble-demo"
+
+<ComponentPreview block>
+  <BubbleDemo />
+</ComponentPreview>
+
+## When to use
+
+`Bubble` is the surface for a single utterance in a conversational UI: chat, an agent transcript, an inline assistant panel. Nest it inside `Message` when the turn needs an avatar, author or timestamp; content that is not part of a conversation belongs in a `Card` or an `Item`.
+
+## Platform notes
+
+Variants resolve to semantic tokens, `default` to `--primary`, `secondary` and `muted` to the neutral surfaces, `destructive` to a `--destructive` tint, while `tinted` is derived from `--primary` with an oklch relative colour so it tracks a brand change on its own. Distinguish speakers with two variants, never a hardcoded colour. Only `BubbleContent` carries the fill: the variant classes target `*:data-[slot=bubble-content]`, so a background class on `Bubble` itself changes nothing. `BubbleReactions` is absolutely positioned and rings itself with `ring-card`, so it only reads correctly on a `bg-card` surface, and the reaction buttons are yours to make accessible: each needs an i18next label and a visible focus ring, neither of which the bare icon buttons in the demo have.
+
+## Install
+
+```bash
+npx shadcn@latest add bubble
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from "@/components/ui/bubble";
+import { Frown, SmilePlus, ThumbsUp } from "lucide-react";
+
+export function BubbleDemo() {
+  return (
+    <BubbleGroup className="max-w-md">
+      <Bubble>
+        <BubbleContent>Hey! How's the new theme working out?</BubbleContent>
+        <BubbleReactions side="bottom" align="end">
+          <button type="button" className="rounded-full p-1 hover:bg-muted">
+            <ThumbsUp className="size-3.5" />
+          </button>
+          <button type="button" className="rounded-full p-1 hover:bg-muted">
+            <SmilePlus className="size-3.5" />
+          </button>
+        </BubbleReactions>
+      </Bubble>
+      <Bubble variant="secondary" align="end">
+        <BubbleContent>Looking great so far! The tokens map nicely to Recharts.</BubbleContent>
+      </Bubble>
+      <Bubble variant="outline">
+        <BubbleContent>One small issue with the sidebar tokens though.</BubbleContent>
+        <BubbleReactions side="bottom" align="start">
+          <button type="button" className="rounded-full p-1 hover:bg-muted">
+            <Frown className="size-3.5" />
+          </button>
+        </BubbleReactions>
+      </Bubble>
+    </BubbleGroup>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/bubble](https://ui.shadcn.com/docs/components/bubble)

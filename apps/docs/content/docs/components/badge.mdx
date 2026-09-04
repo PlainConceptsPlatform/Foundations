@@ -1,0 +1,45 @@
+---
+title: "Badge"
+description: "Displays a badge or a component that looks like a badge."
+---
+
+import { BadgeDemo } from "@/components/previews/badge-demo"
+
+<ComponentPreview>
+  <BadgeDemo />
+</ComponentPreview>
+
+## When to use
+
+Badges label the state or category of a record inline: status in a table cell, a count beside a tab, a role next to a name. If it is clickable it is an action, so use a `Button` (or a link via `asChild`) instead. For something the user has to read and acknowledge, use `Alert`.
+
+## Platform notes
+
+The variants map onto `--primary`, `--secondary`, `--destructive` and `--border`, and there is deliberately no success, warning or info variant, so those tints come from the functional tokens applied by class. Badge renders a `<span>` with no accessible role, which means the state has to be legible from its text (`Active`, not a bare coloured dot), and colour must never be the only signal that a row is failing. Every label is a react-i18next message, single words included, and API status enums are mapped to messages in the slice that owns the entity rather than printed as they arrive. Focus styling only matters once `asChild` turns it into a link or button, and then the `--ring` focus ring must stay visible.
+
+## Install
+
+```bash
+npx shadcn@latest add badge
+```
+
+## Code
+
+```tsx
+import { Badge } from "@/components/ui/badge";
+
+export function BadgeDemo() {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Badge>Default</Badge>
+      <Badge variant="secondary">Secondary</Badge>
+      <Badge variant="destructive">Destructive</Badge>
+      <Badge variant="outline">Outline</Badge>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/badge](https://ui.shadcn.com/docs/components/badge)

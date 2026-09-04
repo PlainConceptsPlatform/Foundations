@@ -1,0 +1,45 @@
+---
+title: "Alert"
+description: "Displays a callout for user attention."
+---
+
+import { AlertDemo } from "@/components/previews/alert-demo"
+
+<ComponentPreview>
+  <AlertDemo />
+</ComponentPreview>
+
+## When to use
+
+Alert is the persistent inline message about the state of a screen or form: a validation summary, a degraded integration, a warning the user should keep seeing. Use `toast` when the message is transient and `AlertDialog` when the user must respond before continuing.
+
+## Platform notes
+
+Only two variants ship, `default` and `destructive`, and both sit on `bg-card`, so an Alert is a bordered card rather than a tinted banner. The theme also exposes `--success`, `--warning` and `--info` beyond base shadcn, but no Alert variant consumes them: apply those tokens yourself if you need a success or info callout. `role="alert"` is always set, so an Alert present on first render is announced by screen readers; keep that for real state changes and prefer plain text for static guidance. This is the mandatory error state for a failed fetch or mutation, sitting alongside `Skeleton` for loading and `Empty` for no data, and its title and description are react-i18next messages.
+
+## Install
+
+```bash
+npx shadcn@latest add alert
+```
+
+## Code
+
+```tsx
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from "lucide-react";
+
+export function AlertDemo() {
+  return (
+    <Alert className="max-w-md">
+      <Info />
+      <AlertTitle>Heads up</AlertTitle>
+      <AlertDescription>Add components to your app with the shadcn CLI.</AlertDescription>
+    </Alert>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/alert](https://ui.shadcn.com/docs/components/alert)

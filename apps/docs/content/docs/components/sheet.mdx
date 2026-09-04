@@ -1,0 +1,65 @@
+---
+title: "Sheet"
+description: "A panel that slides out from the edge of the screen, extending a dialog."
+---
+
+import { SheetDemo } from "@/components/previews/sheet-demo"
+
+<ComponentPreview>
+  <SheetDemo />
+</ComponentPreview>
+
+## When to use
+
+A Sheet is the side panel for a secondary flow that should keep the current screen in view: record details, a filter panel, a multi-field form too tall for a centred window. Use `Dialog` when the content is short and belongs in the middle of the screen, and `Drawer` when it needs to be a draggable bottom sheet on touch devices.
+
+## Platform notes
+
+The `side` prop decides which single edge gets a border (`border-l` for the default right side, `border-t` for bottom), and since `shadow-lg` paints nothing that one border is the entire boundary against the page; keep it when you override `className`. The surface is `bg-background`, which in dark mode (`#0d0e0f`) sits below `--card` (`#17181b`), so a card placed inside the sheet reads as raised without any shadow. `SheetTitle` and `SheetDescription` are the accessible name and description, not decoration, and both strings come from react-i18next. Panel content that fetches needs the full set of states: skeleton while loading, empty when there is nothing, and an inline error, all owned by the slice that renders them.
+
+## Install
+
+```bash
+npx shadcn@latest add sheet
+```
+
+## Code
+
+```tsx
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+export function SheetDemo() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline">Open sheet</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit profile</SheetTitle>
+          <SheetDescription>Make changes to your profile here.</SheetDescription>
+        </SheetHeader>
+        <SheetFooter>
+          <SheetClose asChild>
+            <Button variant="outline">Close</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/sheet](https://ui.shadcn.com/docs/components/sheet)

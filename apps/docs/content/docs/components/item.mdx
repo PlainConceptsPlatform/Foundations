@@ -1,0 +1,77 @@
+---
+title: "Item"
+description: "A generic item component for lists and menus."
+---
+
+import { ItemDemo } from "@/components/previews/item-demo"
+
+<ComponentPreview block>
+  <ItemDemo />
+</ComponentPreview>
+
+## When to use
+
+Item composes a row out of media, title, description and actions, which is what most Platform lists actually are: notifications, search results, integrations, settings rows. Wrap a set of them in `ItemGroup`. Use `Table` when the data is genuinely columnar and worth comparing across rows, and `Card` when a block deserves its own surface.
+
+## Platform notes
+
+`ItemGroup` sets `role="list"` but `Item` does not set `role="listitem"`, so add it (or make the item a real `li` via `asChild`) when the group is a semantic list. Variants resolve to `--border` for `outline` and `--muted` at 50% for `muted`, and the `accent` hover only applies to links: that tint is a surface, not a status colour. `ItemDescription` clamps at two lines, which bites in German and Spanish where the same message runs longer, so review the clamp against the translated string rather than the English one. When the whole row is actionable, make the target a link or button with the `--ring` focus ring instead of hanging `onClick` on the `Item` div, and keep any trailing control outside that target so controls are not nested.
+
+## Install
+
+```bash
+npx shadcn@latest add item
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Bell, Check, MoreHorizontal } from "lucide-react";
+
+export function ItemDemo() {
+  return (
+    <ItemGroup className="max-w-sm rounded-lg border">
+      <Item variant="outline" size="sm">
+        <ItemMedia variant="icon">
+          <Bell />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>New release available</ItemTitle>
+          <ItemDescription>
+            shadcn/ui v4 is out with Base UI support and new components.
+          </ItemDescription>
+        </ItemContent>
+        <Button variant="ghost" size="icon-sm">
+          <MoreHorizontal />
+        </Button>
+      </Item>
+      <ItemSeparator />
+      <Item variant="outline" size="sm">
+        <ItemMedia variant="icon">
+          <Check />
+        </ItemMedia>
+        <ItemContent>
+          <ItemTitle>Components synced</ItemTitle>
+          <ItemDescription>All 50 components are now in the docs sidebar.</ItemDescription>
+        </ItemContent>
+      </Item>
+    </ItemGroup>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/item](https://ui.shadcn.com/docs/components/item)

@@ -1,0 +1,97 @@
+---
+title: 2. Foundations
+description: "Building the app and, more importantly, the guardrails that make later autonomy safe. Interactive agents on a developer machine, unattended agents on runners, and the rule that keeps the model out of decisions it should not be making."
+---
+
+Phase 2 builds the first working version of the app: the infrastructure, the architecture, and the
+capabilities discovery said mattered most. Agents do a large share of that work.
+
+The part that decides whether phase 3 is possible is the other output.
+
+## The deliverable is the guardrails
+
+A guardrail here means a constraint that fails the build rather than a rule in a document. The
+distinction matters because phase 3 sends changes through with no engineer reading them, and a
+convention nobody enforces will not survive that.
+
+The set differs per app, but the recurring ones are:
+
+- **Layering and boundaries.** A one-way dependency rule between layers, and bounded contexts that
+  may not reach into each other's internals. Enforced by a linter, not by review. An agent that
+  "fixes" a boundary violation by widening the rule has broken the guardrail, so widening it is
+  itself gated.
+- **Specification discipline.** A CI check that fails any change to application code which does not
+  also touch a specification, a change proposal, or a decision record. Trivial refactors opt out
+  explicitly and say why.
+- **Test quality, not test count.** A test counts only if it pins observable behaviour. Changed tests
+  are graded, and coverage that executes code without asserting on it does not pass.
+- **An audit trail with no bypass.** Where the domain calls for it, every state change publishes an
+  event that gets appended to a verifiable chain, and there is no code path that skips the appender.
+- **Human checkpoints on the things worth stopping for.** Authentication and authorisation, schema
+  migrations, new external integrations, CI configuration, and the design tokens. Green tests do not
+  buy a merge on those.
+
+Written down alongside them is a definition of done that an agent can actually check itself against,
+which is what makes an unattended run able to tell whether it finished.
+
+## The determinism ladder
+
+The single most useful rule from this phase, and it generalises well beyond workflows:
+
+> The model is the last resort, not the engine.
+
+Every rung below the agent is deterministic, cheaper, and cannot hallucinate, so work gets pushed as
+far down as it will go. Triggers decide whether anything runs at all. A classifier decides which one
+thing runs. Precomputed steps hand the agent facts it would otherwise spend turns fetching. The agent
+handles judgement, prose and code, and nothing it produces reaches the repository except through
+validated outputs.
+
+The full rung-by-rung contract is in [Agentic workflows](/docs/ai#agentic-workflows). It is the same instinct
+as [principle 5](/docs/principles): a convention costs a paragraph, shared code costs a version, a
+migration path and a maintainer. Reach for the cheaper thing first.
+
+## Interactive and unattended agents
+
+Both are used in this phase, and they are good at different things.
+
+**Interactive** means an agent running on an engineer's machine, driven by a person who is watching.
+The feedback loop is short, the context is rich, and the engineer can redirect mid-task. This is where
+the architecture gets shaped, where the guardrails get written, and where a change that needs
+judgement every few minutes belongs. It is also where the harness is installed and where the
+generated architecture, design and guardrail documents come from.
+
+**Unattended** means an agent running on a CI runner, triggered by a repository event, with no one
+watching. Every run starts from a fresh checkout, concurrency is declared rather than improvised, and
+writes arrive as pull requests with an audit trail in the logs. Most of the recovery machinery a
+long-lived local loop needs simply does not apply, because nothing persists between runs.
+
+The rule of thumb: if the work needs a person's judgement while it happens, run it interactively. If
+it needs to happen reliably whether or not anyone is looking, run it unattended. Setup for both, and
+the reasons the unattended path is the default for repository work, are in
+[AI x SDLC](/docs/ai).
+
+## Autonomy is narrowed per capability
+
+An agent is not given a trust level. It is given a set of verbs, and the ones it does not need are
+absent rather than discouraged.
+
+In practice that means a workflow whose job is to propose work can create issues and nothing else, so
+it is structurally incapable of editing code or opening a pull request. A workflow that implements an
+issue opens the pull request and stops there, because merging is a different decision. A workflow that
+validates open pull requests can merge, but only when the checks are green, and after a bounded number
+of retries it labels the change for a human instead of trying again.
+
+This is stricter than the usual autonomy ladder, where a single setting moves an agent from suggesting
+to acting. Here the limit is a property of the workflow rather than a policy applied to it, so there is
+no configuration change that quietly grants an agent a verb it was never meant to have.
+
+## When this phase is done
+
+Phase 2 has succeeded for a capability when a change to that capability can go from an issue to
+production without an engineer reading the diff, and everyone involved is comfortable with that. If the
+answer is "it would probably be fine", the guardrails are not finished.
+
+<Cards>
+  <Card title="3. Maintenance mode" href="/docs/how-we-work/maintenance" description="What the guardrails buy: intake from the whole business." />
+  <Card title="AI x SDLC" href="/docs/ai" description="How agents run against a repository, the router and worker shape, and the full determinism ladder." />
+</Cards>

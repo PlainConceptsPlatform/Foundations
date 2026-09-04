@@ -1,0 +1,171 @@
+---
+title: "Data Table"
+description: "A slot-based table with sorting, drag-to-group, and column reorder or show/hide."
+---
+
+import { DataTableDemo } from "@/components/previews/data-table-demo"
+
+<ComponentPreview block>
+  <DataTableDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for this when a Platform screen needs a working grid: click-to-sort, drag-to-group with collapsible sections and aggregates, column reorder, show/hide columns, and that arrangement remembered per user. If none of those apply, the plain `Table` is the right answer. If you need row virtualisation, server-driven pagination or row selection, build on TanStack Table directly instead of stretching this component.
+
+## Platform notes
+
+The package carries no shadcn, i18n or icon dependency: you supply `slots` (Table, Button, DropdownMenu), `icons` and `texts`, so the wired wrapper lives in `shared/ui` and `texts` is fed from `useTranslation`, including the function entries (`stopGrouping`, `columnsCount`). Sorting and grouping are computed client-side over the `rows` array you pass, so under server-side paging it only orders the current page: sort on the server and hand it `defaultSort` to match. Column order, visibility and grouping persist in `localStorage` under `dt:<tableId>:*`, which makes `tableId` a stable contract (reusing one across two grids crosses their state, and renaming a column key orphans the saved entry). On keyboard, header sorting is a real button, but column reorder and adding a group are HTML5 drag only and group rows toggle on row click, so give keyboard users another route to those if the grid is a primary workflow.
+
+## Install
+
+```bash
+pnpm add @plainconceptsplatform/ui-components
+```
+
+Import from the sub-path: `@plainconceptsplatform/ui-components/data-table`.
+
+## Code
+
+```tsx
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@plainconceptsplatform/ui-components/data-table";
+
+type App = {
+  id: string;
+  name: string;
+  stack: string;
+  status: "Active" | "Deprecated";
+  team: string;
+  description: string;
+};
+
+const apps: App[] = [
+  {
+    id: "1",
+    name: "Studio",
+    stack: "React",
+    status: "Active",
+    team: "Platform",
+    description: "Internal design-system playground and component showcase for the Platform team.",
+  },
+  {
+    id: "2",
+    name: "Docs",
+    stack: "Next.js",
+    status: "Active",
+    team: "Platform",
+    description: "Public documentation site built with Fumadocs and the shared UI components.",
+  },
+  {
+    id: "3",
+    name: "Legacy",
+    stack: ".NET",
+    status: "Deprecated",
+    team: "Enterprise",
+    description: "Old monolith kept alive for a handful of enterprise customers pending migration.",
+  },
+  {
+    id: "4",
+    name: "Insights",
+    stack: "Next.js",
+    status: "Active",
+    team: "Data",
+    description: "Analytics dashboards aggregating product telemetry across every Platform app.",
+  },
+  {
+    id: "5",
+    name: "Console",
+    stack: "React",
+    status: "Active",
+    team: "Platform",
+    description: "Admin console for tenant configuration, feature flags and access control.",
+  },
+  {
+    id: "6",
+    name: "Pulse",
+    stack: "Next.js",
+    status: "Active",
+    team: "Data",
+    description: "Real-time monitoring and alerting service for the data ingestion pipelines.",
+  },
+  {
+    id: "7",
+    name: "Hub",
+    stack: ".NET",
+    status: "Deprecated",
+    team: "Enterprise",
+    description: "Legacy integration hub connecting on-prem systems to the cloud platform.",
+  },
+  {
+    id: "8",
+    name: "Flow",
+    stack: "React",
+    status: "Active",
+    team: "Platform",
+    description: "Workflow builder that lets teams automate repetitive operational tasks.",
+  },
+];
+
+const columns: DataTableColumn<App>[] = [
+  {
+    key: "name",
+    label: "App",
+    width: 120,
+    render: (r) => <span className="font-medium">{r.name}</span>,
+    sortValue: (r) => r.name,
+    groupValue: (r) => r.stack,
+  },
+  {
+    key: "stack",
+    label: "Stack",
+    width: 110,
+    render: (r) => r.stack,
+    sortValue: (r) => r.stack,
+  },
+  {
+    key: "team",
+    label: "Team",
+    width: 120,
+    render: (r) => r.team,
+    sortValue: (r) => r.team,
+  },
+  {
+    key: "description",
+    label: "Description",
+    width: 240,
+    render: (r) => r.description,
+    sortValue: (r) => r.description,
+  },
+  {
+    key: "status",
+    label: "Status",
+    width: 120,
+    render: (r) => (
+      <Badge variant={r.status === "Active" ? "default" : "secondary"}>{r.status}</Badge>
+    ),
+    sortValue: (r) => r.status,
+  },
+];
+
+export function DataTableDemo() {
+  return (
+    <div className="w-full">
+      <DataTable
+        tableId="docs-data-table-demo"
+        rows={apps}
+        rowKey={(r) => r.id}
+        columns={columns}
+        defaultGroupBy={["stack"]}
+      />
+    </div>
+  );
+}
+```
+
+## Full API
+
+[`packages/ui-components` README](https://github.com/PlainConceptsPlatform/Foundations/blob/main/packages/ui-components/README.md)

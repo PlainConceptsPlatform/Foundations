@@ -1,0 +1,105 @@
+---
+title: The three phases
+description: "How the Platform department at Plain Concepts builds and runs apps: three phases, four public repositories, and the guardrails that make agent autonomy safe."
+---
+
+Platform is a department at Plain Concepts, and this section is how it builds and runs software,
+written down. We publish it because the repositories the whole method rests on are public anyway,
+and because "agents merge to production with no engineer in the loop" is the kind of claim that
+should be checkable rather than taken on faith. If you are here to set up a project rather than to
+read about one, go straight to [Adopt in your project](/docs/adopt).
+
+Most Platform apps pass through three phases. They are not a project schedule. What separates them is
+**who is allowed to start a change**, and each phase hands that right to a wider group.
+
+<Mermaid chart={String.raw`flowchart LR
+    D["<b>1. Discovery</b><br/>departments and engineers<br/>decide what to build"]
+    F["<b>2. Foundations</b><br/>engineers and agents build<br/>the app and its guardrails"]
+    M["<b>3. Maintenance mode</b><br/>the business files requests,<br/>agents implement them"]
+    D --> F --> M
+    M -.->|"too large for a small change"| D
+    classDef phase fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
+    class D,F,M phase`} />
+
+| Phase | Who starts a change | What the phase produces |
+|---|---|---|
+| **1. Discovery** | Departments, with engineers | The product decision, the integrations it needs, and the constraints |
+| **2. Foundations** | Engineers, with agents | Working software, and the guardrails that bind everything after it |
+| **3. Maintenance mode** | Anyone in the business | Small changes, shipped continuously and measured |
+
+## The four pillars
+
+Four repositories carry all of this. They are all public, so the source is the real reference when a
+page here is not specific enough.
+
+<Cards>
+  <Card title="Foundations" href="https://github.com/PlainConceptsPlatform/Foundations" description="The theme, the conventions, the reference architecture, and this site. Used in all three phases." />
+  <Card title="agent-harness" href="https://github.com/PlainConceptsPlatform/agent-harness" description="Installs the Platform Harness into a repository: skills, commands, an agent team, and an OpenSpec workspace. Phase 2." />
+  <Card title="agentic-workflows" href="https://github.com/PlainConceptsPlatform/agentic-workflows" description="The router and worker catalog that runs the pipeline, plus the CLI that installs and updates it. Phases 2 and 3." />
+  <Card title="project-health" href="https://github.com/PlainConceptsPlatform/project-health" description="Delivery and agent metrics collected from GitHub, published as a static site. Phase 3." />
+</Cards>
+
+Taken in order they form a chain, which is the clearest way to see why there are four and not one:
+**Foundations** sets the conventions, **agent-harness** puts them into a repository as something
+agents can act on, **agentic-workflows** runs the agents against it, and **project-health** reports on
+what came out. Drop any one and the phase it carries stops working.
+
+## Phase 2 exists to make phase 3 safe
+
+The claim worth paying attention to is not that agents write code. It is that in phase 3 someone who
+has never opened the repository can file a request and have it implemented, reviewed and merged with
+no engineer in the loop.
+
+That is only acceptable because of what phase 2 built. Layering rules that fail the build when
+crossed. A specification that has to be updated when behaviour changes. A test-quality gate that
+rejects tests asserting nothing. An audit trail no code path can skip. Each one is a constraint an
+agent cannot argue its way past, and together they are what buys the autonomy.
+
+So the order is not a preference:
+
+<Callout type="warn" title="You cannot skip phase 2 and arrive at phase 3">
+  Pointing agents at a repository with no enforced boundaries does not produce a maintenance mode. It
+  produces a fast way to generate incidents. The guardrails are the product of phase 2, not a tax on
+  it.
+</Callout>
+
+This is the same finding DORA published in 2025: AI amplifies what a team already has, good practices
+and bad ones alike. See the
+[2025 State of AI-assisted Software Development](https://dora.dev/dora-report-2025/).
+
+## Outcomes belong to the business, means belong to engineering
+
+Phase 3 works because that line is written down and enforced by the intake itself, not renegotiated
+for every request.
+
+Anyone can ask for a change to an **outcome**: how a screen behaves, what a workflow does, what the
+wording says, what a business rule or a formula should compute. Requests about **means** stay with
+engineering: architecture, infrastructure, deployment, authentication, data models, APIs.
+
+The line is drawn by category rather than by size. A small, clear, well-tested request to change how
+the app authenticates is still an engineering decision, and it is refused on those grounds.
+
+## The phases overlap
+
+A project is rarely in a single phase. The same app can be in maintenance mode for its screens while
+a new integration is still being worked out in discovery, and the foundations for that integration
+get built while everything else keeps shipping. Discovery in particular never really closes: it runs
+alongside delivery rather than in front of it.
+
+What does not vary is the sequence for any one capability. A capability reaches maintenance mode only
+after its guardrails exist.
+
+<Callout type="info" title="Not the same as Principles">
+  [Principles](/docs/principles) answers a narrower question: what belongs in the shared foundation
+  and what does not. This section is about how we build the apps that consume it.
+</Callout>
+
+## The phases in detail
+
+<Cards>
+  <Card title="1. Discovery" href="/docs/how-we-work/discovery" description="Deciding what to build, and which constraints the build will have to encode." />
+  <Card title="2. Foundations" href="/docs/how-we-work/foundations" description="Guardrails as the deliverable, interactive and unattended agents, and the determinism ladder." />
+  <Card title="3. Maintenance mode" href="/docs/how-we-work/maintenance" description="Two intake doors, the eligibility boundary, and measuring it without flattering the numbers." />
+  <Card title="Analytics with DORA" href="/docs/analytics" description="What classic DORA still measures once agents ship the changes, and what has to be added." />
+  <Card title="Adopt in your project" href="/docs/adopt" description="The day-one sequence: theme, harness, workflows, and metrics, with the reason for each." />
+</Cards>

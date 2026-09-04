@@ -1,0 +1,44 @@
+---
+title: "Checkbox"
+description: "A control that allows the user to toggle between checked and not checked."
+---
+
+import { CheckboxDemo } from "@/components/previews/checkbox-demo"
+
+<ComponentPreview>
+  <CheckboxDemo />
+</ComponentPreview>
+
+## When to use
+
+For independent boolean choices, and for multi-select lists where each row is on or off. When the boolean applies a setting immediately instead of being submitted with a form, use `Switch`; when the options are mutually exclusive, use `RadioGroup`.
+
+## Platform notes
+
+Radix renders a `button`, not a native `input`, so it takes no part in native form submission: bind it through a react-hook-form `Controller`, not `register`. Checked state fills with `--primary` and draws the Lucide check in `--primary-foreground`, while the indicator carries `transition-none` deliberately, so do not add a transition to fade the tick in. Give it an `id` and an associated `Label` or `FieldLabel` every time; adjacent text alone does not label a checkbox. Its label is a `t()` message like every other user-facing string.
+
+## Install
+
+```bash
+npx shadcn@latest add checkbox
+```
+
+## Code
+
+```tsx
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+
+export function CheckboxDemo() {
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox id="terms" defaultChecked />
+      <Label htmlFor="terms">Accept terms and conditions</Label>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/checkbox](https://ui.shadcn.com/docs/components/checkbox)

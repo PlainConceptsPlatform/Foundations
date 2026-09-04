@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/preset.css";
+
+/* Platform Foundations theme (Platform tokens). */
+@import "@plainconceptsplatform/ui-theme/theme.css";
+@import "@plainconceptsplatform/ui-theme/base.css";
+
+/* Radix/shadcn overlay animations (animate-in, fade-in, zoom-in, slide-in-from-*).
+   Without this, every dialog, popover, dropdown, tooltip, sheet and drawer opens
+   with no transition at all. */
+@import "tw-animate-css";
+
+/* Let Tailwind scan Fumadocs UI so its classes are generated. */
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+/* And the component package this site documents. Without it, any class used only
+   inside ui-components is never generated: the element carries it and nothing
+   applies. That failed silently and selectively — `text-[11px]` worked because the
+   docs app happens to use it too, while `text-[13.5px]` and `h-[33px]` did not,
+   so components rendered at inherited sizes and looked almost right. */
+@source "../../../packages/ui-components/src/**/*.{ts,tsx}";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Fumadocs styles its own chrome (navbar, sidebar, TOC, search, code blocks)
+   from a --color-fd-* namespace, independent of the shadcn tokens. Alias it onto
+   the Platform semantics so the site is themed by the package it documents,
+   instead of shipping the stock neutral preset. */
+@theme inline {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-card: var(--card);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-ring: var(--ring);
+}

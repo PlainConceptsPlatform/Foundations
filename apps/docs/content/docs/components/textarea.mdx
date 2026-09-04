@@ -1,0 +1,44 @@
+---
+title: "Textarea"
+description: "Displays a form textarea field."
+---
+
+import { TextareaDemo } from "@/components/previews/textarea-demo"
+
+<ComponentPreview>
+  <TextareaDemo />
+</ComponentPreview>
+
+## When to use
+
+Use for free-form multi-line input: comments, descriptions, internal notes. If the value is a single short string, use `Input`; if it needs a character counter or an inline send button, compose it as `InputGroupTextarea` inside an `InputGroup`.
+
+## Platform notes
+
+`field-sizing-content` with `min-h-16` means the box grows with its content, and that growth stays untransitioned on purpose: the motion contract forbids animating `height`. Border comes from `--input` and the placeholder from `--muted-foreground`, with the same `aria-invalid` destructive treatment as `Input`. Long-form text is the most likely place for a save that can fail, so the surrounding form owes an explicit pending state and an error state, not just the happy path.
+
+## Install
+
+```bash
+npx shadcn@latest add textarea
+```
+
+## Code
+
+```tsx
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+export function TextareaDemo() {
+  return (
+    <div className="grid w-full max-w-sm gap-2">
+      <Label htmlFor="message">Message</Label>
+      <Textarea id="message" placeholder="Type your message here." />
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/textarea](https://ui.shadcn.com/docs/components/textarea)

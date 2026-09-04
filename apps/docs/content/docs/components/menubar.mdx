@@ -1,0 +1,75 @@
+---
+title: "Menubar"
+description: "A visually persistent menu giving quick access to a consistent set of commands."
+---
+
+import { MenubarDemo } from "@/components/previews/menubar-demo"
+
+<ComponentPreview block>
+  <MenubarDemo />
+</ComponentPreview>
+
+## When to use
+
+`Menubar` fits document-style surfaces with many grouped commands, an editor or an authoring view. Most Platform screens are CRUD and do not need it: use `Sidebar` for the app shell and `DropdownMenu` for a page's handful of actions.
+
+## Platform notes
+
+It has no responsive fallback and does not collapse, so any screen using it needs a separate small-viewport path through `Sidebar` or `DropdownMenu`. `MenubarShortcut` renders text only: the key handler is yours to register, and a displayed shortcut that nothing listens for is a defect users report. Menu titles, item labels, and shortcut strings are react-i18next messages, and destructive entries use `variant="destructive"` so they pick up the `--destructive` treatment on hover and focus.
+
+## Install
+
+```bash
+npx shadcn@latest add menubar
+```
+
+## Code
+
+```tsx
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+
+export function MenubarDemo() {
+  return (
+    <Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>
+            New Tab <MenubarShortcut>⌘T</MenubarShortcut>
+          </MenubarItem>
+          <MenubarItem>
+            New Window <MenubarShortcut>⌘N</MenubarShortcut>
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem variant="destructive">
+            Close <MenubarShortcut>⌘W</MenubarShortcut>
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>Edit</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>
+            Copy <MenubarShortcut>⌘C</MenubarShortcut>
+          </MenubarItem>
+          <MenubarItem>
+            Paste <MenubarShortcut>⌘V</MenubarShortcut>
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/menubar](https://ui.shadcn.com/docs/components/menubar)

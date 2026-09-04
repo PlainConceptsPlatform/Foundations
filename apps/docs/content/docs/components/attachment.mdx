@@ -1,0 +1,82 @@
+---
+title: "Attachment"
+description: "A file attachment component with upload states and media preview."
+---
+
+import { AttachmentDemo } from "@/components/previews/attachment-demo"
+
+<ComponentPreview block>
+  <AttachmentDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `Attachment` to render a file that already exists in the flow: uploads queued in a chat composer, evidence on a record, an export an agent produced. The affordance for choosing a file is a labelled `Input type="file"` inside a `Field`, and a row that is not a file is an `Item`.
+
+## Platform notes
+
+`state` (`idle`, `uploading`, `processing`, `error`, `done`) is where the mandatory states live for this component, so wire all of them instead of swapping in a `Skeleton`: `error` recolours border and text through `--destructive`, and an empty attachment list still needs its own `Empty` block. The card is already border plus `bg-card`, which is the entire elevation story. `AttachmentTitle` reaches for a `shimmer` utility the Platform theme does not define, so it paints nothing; keep progress as text in `AttachmentDescription` (the demo's "Uploading 64%"), which is also what a screen reader announces, and build that string with i18next interpolation. One layout trap: `AttachmentTrigger` is an absolutely positioned overlay at `inset-0 z-10`, so any button has to sit inside `AttachmentActions` (`z-20`) or it stops being clickable.
+
+## Install
+
+```bash
+npx shadcn@latest add attachment
+```
+
+## Code
+
+```tsx
+"use client";
+
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+  AttachmentTrigger,
+} from "@/components/ui/attachment";
+import { Spinner } from "@/components/ui/spinner";
+import { FileText } from "lucide-react";
+
+export function AttachmentDemo() {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <Attachment state="done">
+        <AttachmentMedia variant="icon">
+          <FileText />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>proposal.pdf</AttachmentTitle>
+          <AttachmentDescription>1.2 MB</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+
+      <Attachment state="uploading">
+        <AttachmentMedia variant="icon">
+          <Spinner />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>uploading-design.png</AttachmentTitle>
+          <AttachmentDescription>Uploading 64%</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+
+      <Attachment state="error" size="sm">
+        <AttachmentMedia variant="icon">
+          <FileText />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>failed.txt</AttachmentTitle>
+          <AttachmentDescription>Upload failed</AttachmentDescription>
+        </AttachmentContent>
+      </Attachment>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/attachment](https://ui.shadcn.com/docs/components/attachment)

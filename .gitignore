@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+.source/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.env
+.env*.local
+.turbo/
+.claude/
+
+# generated: docs site reference pages synced from repo markdown
+apps/docs/content/docs/reference/

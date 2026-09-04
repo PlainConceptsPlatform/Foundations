@@ -1,0 +1,44 @@
+---
+title: "Input"
+description: "Displays a form input field."
+---
+
+import { InputDemo } from "@/components/previews/input-demo"
+
+<ComponentPreview>
+  <InputDemo />
+</ComponentPreview>
+
+## When to use
+
+The default single-line control for any short scalar value in a form: names, emails, quantities, references. Reach for `Textarea` when the value is multi-line prose, `InputGroup` when it needs a prefix, suffix or inline action, and `NativeSelect` or `Select` when the value comes from a fixed list.
+
+## Platform notes
+
+The control is `bg-transparent` with `border-input`, so `--input` is the entire affordance; `shadow-xs` sits in the class list but paints nothing, because the theme flattens the whole shadow scale to a transparent value. Validation styling hangs off `aria-invalid`, so a zod failure has to reach the DOM as `aria-invalid` (which the shadcn `Field` and `Form` wiring sets for you) rather than as a hand-added red border class. A placeholder is not a label: pair every `Input` with a `Label` or `FieldLabel`, and route the label, the placeholder and the error message through react-i18next `t()` calls. It lives in `shared/ui`; the form that composes it belongs to the feature or entity that owns the data.
+
+## Install
+
+```bash
+npx shadcn@latest add input
+```
+
+## Code
+
+```tsx
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export function InputDemo() {
+  return (
+    <div className="grid w-full max-w-sm gap-2">
+      <Label htmlFor="email">Email</Label>
+      <Input type="email" id="email" placeholder="you@example.com" />
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/input](https://ui.shadcn.com/docs/components/input)

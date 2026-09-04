@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege by default. No job here needs to write to the repo.
+permissions:
+  contents: read
+
+# A new push to the same ref makes the in-flight run obsolete.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, build (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # package.json declares engines.node ">=20". Test the range we claim
+        # rather than only the version we happen to deploy on.
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (Biome)
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # The build was never gated, so a broken build could reach main and was
+      # only caught by the deploy. It also exercises sync-docs and gen-tokens.
+      - name: Build
+        run: pnpm build
+
+      # Generated content is committed so it is reviewable in a diff. If a
+      # generator's input changed without the output being regenerated, or
+      # someone hand-edited a generated page, the tree is now dirty.
+      - name: Generated content is up to date
+        run: |
+          pnpm --filter @plainconceptsplatform/docs gen
+          git diff --exit-code -- apps/docs/content/docs/components apps/docs/lib/tokens.generated.ts \
+            || { echo "::error::Generated files are stale. Run 'pnpm --filter @plainconceptsplatform/docs gen' and commit the result."; exit 1; }

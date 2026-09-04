@@ -1,0 +1,51 @@
+---
+title: "Spinner"
+description: "A loading spinner component."
+---
+
+import { SpinnerDemo } from "@/components/previews/spinner-demo"
+
+<ComponentPreview>
+  <SpinnerDemo />
+</ComponentPreview>
+
+## When to use
+
+Use Spinner for an indeterminate wait tied to a control or a small region: a submitting button, an inline refresh, a panel too small for a skeleton. For a screen or section of content that is loading, use `Skeleton`; when the ratio is known, use `Progress`.
+
+## Platform notes
+
+Under the hood this is a Lucide `Loader2Icon` with `role="status"` and a hardcoded English `aria-label="Loading"`: override it with a translated message, otherwise a magic string ships straight into the accessibility tree. Because the theme stops `animate-spin` after one iteration under reduced motion, a spinner on its own is not a visible wait indicator for those users, so pair it with text or a disabled control the way the demo pairs it with a disabled Button. It takes `currentColor`, so inside a button it inherits the correct foreground with no token work; size it with `size-*` rather than width and height utilities.
+
+## Install
+
+```bash
+npx shadcn@latest add spinner
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+
+export function SpinnerDemo() {
+  return (
+    <div className="flex items-center gap-6">
+      <Spinner className="size-4" />
+      <Spinner className="size-6" />
+      <Spinner className="size-8" />
+      <Button disabled>
+        <Spinner className="size-4" />
+        Loading
+      </Button>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/spinner](https://ui.shadcn.com/docs/components/spinner)

@@ -1,0 +1,62 @@
+---
+title: "Card"
+description: "Displays content and actions in a card, with a header, content, and footer."
+---
+
+import { CardDemo } from "@/components/previews/card-demo"
+
+<ComponentPreview block>
+  <CardDemo />
+</ComponentPreview>
+
+## When to use
+
+Card is the default container for a self-contained block on a Platform screen: a dashboard panel, a form section, a summary tile. Prefer it to a bare `div` with borders so every surface in the app matches. It is the wrong choice for a repeated list of records, where `Item` in an `ItemGroup` is lighter, and for anything that overlays the page, where `Dialog`, `Sheet` or `Popover` belong.
+
+## Platform notes
+
+Card is the canonical elevation in this theme: `border` plus `bg-card` and `text-card-foreground`, with no shadow. The vendored component still carries `shadow-sm`, which compiles to a fully transparent shadow because the theme overrides Tailwind's shadow scale, so leave the class in place (upstream source stays copy-pasteable) and do not reach for `shadow-md` expecting depth. `CardTitle` and `CardDescription` render as `div`, not headings, so pass a heading element through `CardTitle` (or wire `aria-labelledby`) when the card is a real section of the page. A card holding fetched data owns its states: skeleton inside `CardContent` with the header left intact so nothing jumps, plus a written empty state and an error path.
+
+## Install
+
+```bash
+npx shadcn@latest add card
+```
+
+## Code
+
+```tsx
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export function CardDemo() {
+  return (
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Create project</CardTitle>
+        <CardDescription>Deploy your new project in one click.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          Themed with @plainconceptsplatform/ui-theme tokens.
+        </p>
+      </CardContent>
+      <CardFooter className="gap-2">
+        <Button variant="outline">Cancel</Button>
+        <Button>Deploy</Button>
+      </CardFooter>
+    </Card>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/card](https://ui.shadcn.com/docs/components/card)

@@ -1,0 +1,50 @@
+---
+title: "Toggle Group"
+description: "A set of two-state buttons that can be toggled on or off."
+---
+
+import { ToggleGroupDemo } from "@/components/previews/toggle-group-demo"
+
+<ComponentPreview>
+  <ToggleGroupDemo />
+</ComponentPreview>
+
+## When to use
+
+Use `ToggleGroup` for choosing from a small set that stays visible: a view switcher, alignment, a 7 / 30 / 90 day range. Past roughly five options move to `Select`, and if the choice swaps panels of content rather than a value, use `Tabs`.
+
+## Platform notes
+
+`variant` and `size` are set once on the group and reach the items through React context, so passing them per item is silently ignored; the demo sets `variant="outline"` on `ToggleGroup` only. It is uncontrolled through `defaultValue` in the demo; a controlled group needs `value` plus `onValueChange`, and `type="single"` emits an empty string when the active item is deselected, so guard that before it reaches a TanStack Query key or a URL param. Every item needs a translated `aria-label` (`Align left` in the demo is a magic string that must become an i18next message), and the group needs its own accessible name when the icons alone do not say what is being chosen.
+
+## Install
+
+```bash
+npx shadcn@latest add toggle-group
+```
+
+## Code
+
+```tsx
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
+export function ToggleGroupDemo() {
+  return (
+    <ToggleGroup type="single" defaultValue="center" variant="outline">
+      <ToggleGroupItem value="left" aria-label="Align left">
+        Left
+      </ToggleGroupItem>
+      <ToggleGroupItem value="center" aria-label="Align center">
+        Center
+      </ToggleGroupItem>
+      <ToggleGroupItem value="right" aria-label="Align right">
+        Right
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/toggle-group](https://ui.shadcn.com/docs/components/toggle-group)

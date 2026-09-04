@@ -1,0 +1,30 @@
+{
+  "name": "platform-foundations",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared Platform foundation for PlainConcepts Platform apps: theme, conventions, docs, and a themed component showcase.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @plainconceptsplatform/docs dev",
+    "build": "pnpm -r build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm -r typecheck",
+    "release:theme": "pnpm typecheck && cd packages/theme && npm publish --access public",
+    "release:components": "pnpm typecheck && pnpm --filter @plainconceptsplatform/ui-components build && cd packages/ui-components && npm publish --access public",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{css,js,json,jsx,mjs,ts,tsx}": "biome check --write --no-errors-on-unmatched"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
+    "typescript": "^5.6.3"
+  }
+}

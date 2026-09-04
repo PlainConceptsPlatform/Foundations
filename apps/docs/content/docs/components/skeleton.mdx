@@ -1,0 +1,46 @@
+---
+title: "Skeleton"
+description: "Used to show a placeholder while content is loading."
+---
+
+import { SkeletonDemo } from "@/components/previews/skeleton-demo"
+
+<ComponentPreview>
+  <SkeletonDemo />
+</ComponentPreview>
+
+## When to use
+
+Skeleton is the mandated loading state for content that will appear in place: lists, cards, tables, detail panels. Use `Spinner` for a wait attached to a control such as a submitting button, and `Progress` when you know how far along the work is.
+
+## Platform notes
+
+Painted with `bg-accent`, which is a blue tint in this theme (blue-100 in light, `#17244a` in dark) and doubles as the hover surface, so a skeleton row can match the colour of a hovered row above it; that is the theme working as designed, do not swap in `--muted` per component. No `motion-safe:` guard is needed on `animate-pulse`: the theme's base layer collapses animation to 1ms with a single iteration under `prefers-reduced-motion: reduce`, so this is handled once for the whole app. Size each skeleton to the real element it stands in for (the demo mirrors an avatar plus two text lines) so nothing shifts when data arrives. Skeletons live next to the component they replace, in the slice that owns it, not in a shared collection of loading screens.
+
+## Install
+
+```bash
+npx shadcn@latest add skeleton
+```
+
+## Code
+
+```tsx
+import { Skeleton } from "@/components/ui/skeleton";
+
+export function SkeletonDemo() {
+  return (
+    <div className="flex items-center gap-4">
+      <Skeleton className="h-12 w-12 rounded-full" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/skeleton](https://ui.shadcn.com/docs/components/skeleton)

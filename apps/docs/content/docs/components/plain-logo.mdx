@@ -1,0 +1,39 @@
+---
+title: Logotype
+description: Responsive brand logo that adapts to the space it is given.
+---
+
+import { PlainLogo } from "@plainconceptsplatform/ui-components";
+
+## Installation
+
+```bash
+pnpm add @plainconceptsplatform/ui-components
+```
+
+## Usage
+
+```tsx
+import { PlainLogo } from "@plainconceptsplatform/ui-components";
+
+<PlainLogo />
+```
+
+## Preview
+
+`PlainLogo` uses CSS container queries (no JavaScript) to show the biggest mark that fits
+its parent: the **icon** in tight spaces, the **wordmark** at medium widths, and the full
+**lockup** when wide. Text follows `currentColor` (works in light/dark); the brand mark stays blue.
+
+<div className="my-4 space-y-4">
+  <div className="w-20 rounded-md border border-border p-3"><PlainLogo /></div>
+  <div className="w-72 rounded-md border border-border p-3"><PlainLogo /></div>
+  <div className="w-full rounded-md border border-border p-3"><PlainLogo /></div>
+</div>
+
+Under ~190px it shows the icon, up to ~460px the wordmark, and wider it shows the full lockup.
+Pass `className` to constrain size:
+
+```tsx
+<PlainLogo className="h-8 w-40" />
+```

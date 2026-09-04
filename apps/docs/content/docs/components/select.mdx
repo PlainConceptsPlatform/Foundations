@@ -1,0 +1,56 @@
+---
+title: "Select"
+description: "Displays a list of options for the user to pick from, triggered by a button."
+---
+
+import { SelectDemo } from "@/components/previews/select-demo"
+
+<ComponentPreview>
+  <SelectDemo />
+</ComponentPreview>
+
+## When to use
+
+The default choice for one value from a known list of roughly five to fifteen options, when you want the Platform dropdown surface with grouping and checkmarks. Below that count, `RadioGroup` shows everything at once; above it, or whenever a user would want to type to narrow, use `Combobox`; on dense data-entry or mobile-first screens `NativeSelect` is faster.
+
+## Platform notes
+
+This vendored copy defaults `SelectContent` to `position="item-aligned"` and `align="center"` rather than the upstream `popper`, so the panel overlays the trigger: pass `position="popper"` when you need it to sit below. Content renders through a Radix portal onto `--popover`, with item hover on `--accent`, which is exactly why `--accent` is a hover surface and not a value to reuse as a chart series or badge colour. The panel is `bg-popover` plus a border and no visible shadow, since `shadow-md` compiles to transparent here. Wrap the trigger in `Field` so it gets a label, set `aria-invalid` on it when the form reports an error, and take the `SelectValue` placeholder and every `SelectItem` label from react-i18next.
+
+## Install
+
+```bash
+npx shadcn@latest add select
+```
+
+## Code
+
+```tsx
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export function SelectDemo() {
+  return (
+    <Select defaultValue="blueberry">
+      <SelectTrigger className="w-48">
+        <SelectValue placeholder="Select a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="apple">Apple</SelectItem>
+        <SelectItem value="banana">Banana</SelectItem>
+        <SelectItem value="blueberry">Blueberry</SelectItem>
+        <SelectItem value="grapes">Grapes</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/select](https://ui.shadcn.com/docs/components/select)

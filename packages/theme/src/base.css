@@ -1,0 +1,42 @@
+/* @plainconceptsplatform/ui-theme, base layer.
+ * Import AFTER theme.css. Sets element defaults using semantic tokens.
+ *
+ * Font: load "Outfit" in the app (Next.js: next/font/google, recommended,
+ * self-hosted, no layout shift). This file only references the family via
+ * --font-sans; it does not fetch a webfont, to keep the package offline-safe.
+ */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans, "Outfit", system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Type scale from the Platform styleguide (Outfit). */
+  h1 {
+    font-weight: 700;
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.5625rem; /* 25px */
+  }
+
+  /* DESIGN.md requires respecting this; enforce it once here rather than asking
+     every component to remember. Keeps a 1ms duration so transitionend still
+     fires and JS waiting on it does not stall. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

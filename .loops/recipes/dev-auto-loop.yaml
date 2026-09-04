@@ -1,0 +1,203 @@
+version: 2
+
+loops:
+  - taskId: dev-auto-preflight
+    intervalHuman: 20m
+    description: >
+      Unattended development loop: sync main -> plan and complete
+      the oldest issue -> verify -> create and approve a PR ->
+      auto-merge -> close the issue
+
+tasks:
+  - id: dev-auto-preflight
+    name: "Preflight: require a clean tree and sync main"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        test -z "$(git status --porcelain)"
+        && git switch main
+        && git fetch origin
+        && git rebase origin/main
+    onSuccessTaskId: dev-auto-pick
+    onFailureTaskId: dev-auto-clean-dirty
+
+  - id: dev-auto-clean-dirty
+    name: "Recovery: dirty tree, reset and return to main"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        git reset --hard && git clean -fd
+        && git switch main
+        && git fetch origin
+        && git rebase origin/main
+    onSuccessTaskId: dev-auto-pick
+    onFailureTaskId: null
+    maxRuns: 1
+
+  - id: dev-auto-pick
+    name: "Select and reserve the oldest code:pick issue"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        number=$(gh issue list --label "code:pick" --state open
+        --limit 1000 --json number
+        --jq "sort_by(.number) | .[0].number");
+        test -n "$number" || exit 75;
+        body=$(gh issue view "$number" --json number,title,body
+        --jq "{number,title,body}");
+        gh issue edit "$number" --add-label code:doing
+        --remove-label code:pick >/dev/null;
+        printf "%s\n" "$body"
+    onSuccessTaskId: dev-auto-implement
+    onFailureTaskId: dev-auto-nothing
+
+  - id: dev-auto-implement
+    name: "Implement: complete the issue directly with OpenCode"
+    command: opencode
+    commandArgs:
+      - run
+      - >
+        First, load all skills available for your current agent. Then
+        take complete ownership of this GitHub issue. First inspect the
+        current repository state and determine whether the work is
+        untouched, partially implemented, or already present but
+        incomplete. If work is missing, do it. If work already exists,
+        identify and complete all remaining work rather than starting
+        over.
+        Previous task output: {{output}}.
+        Plan the remaining work internally before coding, then
+        implement it. Verify that the issue is actually complete before
+        finishing: run the relevant checks, inspect the resulting
+        behavior, and fix any failures. Do not stop after planning, do
+        not stop after a summary, and do not claim completion without
+        verification. Preserve correct existing work and make the
+        smallest correct change. Work on a feature branch. Never explore
+        or read files outside the current repository root. Do not push
+        or perform any GitHub actions. Never ask for confirmation.
+        Generate visual evidence where the change affects the UI. Issue
+        title: {{title}} Issue body: {{body}} Issue id: {{number}}
+    onSuccessTaskId: dev-auto-verify
+    onFailureTaskId: dev-auto-fail
+    maxRuns: 5
+
+  - id: dev-auto-verify
+    name: "Verify: lint, typecheck, tests, and build"
+    command: sh
+    commandArgs:
+      - -c
+      - pnpm lint && pnpm typecheck && pnpm test && pnpm build
+    onSuccessTaskId: dev-auto-commit
+    onFailureTaskId: dev-auto-implement
+
+  - id: dev-auto-commit
+    name: "Stage and commit all changes"
+    command: sh
+    commandArgs:
+      - -c
+      - git add -A && git commit -m "fix: resolve #{{number}} {{title}}" || true
+    onSuccessTaskId: dev-auto-pr
+    onFailureTaskId: null
+
+  - id: dev-auto-pr
+    name: "Create PR and enable auto-merge once checks pass"
+    # --auto, never --admin. --admin bypasses branch protection, so an unattended
+    # loop would merge code that CI has not approved (and this repo publishes two
+    # packages to npm). --auto hands the decision to GitHub: it merges only after
+    # the required checks are green, and simply waits otherwise.
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        BRANCH=$(git branch --show-current)
+        && git push -u origin "$BRANCH" >/dev/null
+        && PR_URL=$(gh pr create
+        --title "Resolve #{{number}}: {{title}}"
+        --body "Closes #{{number}}" --label code:done)
+        && gh pr merge "$PR_URL" --squash --delete-branch --auto
+        && printf '{"prUrl":"%s"}\n' "$PR_URL"
+    onSuccessTaskId: dev-auto-complete
+    onFailureTaskId: dev-auto-merge-fail
+
+  - id: dev-auto-complete
+    name: "Complete: mark the issue done, close it, and return to main"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        gh issue edit {{number}} --add-label code:done
+        --remove-label code:doing --remove-label code:review
+        && gh issue close {{number}}
+        && git checkout -- . && git clean -fd && git switch main
+    onSuccessTaskId: null
+    onFailureTaskId: null
+
+  - id: dev-auto-fail
+    name: "Recovery: reset implementation and return the issue to code:pick"
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        git reset --hard && git clean -fd && git switch main
+        && gh issue edit {{number}} --add-label code:pick
+        --remove-label code:doing
+    onSuccessTaskId: null
+    onFailureTaskId: null
+
+  - id: dev-auto-merge-fail
+    name: "Recovery: hand the PR to a human for review"
+    # No retry with elevated permissions. If auto-merge could not be enabled or the
+    # checks failed, that is a signal to stop, not to push harder: label the issue
+    # and leave the branch and PR intact for someone to look at.
+    command: sh
+    commandArgs:
+      - -c
+      - >
+        gh issue edit {{number}} --add-label code:review
+        --remove-label code:doing
+        && git checkout -- . && git clean -fd && git switch main
+    onSuccessTaskId: null
+    onFailureTaskId: null
+
+  - id: dev-auto-nothing
+    name: "Idle: no code:pick issues are available"
+    command: echo
+    commandArgs:
+      - "Nothing to do, no issues with code:pick label"
+    silentChain: true
+    onSuccessTaskId: null
+    onFailureTaskId: null
+
+diagram: |
+  flowchart TD
+      devAutoStart("Start<br/>Begin automated development cycle") --> devAutoPreflight
+      devAutoPreflight["Preflight<br/>Require a clean tree and sync main"] -->|✓| devAutoPick
+      devAutoPreflight -.->|✗| devAutoCleanDirty
+      devAutoCleanDirty("Recovery<br/>Dirty tree, reset and return to main<br/>(maxRuns=1)") -->|✓| devAutoPick
+      devAutoPick["Select<br/>Reserve the oldest code:pick issue"] -->|✓| devAutoImplement
+      devAutoPick -.->|✗| devAutoNothing
+      devAutoImplement("Implement<br/>Complete the issue with OpenCode<br/>↻5") -->|✓| devAutoVerify
+      devAutoImplement -.->|✗| devAutoFail
+      devAutoVerify["Verify<br/>Lint, typecheck, tests, and build"] -->|✓| devAutoCommit
+      devAutoVerify -.->|✗| devAutoImplement
+      devAutoCommit("Commit<br/>Stage and commit all changes") -->|✓| devAutoPr
+      devAutoPr["PR<br/>Create PR, auto-merge once checks pass"] -->|✓| devAutoComplete
+      devAutoPr -.->|✗| devAutoMergeFail
+      devAutoComplete(("Complete<br/>Mark issue done, close it,<br/>and return to main"))
+      devAutoFail(("Fail<br/>Reset and return issue<br/>to code:pick"))
+      devAutoMergeFail(("Merge Fail<br/>Label code:review and<br/>leave the PR for a human"))
+      devAutoNothing(("Idle<br/>No code:pick issues<br/>are available"))
+      classDef start fill:#ffffff,stroke:#172033,stroke-width:2px,color:#172033
+      classDef action fill:#eef0ff,stroke:#554cff,stroke-width:2px,color:#172033
+      classDef decision fill:#fff8e8,stroke:#c75b00,stroke-width:2px,color:#172033
+      classDef idle fill:#202c40,stroke:#738198,stroke-width:2px,color:#ffffff
+      classDef failure fill:#fff0f0,stroke:#ef2929,stroke-width:2px,color:#8b1a1a
+      classDef success fill:#e8f8ec,stroke:#18883c,stroke-width:2px,color:#145a32
+      class devAutoStart start
+      class devAutoCleanDirty,devAutoImplement,devAutoCommit action
+      class devAutoPreflight,devAutoPick,devAutoVerify,devAutoPr decision
+      class devAutoNothing idle
+      class devAutoFail,devAutoMergeFail failure
+      class devAutoComplete success

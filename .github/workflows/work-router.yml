@@ -1,0 +1,453 @@
+# Managed by @plainconceptsplatform/workflows. Source: loops/workflows/work-router.yml. Update with `workflows update --force`; consumer edits may be overwritten.
+name: "All Work Router"
+
+# Owns every repository automation trigger. Classifies each event into exactly one route,
+# then calls at most one worker or runs one deterministic job. No model runs here.
+
+# GitHub titles an issue-triggered run with the issue title, so every run on one issue reads
+# the same. Name it after the event instead. This is evaluated before any job, so it can
+# describe the trigger but not the route the classifier picks.
+run-name: >-
+  ${{ github.event_name == 'issues'
+  && github.event.label.name == 'bot-working'
+  && contains(github.event.issue.labels.*.name, 'implement')
+  && format('Working (Implement): {0} (#{1})', github.event.issue.title, github.event.issue.number)
+  || github.event_name == 'issues'
+  && github.event.label.name == 'bot-working'
+  && contains(github.event.issue.labels.*.name, 'refine')
+  && format('Working (Refine): {0} (#{1})', github.event.issue.title, github.event.issue.number)
+  || github.event_name == 'issues'
+  && github.event.label.name == 'bot-working'
+  && contains(github.event.issue.labels.*.name, 'direct')
+  && format('Working (Direct): {0} (#{1})', github.event.issue.title, github.event.issue.number)
+  || github.event_name == 'issues'
+  && github.event.label.name == 'bot-working'
+  && format('Working: {0} (#{1})', github.event.issue.title, github.event.issue.number)
+  || github.event_name == 'issues'
+  && format('{0} label on #{1} by {2}', github.event.label.name, github.event.issue.number, github.actor)
+  || github.event_name == 'issue_comment'
+  && format('comment on #{0} by {1}', github.event.issue.number, github.actor)
+  || github.event_name == 'pull_request_review'
+  && format('review on PR #{0} by {1}', github.event.pull_request.number, github.actor)
+  || github.event_name == 'pull_request_review_comment'
+  && format('review comment on PR #{0} by {1}', github.event.pull_request.number, github.actor)
+  || github.event_name == 'pull_request_target'
+  && format('PR #{0} {1} by {2}', github.event.pull_request.number, github.event.action, github.actor)
+  || github.event_name == 'workflow_run'
+  && format('CI {0} on {1}', github.event.workflow_run.conclusion, github.event.workflow_run.head_branch)
+  || github.event_name == 'workflow_dispatch'
+  && format('dispatch: {0}', inputs.operation)
+  || github.event_name == 'schedule'
+  && format('schedule {0}', github.event.schedule)
+  || github.event_name }}
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_run:
+    workflows: ["App: CI", "CI"]
+    types: [completed]
+    branches:
+      - "fix/*"
+      - "bugfix/*"
+      - "feature/*"
+      - "bot/*"
+      - "patch/*"
+      - "hotfix/*"
+
+  # Cron to route mapping lives in .github/actions/classify-route/classify-route.sh.
+  schedule:
+    - cron: "17 1 * * 1"
+    - cron: "43 3 * * *"
+    - cron: "0 6 * * *"
+    - cron: "*/15 * * * *"
+    - cron: "0 */2 * * *"
+    - cron: "29 7 * * *"
+
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Operation to run"
+        required: true
+        type: choice
+        options:
+          - refine
+          - implement
+          - direct
+          - apply-review
+          - merge-gate
+          - audit
+          - propose
+          - audit-close
+          - cleanup-artifacts
+          - reconcile-bot-pr-runs
+          - stale-recovery
+          - validate
+      issue-number:
+        description: "Issue number (required for refine / implement / direct)"
+        required: false
+        type: string
+      pr-number:
+        description: "Pull request number (required for apply-review / merge-gate)"
+        required: false
+        type: string
+      mode:
+        description: "Refine mode: first or rerefine"
+        required: false
+        type: choice
+        options:
+          - first
+          - rerefine
+      ci-conclusion:
+        description: "CI conclusion for merge-gate dispatch"
+        required: false
+        type: choice
+        options:
+          - success
+          - failure
+          - action_required
+      ci-run-id:
+        description: "CI workflow run ID for merge-gate dispatch"
+        required: false
+        type: string
+      trigger-kind:
+        description: "Audit trigger: scheduled or manual"
+        required: false
+        type: choice
+        options:
+          - manual
+          - scheduled
+
+permissions:
+  contents: read
+
+jobs:
+  # Public repositories must check repository permission before an event can start a model.
+  authorize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      trusted: ${{ steps.check.outputs.trusted }}
+    steps:
+      - name: Check the actor can start an agent
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          # Events with no human actor. `schedule` and `workflow_run` are the fleet triggering
+          # itself; `workflow_dispatch` is already restricted by GitHub to write and above.
+          case "$EVENT" in
+            schedule | workflow_run | workflow_dispatch)
+              echo "trusted=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::$EVENT has no untrusted actor."
+              exit 0
+              ;;
+          esac
+
+          # Platform bot owns Safe Outputs. Its label changes must be able to
+          # start the follow-on worker, even though GitHub does not report it
+          # as a repository collaborator.
+          if [ "$ACTOR" = "github-actions[bot]" ] || [ "$ACTOR" = "platform-devbox[bot]" ]; then
+            echo "trusted=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" \
+            --jq '.permission' 2>/dev/null || echo "none")
+
+          case "$permission" in
+            admin | maintain | write)
+              echo "trusted=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::$ACTOR has $permission permission."
+              ;;
+            *)
+              echo "trusted=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::$ACTOR has '$permission' permission on this repository. No agent will run."
+              ;;
+          esac
+
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      route: ${{ steps.route.outputs.route }}
+      issue-number: ${{ steps.route.outputs.issue-number }}
+      pr-number: ${{ steps.route.outputs.pr-number }}
+      linked-issue: ${{ steps.route.outputs.linked-issue }}
+      ci-conclusion: ${{ steps.route.outputs.ci-conclusion }}
+      ci-run-id: ${{ steps.route.outputs.ci-run-id }}
+      refine-mode: ${{ steps.route.outputs.refine-mode }}
+      direct-mode: ${{ steps.route.outputs.direct-mode }}
+      trigger-kind: ${{ steps.route.outputs.trigger-kind }}
+    steps:
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Classify event into a single route
+        id: route
+        uses: ./.github/actions/classify-route
+        with:
+          token: ${{ github.token }}
+
+  call-implement:
+    needs: [classify, authorize]
+    if: needs.classify.outputs.route == 'implement' && needs.authorize.outputs.trusted == 'true'
+    uses: ./.github/workflows/agent-implement.lock.yml
+    concurrency:
+      group: write-pipeline-${{ needs.classify.outputs.issue-number }}
+      cancel-in-progress: false
+    permissions: write-all
+    with:
+      issue-number: ${{ needs.classify.outputs.issue-number }}
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
+      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
+
+  call-direct:
+    needs: [classify, authorize]
+    if: needs.classify.outputs.route == 'direct' && needs.authorize.outputs.trusted == 'true'
+    uses: ./.github/workflows/agent-direct.lock.yml
+    concurrency:
+      group: direct-${{ needs.classify.outputs.issue-number }}
+      cancel-in-progress: false
+    permissions: write-all
+    with:
+      issue-number: ${{ needs.classify.outputs.issue-number }}
+      mode: ${{ needs.classify.outputs.direct-mode }}
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
+      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
+
+  bot-approve:
+    needs: classify
+    if: >
+      needs.classify.outputs.route == 'bot-approve' &&
+        (github.actor == 'app/github-actions' || github.actor == 'platform-devbox[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Approve pending workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          mapfile -t run_ids < <(
+            gh api "repos/$REPO/actions/runs?status=action_required&branch=$BRANCH" \
+              --jq '.workflow_runs[].id'
+          )
+
+          if [ "${#run_ids[@]}" -eq 0 ]; then
+            echo "No runs awaiting approval on branch $BRANCH"
+            exit 0
+          fi
+
+          for run_id in "${run_ids[@]}"; do
+            echo "Approving run $run_id"
+            gh api "repos/$REPO/actions/runs/$run_id/approve" --method POST
+          done
+
+  reconcile-bot-pr-runs:
+    needs: classify
+    if: needs.classify.outputs.route == 'reconcile-bot-pr-runs'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    env:
+      BOT_APP_ID: ${{ secrets.BOT_APP_ID }}
+      BOT_PRIVATE_KEY: ${{ secrets.BOT_PRIVATE_KEY }}
+    steps:
+      - name: Checkout for App token action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+      # Runs only the default-branch workflow and never checks out pull-request code.
+      # External users cannot impersonate github-actions[bot].
+      - name: Approve checks and dispatch Merge Gate for trusted bot pull requests
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+
+          gh api "repos/$REPO/pulls?state=open&per_page=100" |
+            jq -r --arg repo "$REPO" '
+              .[]
+              | select(
+                  (.user.login == "github-actions[bot]" or .user.login == "app/github-actions" or .user.login == "platform-devbox[bot]")
+                  and .head.repo.full_name == $repo
+                  and .mergeable_state != "dirty"
+                )
+              | [.number, .head.ref] | @tsv
+            ' |
+            while IFS=$'\t' read -r pr_number branch; do
+              gh api "repos/$REPO/actions/runs?status=action_required&branch=$branch" \
+                --jq '.workflow_runs[]
+                  | select(
+                      .event == "pull_request"
+                      and (.name == "App: CI" or .name == "Visual evidence")
+                    )
+                  | .id' |
+                while IFS= read -r run_id; do
+                  echo "Approving trusted bot run $run_id"
+                  gh api "repos/$REPO/actions/runs/$run_id/approve" --method POST
+                done
+
+              # Check if merge-gate already ran for this PR (comment on PR or linked issue)
+              gate_recorded=$(gh api "repos/$REPO/issues/$pr_number/comments?per_page=100" \
+                --jq 'any(.[]; .body | contains("<!-- agent-merge-gate -->"))')
+              if [ "$gate_recorded" = "true" ]; then
+                echo "Merge gate already recorded for PR #$pr_number, skipping"
+                continue
+              fi
+
+              # Also check the linked issue comments if the PR closes an issue
+              linked_issue=$(gh pr view "$pr_number" --repo "$REPO" --json closingIssuesReferences --jq '.closingIssuesReferences[0].number // empty' 2>/dev/null || true)
+              if [ -n "$linked_issue" ]; then
+                gate_recorded=$(gh api "repos/$REPO/issues/$linked_issue/comments?per_page=100" \
+                  --jq 'any(.[]; .body | contains("<!-- agent-merge-gate -->"))')
+                if [ "$gate_recorded" = "true" ]; then
+                  echo "Merge gate already recorded on issue #$linked_issue for PR #$pr_number, skipping"
+                  continue
+                fi
+              fi
+
+              ci=$(gh api "repos/$REPO/actions/runs?branch=$branch&per_page=100" \
+                --jq '[.workflow_runs[]
+                  | select(
+                      .name == "App: CI"
+                      and .event == "pull_request"
+                      and .status == "completed"
+                      and (.conclusion == "success" or .conclusion == "failure")
+                    )
+                  ] | sort_by(.created_at) | last // empty | [.id, .conclusion] | @tsv')
+              if [ -z "$ci" ]; then
+                continue
+              fi
+
+              IFS=$'\t' read -r ci_run_id ci_conclusion <<<"$ci"
+              echo "Dispatching Merge Gate for PR #$pr_number ($ci_conclusion, run $ci_run_id)"
+              gh api "repos/$REPO/actions/workflows/work-router.yml/dispatches" \
+                --method POST \
+                -f ref="$DEFAULT_BRANCH" \
+                -f "inputs[operation]=merge-gate" \
+                -f "inputs[pr-number]=$pr_number" \
+                -f "inputs[ci-conclusion]=$ci_conclusion" \
+                -f "inputs[ci-run-id]=$ci_run_id"
+            done
+
+  audit-close:
+    needs: classify
+    if: needs.classify.outputs.route == 'audit-close'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: audit-close
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/audit-close
+        with:
+          token: ${{ github.token }}
+
+  cleanup-artifacts:
+    needs: classify
+    if: needs.classify.outputs.route == 'cleanup-artifacts' && !github.event.repository.fork
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: cleanup-artifacts
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/cleanup-artifacts
+        with:
+          token: ${{ github.token }}
+          artifact-retention-days: ${{ vars.ARTIFACT_RETENTION_DAYS }}
+
+  stale-recovery:
+    needs: classify
+    if: needs.classify.outputs.route == 'stale-recovery'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: stale-recovery
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      actions: write
+    steps:
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/stale-recovery
+        with:
+          token: ${{ github.token }}
+          stale-threshold-hours: ${{ vars.STALE_THRESHOLD_HOURS }}
+
+  validate:
+    needs: classify
+    if: needs.classify.outputs.route == 'validate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout workflow actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/verify-route-matrix
+      - uses: ./.github/actions/verify-composite-actions

@@ -1,0 +1,52 @@
+---
+title: "Direction"
+description: "A text direction provider for RTL and LTR language support."
+---
+
+import { DirectionDemo } from "@/components/previews/direction-demo"
+
+<ComponentPreview>
+  <DirectionDemo />
+</ComponentPreview>
+
+## When to use
+
+`DirectionProvider` tells Radix primitives which side is start, so wrap the app in it as soon as a Platform app ships an RTL locale such as Arabic or Hebrew. Drive its value from the active react-i18next language rather than a fixed string; it renders nothing itself, so it is never the fix for a layout problem.
+
+## Platform notes
+
+The provider is context only. It flips Radix behaviour (menu arrow keys, popover side, slider direction) but does not set the `dir` attribute, so text does not actually flow right to left until the App Router root layout also puts `dir` on `<html>` from the current language. It belongs in `src/app` beside the i18n provider, never inside a feature. Everything under it should use logical utilities (`ms-*`, `me-*`, `text-start`, `inset-s-*`) in place of `ml-*` or `left-*`; `MessageScrollerButton` is the in-repo example, correcting its own centring with an `rtl:` variant.
+
+## Install
+
+```bash
+npx shadcn@latest add direction
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { DirectionProvider } from "@/components/ui/direction";
+
+export function DirectionDemo() {
+  return (
+    <DirectionProvider dir="rtl">
+      <div className="flex flex-col gap-2">
+        <Button>Select to toggle text direction</Button>
+        <p className="text-sm text-muted-foreground">
+          This content is wrapped in a <code>DirectionProvider</code> with
+          <code> dir="rtl"</code>. Text flows right-to-left, which is useful for Arabic, Hebrew, and
+          other RTL languages.
+        </p>
+      </div>
+    </DirectionProvider>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/direction](https://ui.shadcn.com/docs/components/direction)

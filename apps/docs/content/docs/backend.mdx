@@ -1,0 +1,116 @@
+---
+title: Backend
+description: The .NET conventions, the reasoning, and the patterns for everyday work.
+---
+
+Backend apps are .NET and C#. The source of truth is the Plain engineering skills. This page
+explains how the pieces fit and when to reach for each one; the skills hold the exhaustive rules.
+
+Two skills anchor everything. `plain-engineering-conventions` is language-agnostic (errors,
+boundaries, observability, testing, security). `plain-dotnet-guardrails` is the .NET side (VSA,
+EF Core, Aspire, DI, build hygiene, architecture tests). Read those two first.
+
+## Architecture
+
+Apps use Clean Architecture layers with the dependency arrow pointing inward:
+
+```text
+Api             minimal-API endpoints, grouped by feature; the composition root
+Application     use-cases as commands and queries (CQS); DTOs
+Domain          entities, value objects, domain events; no outward dependencies
+Infrastructure  EF Core and external integrations; implements Application/Domain interfaces
+SharedKernel    DDD building blocks reused across the domain
+```
+
+A request flows one direction. It lands on an endpoint in **Api**, which dispatches a command or
+query to **Application**. The handler works with the **Domain** model and persists through
+**Infrastructure**. `Domain` knows nothing about the outer layers, which is what keeps the core
+testable and stable. The full reference is in
+[Architecture](/docs/reference/architecture); deeper tactical patterns are in the
+`clean-ddd-hexagonal` skill.
+
+## Vertical slices and CQS
+
+Inside the layers, organize **by feature**, not by technical type. Everything for "create invoice"
+lives together rather than being scattered across generic `Services` and `Repositories` folders.
+Separate the write side from the read side: **commands** change state and return a result, **queries**
+read and never mutate. This keeps handlers small and intention-revealing.
+
+## Errors as values
+
+Domain and application errors are return values, not thrown exceptions, using `ErrorOr<T>` mapped to
+RFC 7807 ProblemDetails at the edge:
+
+```csharp
+public async Task<ErrorOr<User>> Handle(GetUser query)
+{
+    var user = await _users.FindAsync(query.Id);
+    return user is null
+        ? Error.NotFound("User.NotFound", "User not found")
+        : user;
+}
+
+// endpoint maps the result to HTTP
+result.Match(Results.Ok, errors => errors.ToProblemDetails());
+```
+
+Exceptions are for the genuinely exceptional, not for control flow.
+
+## When to use what
+
+- **A service or small app:** a few layered projects with feature folders inside. This is the
+  default. Do not add modules or a mediator before you feel the pain.
+- **A larger system:** a modular monolith where each module is a bounded context, internally VSA and
+  CQS. Split into separate deployables only when a boundary genuinely demands it.
+
+## Data access
+
+EF Core is the default. Keep queries in Infrastructure behind interfaces the Application layer owns.
+Project to DTOs for reads instead of loading full aggregates, use `AsNoTracking` for read-only
+queries, and watch for N+1 with explicit `Include` or split queries. Repository and query patterns
+are in `dotnet-backend-patterns`; tuning is in `optimizing-ef-core-queries`.
+
+## Testing
+
+Follow the pyramid. Many **unit** tests with xUnit over the domain and application handlers, where
+the value-as-errors style makes assertions clean. Fewer **integration** tests that run a real host
+through `WebApplicationFactory` against a real database through Testcontainers, so you catch wiring
+and query bugs. A few end-to-end tests over the critical paths. Skill: `csharp-xunit`.
+
+## Azure SQL backups in production
+
+Every production environment manages its database backup policy from Bicep, explicitly, with the
+platform standard values. Restating the defaults is the point: an unmanaged policy is one portal
+click or one implicit reset away from drifting, and a `backupShortTermRetentionPolicies` deployment
+that only sets `retentionDays` silently resets the differential cadence to Azure's 12-hour default
+on every apply.
+
+The standard is a **7-day point-in-time restore window**, one **differential backup every 24
+hours**, and **no long-term retention** unless the domain demands it:
+
+```bicep
+resource backupRetention 'Microsoft.Sql/servers/databases/backupShortTermRetentionPolicies@2023-08-01-preview' = {
+  parent: database
+  name: 'default'
+  properties: {
+    retentionDays: 7              // PITR window, the platform production standard
+    diffBackupIntervalInHours: 24 // stated so an apply cannot reset it to 12
+  }
+}
+```
+
+Wire both values from the environment config (`infra/pro.env`) through the infra workflow, so pro
+carries them and PRE stays on the platform defaults. Verify after the first apply in the portal
+under SQL server, Backups, Retention policies.
+
+## Observability and security
+
+Structured logging with `ILogger<T>` and OpenTelemetry for traces and metrics. Never log secrets or
+personal data. Run dependency and secret scanning in CI. The `plain-engineering-conventions`
+references cover observability and security in depth.
+
+## Skills for agents
+
+`plain-engineering-conventions`, `plain-dotnet-guardrails`, `clean-ddd-hexagonal`,
+`dotnet-backend-patterns`, `modern-csharp-coding-standards`, `optimizing-ef-core-queries`,
+`csharp-xunit`. See [AI and agents](/docs/ai) for how to install them.

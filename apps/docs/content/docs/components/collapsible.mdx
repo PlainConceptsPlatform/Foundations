@@ -1,0 +1,63 @@
+---
+title: "Collapsible"
+description: "An interactive component which expands and collapses a panel."
+---
+
+import { CollapsibleDemo } from "@/components/previews/collapsible-demo"
+
+<ComponentPreview>
+  <CollapsibleDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for `Collapsible` for a single show/hide region: advanced options in a form, a filter panel above a table, extra detail under a summary row. Several sibling regions with their own headings are an `Accordion` instead, and content that should float over the page rather than push it down belongs in a `Popover` or `Sheet`.
+
+## Platform notes
+
+The demo runs it controlled (`open` plus `onOpenChange`) because the trigger label flips between two words; both of those are react-i18next messages, and lifting the state is what lets you pick the right one. Uncontrolled with `defaultOpen` is fine when the label never changes. Keep the trigger a real button (`asChild` onto `Button`, as the demo does) so it stays keyboard reachable with the `ring` outline and Radix can keep `aria-expanded` truthful. Its height animation is the `animate-collapsible-*` keyframes from `tw-animate-css`, already reduced to 1ms under `prefers-reduced-motion` by the theme's `base.css`.
+
+## Install
+
+```bash
+npx shadcn@latest add collapsible
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+export function CollapsibleDemo() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full max-w-sm space-y-2">
+      <div className="flex items-center gap-3 px-4">
+        <h4 className="text-sm font-semibold">Foundation packages</h4>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm">
+            {isOpen ? "Hide" : "Show"}
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent className="space-y-2">
+        <div className="rounded-md border px-4 py-2 text-sm">@plainconceptsplatform/ui-theme</div>
+        <div className="rounded-md border px-4 py-2 text-sm">
+          @plainconceptsplatform/ui-components
+        </div>
+        <div className="rounded-md border px-4 py-2 text-sm">docs (this app)</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/collapsible](https://ui.shadcn.com/docs/components/collapsible)

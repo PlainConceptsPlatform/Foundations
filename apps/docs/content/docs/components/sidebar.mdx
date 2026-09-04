@@ -1,0 +1,114 @@
+---
+title: "Sidebar"
+description: "A composable, collapsible sidebar with a provider and many sub-parts."
+---
+
+import { SidebarDemo } from "@/components/previews/sidebar-demo"
+
+<ComponentPreview block>
+  <SidebarDemo />
+</ComponentPreview>
+
+## When to use
+
+`Sidebar` is the default app shell for a Platform tool: persistent primary navigation, collapsible to icons. Use `Sheet` when the panel is temporary and task-scoped, and `Menubar` or `NavigationMenu` when what you need is a command surface rather than a shell.
+
+## Platform notes
+
+It consumes the whole `--sidebar-*` token group and renders unstyled without it; the theme sets `--sidebar` to `--pc-neutral-100` rather than neutral-50 because neutral-50 reads at 1.04:1 against white and is not perceptible as a separate surface, with `--sidebar-border` carrying the boundary and `--sidebar-accent` the active item. `SidebarProvider` writes collapse state to a `sidebar_state` cookie and binds Ctrl/Cmd+B, so it must be a client component (hence `"use client"` in the demo), and to avoid a flash on first paint read that cookie in the server layout and pass `defaultOpen`. Below `md` it swaps to a `Sheet` whose sr-only title is the hardcoded string `Sidebar`, and `SidebarTrigger` ships a hardcoded `Toggle Sidebar` label: both are user-facing accessible names and need react-i18next. `SidebarMenuSkeleton` is the built-in loading state for a nav tree built from fetched data, and the nav tree itself is composed in `app/` or the widget owning the shell, not inside `shared/ui`.
+
+## Install
+
+```bash
+npx shadcn@latest add sidebar
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Frame, LifeBuoy, Map as MapIcon, Send } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarSeparator,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+const items = [
+  { title: "Overview", icon: Frame },
+  { title: "Components", icon: MapIcon },
+  { title: "Support", icon: LifeBuoy },
+];
+
+export function SidebarDemo() {
+  return (
+    <SidebarProvider className="overflow-hidden rounded-md border">
+      <Sidebar collapsible="icon" className="hidden md:flex">
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="flex size-6 items-center justify-center rounded bg-primary text-primary-foreground">
+              <span className="text-xs font-bold">P</span>
+            </div>
+            <span className="text-sm font-semibold">Platform</span>
+          </div>
+        </SidebarHeader>
+        <SidebarSeparator />
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton isActive={item.title === "Overview"}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <Send />
+                <span>Feedback</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-12 items-center gap-2 border-b px-3">
+          <SidebarTrigger />
+          <span className="text-sm font-medium">Showcase layout</span>
+        </header>
+        <div className="flex h-40 items-center justify-center p-6 text-sm text-muted-foreground">
+          Main content area
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/sidebar](https://ui.shadcn.com/docs/components/sidebar)

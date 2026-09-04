@@ -1,0 +1,67 @@
+---
+title: "Alert Dialog"
+description: "A modal dialog that interrupts the user with important content and expects a response."
+---
+
+import { AlertDialogDemo } from "@/components/previews/alert-dialog-demo"
+
+<ComponentPreview>
+  <AlertDialogDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for AlertDialog when the user must confirm something consequential before anything happens: deleting a record, discarding unsaved work, running a job that cannot be undone. For ordinary editing use `Dialog`, and report the outcome afterwards with a toast rather than a second AlertDialog.
+
+## Platform notes
+
+The Platform copy diverges from upstream in a way worth knowing: `AlertDialogAction` and `AlertDialogCancel` render through the `Button` component, so they accept `variant` and `size` directly (`variant="destructive"` on the action for a delete, which pulls `--destructive`), and there is an extra `AlertDialogMedia` slot plus `size="sm"` on the content. Nothing dismisses it by outside click and there is no close icon, which is the point, so the two button labels carry the whole decision: make them specific verbs, and make them i18next messages, not `t("ok")`. Enter and exit come from tw-animate-css and the theme's base layer already collapses them under `prefers-reduced-motion: reduce`, so do not layer a transition on top.
+
+## Install
+
+```bash
+npx shadcn@latest add alert-dialog
+```
+
+## Code
+
+```tsx
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+
+export function AlertDialogDemo() {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">Delete account</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your account.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction>Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/alert-dialog](https://ui.shadcn.com/docs/components/alert-dialog)

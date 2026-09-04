@@ -1,0 +1,38 @@
+---
+title: "Progress"
+description: "Displays an indicator showing the completion progress of a task."
+---
+
+import { ProgressDemo } from "@/components/previews/progress-demo"
+
+<ComponentPreview>
+  <ProgressDemo />
+</ComponentPreview>
+
+## When to use
+
+Use Progress when the completion ratio of a task is actually known: a file upload, a bulk import, a step counter through a wizard. When the duration is unknown use `Spinner`, and when content is loading in place use `Skeleton`.
+
+## Platform notes
+
+Track and bar are both brand tinted (`bg-primary/20` behind `bg-primary`); leave them that way and never reach for `--chart-*`, which is reserved for data series, or `--accent`, which is a hover surface. This copy has no indeterminate mode: with `value` omitted the indicator falls back to 0 and renders an empty track, which looks like a stalled task, so switch to `Spinner` rather than passing nothing. The bar is the only visual carrier of the number, so give the root an accessible name and render the percentage or step label beside it as a translated string. Its `transition-all` only ever animates `transform`, which is inside the motion contract, and the theme base layer already handles `prefers-reduced-motion`.
+
+## Install
+
+```bash
+npx shadcn@latest add progress
+```
+
+## Code
+
+```tsx
+import { Progress } from "@/components/ui/progress";
+
+export function ProgressDemo() {
+  return <Progress value={66} className="w-full max-w-sm" />;
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/progress](https://ui.shadcn.com/docs/components/progress)

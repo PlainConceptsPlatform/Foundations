@@ -1,0 +1,52 @@
+---
+title: "Native Select"
+description: "A styled native HTML select element."
+---
+
+import { NativeSelectDemo } from "@/components/previews/native-select-demo"
+
+<ComponentPreview>
+  <NativeSelectDemo />
+</ComponentPreview>
+
+## When to use
+
+Reach for this when you want the operating system's own picker: long option lists, dense data-entry forms, and mobile, where the native wheel beats a custom panel. Use `Select` for grouped items with icons or custom item rendering, and `Combobox` when the list needs a search box.
+
+## Platform notes
+
+The wrapper is `w-fit`, so inside a `Field` it will not stretch to match its neighbours; add `className="w-full"` when you want it to line up with the other controls in the column. Options are painted with the `Canvas` and `CanvasText` system colours because browsers do not let CSS reach into a native `<option>` list, which means the open popup will not follow your `dark` class: accept that instead of fighting it. The trigger sits on `--input` with the same `focus-visible` ring and `aria-invalid` states as `Input`, and the chevron is `aria-hidden`, so the accessible name still has to come from a `Label` bound by `htmlFor`. Option text is translated content, so build the list from `t()` values, not literals.
+
+## Install
+
+```bash
+npx shadcn@latest add native-select
+```
+
+## Code
+
+```tsx
+"use client";
+
+import { Field } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+
+export function NativeSelectDemo() {
+  return (
+    <Field className="max-w-xs">
+      <Label htmlFor="framework">Framework</Label>
+      <NativeSelect id="framework" defaultValue="next">
+        <NativeSelectOption value="next">Next.js</NativeSelectOption>
+        <NativeSelectOption value="vite">Vite</NativeSelectOption>
+        <NativeSelectOption value="remix">Remix</NativeSelectOption>
+        <NativeSelectOption value="astro">Astro</NativeSelectOption>
+      </NativeSelect>
+    </Field>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/native-select](https://ui.shadcn.com/docs/components/native-select)

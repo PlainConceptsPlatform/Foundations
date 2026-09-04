@@ -1,0 +1,51 @@
+---
+title: "Tabs"
+description: "A set of layered sections of content, shown one at a time."
+---
+
+import { TabsDemo } from "@/components/previews/tabs-demo"
+
+<ComponentPreview block>
+  <TabsDemo />
+</ComponentPreview>
+
+## When to use
+
+`Tabs` switches between panels of content that all belong to the same object, on one screen. Do not use it for steps in a process (use an explicit stepper or a multi-page form) or for sections that should be linkable, which belong to real routes with `NavigationMenu` or a Next.js segment layout.
+
+## Platform notes
+
+`TabsList` sits on `--muted` with the active trigger on `--background`, so a list placed on a muted card surface loses its contrast: put it on `bg-card` or switch the list to the `line` variant. The demo is uncontrolled via `defaultValue`; a controlled version needs `value` and `onValueChange`, and syncing that to a search param is preferred as soon as anyone wants to link a specific tab. Radix unmounts inactive panels, so react-hook-form state inside a tab is lost on switch unless the form lives at the `Tabs` level. Each panel owns its own loading, empty, and error states; a tab that fetches on activation shows a skeleton, not a blank region.
+
+## Install
+
+```bash
+npx shadcn@latest add tabs
+```
+
+## Code
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export function TabsDemo() {
+  return (
+    <Tabs defaultValue="account" className="w-full max-w-sm">
+      <TabsList>
+        <TabsTrigger value="account">Account</TabsTrigger>
+        <TabsTrigger value="password">Password</TabsTrigger>
+      </TabsList>
+      <TabsContent value="account" className="text-sm text-muted-foreground">
+        Update your account details here.
+      </TabsContent>
+      <TabsContent value="password" className="text-sm text-muted-foreground">
+        Change your password here.
+      </TabsContent>
+    </Tabs>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/tabs](https://ui.shadcn.com/docs/components/tabs)

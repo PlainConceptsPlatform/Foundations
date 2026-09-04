@@ -1,0 +1,9 @@
+/* @plainconceptsplatform/ui-theme, single entry point.
+ * Apps import this once:  @import "@plainconceptsplatform/ui-theme";
+ */
+@import "tailwindcss";
+@import "./theme.css";
+@import "./base.css";
+
+/* Enable class-based dark mode: <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));

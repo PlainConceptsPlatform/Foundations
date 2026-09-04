@@ -1,0 +1,51 @@
+---
+title: "Scroll Area"
+description: "Custom scrollbars with consistent styling across browsers."
+---
+
+import { ScrollAreaDemo } from "@/components/previews/scroll-area-demo"
+
+<ComponentPreview block>
+  <ScrollAreaDemo />
+</ComponentPreview>
+
+## When to use
+
+Wrap a bounded region in `ScrollArea` when it needs its own themed scrollbar: a long option list inside a `Popover`, an activity log, a column of many items. Let the page scroll natively when the whole screen is the scroll container, and use `MessageScroller` for a transcript that has to stay pinned to the newest entry.
+
+## Platform notes
+
+Scrolling only happens if the area has a resolved height (`h-60` in the demo); hand it a percentage or `auto` and it quietly stops clipping. The thumb is `bg-border` on a transparent track, deliberately quiet, so do not make it the only cue that more content exists: leave a row partly visible at the fold. The viewport itself is focusable and shows the `ring` outline, so keep it keyboard reachable instead of setting `tabIndex={-1}`. The mandatory states live around it: `Skeleton` rows while data loads and an `Empty` block when there is nothing, otherwise an empty scroll box reads as a bug.
+
+## Install
+
+```bash
+npx shadcn@latest add scroll-area
+```
+
+## Code
+
+```tsx
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const tags = Array.from({ length: 24 }).map((_, i) => `Item ${i + 1}`);
+
+export function ScrollAreaDemo() {
+  return (
+    <ScrollArea className="h-60 w-full max-w-sm rounded-md border p-4">
+      <div className="flex flex-col gap-2">
+        {tags.map((tag) => (
+          <div key={tag} className="flex items-center gap-2 rounded-sm bg-muted px-3 py-2 text-sm">
+            <span className="size-2 rounded-full bg-primary" />
+            {tag}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/scroll-area](https://ui.shadcn.com/docs/components/scroll-area)

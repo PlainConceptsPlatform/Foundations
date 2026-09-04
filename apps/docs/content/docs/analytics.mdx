@@ -1,0 +1,155 @@
+---
+title: Analytics with DORA
+description: "Three DORA metrics we take from GitHub, two we refuse to fake, and the agent metrics classic DORA has no slot for."
+---
+
+Once agents implement most of the changes, throughput stops telling you much. A project can open
+forty pull requests in a week and mean nothing by it. So the measurement has to move: towards what
+still needs a person, what the agents actually cost, and a habit of refusing to report what cannot be
+known.
+
+[**Project Health**](https://github.com/PlainConceptsPlatform/project-health) is where that lives. It
+collects delivery and agent metrics for Platform projects from the GitHub API, stores them as JSON in
+its own repository, and publishes a static site. Nothing in it talks to a monitoring system, and
+where GitHub cannot answer a question it says so rather than estimating.
+
+## What survives from classic DORA
+
+Modern DORA defines five metrics across two groups. Three can be derived from a repository, and two
+cannot.
+
+| Metric | Group | Status |
+|---|---|---|
+| Deployment frequency | Throughput | Collected |
+| Change lead time | Throughput | Collected |
+| Deployment rework rate | Instability | Collected once releases carry a hotfix marker |
+| Change fail rate | Instability | Not collected |
+| Failed deployment recovery time | Throughput | Not collected |
+
+The two that are missing both depend on knowing that a release caused a problem in production. DORA
+defines a failed deployment as one requiring immediate intervention afterwards, which is a fact about
+the running service and not about the repository. A red pipeline is a different thing and would be a
+misleading stand-in: across every production deployment collected so far, not one is recorded as
+failed, so a pipeline-based change fail rate would read zero forever.
+
+Rework rate survives because it is a property of a single release in isolation. It asks whether a
+release was planned or shipped in reaction to something, and whoever ships it can state that at the
+time. That makes it the one instability metric available without incident tooling, and it is what
+keeps a project placeable on the stability axis at all.
+
+### Two lead times, reported separately
+
+Change lead time follows the DORA definition, from when a commit was written to when it reached
+production. Issue to staging measures from when an issue was opened to when the work reached staging.
+The second starts earlier and ends earlier, so it flatters the number. Both are shown, and only the
+first feeds the profile placement.
+
+## Profiles, not a grade
+
+The 2025 DORA report replaced the older Elite through Low tiers with
+[seven team profiles](https://dora.dev/research/2025/ai-capabilities-model/) derived from cluster
+analysis, built on throughput, stability, and team well-being.
+
+Well-being is measured by survey and cannot be derived from a repository. So a project is placed on
+two of the three axes and reported as the set of profiles consistent with that, rather than given a
+single label. High throughput with high stability means either Pragmatic Performers or Harmonious
+High-Achievers, and only a survey separates them.
+
+<Callout type="warn" title="Do not infer well-being from commit timestamps">
+  Weekend and late-night activity is weak evidence, and measuring people that way costs more trust
+  than the metric is worth. The band edges in the config are directional reference lines too, not
+  official thresholds: DORA re-derives its clusters from each year's survey, so there are no fixed
+  cutoffs to copy.
+</Callout>
+
+## What agentic delivery adds
+
+Classic DORA has no slot for the cost of the thing doing the work. For projects running agent
+workflows, two more numbers get collected per run: token usage, read from the usage artifact with its
+input, output and cache counts and the model name, and execution time, taken from the duration of the
+step that runs the agent rather than the whole workflow.
+
+Getting those right turned out to be most of the work, and the traps are worth knowing because they
+all inflate or deflate quietly.
+
+- **Totals are a floor, and are labelled as one.** A run only reports usage if it reached the model
+  and uploaded its artifact. In one month on one project, 14 of 23 agent runs did. The site prints
+  "measured N of M" beside the totals instead of presenting a partial sum as complete.
+- **Find runs by evidence, not by title.** Run titles leak: an issue-triggered run and a dispatched
+  one are titled differently, so a per-kind title list missed triage and merge-gate entirely and half
+  the implement runs as well. Correcting it took that month from 23 measured runs to 52, and agent
+  time from 4h 20m to 7h 31m.
+- **A declared agent job is not an agent run.** Several workflow kinds declare a job that is
+  conditionally skipped, and one declares one on every run and skips it every time, which counted 140
+  agent runs that never invoked an agent. The real test is whether the job contains the step that runs
+  the agent, which also makes the kind and the duration come from the same evidence.
+- **Two durations exist and they are not the same.** A run's own token table sums time spent inside
+  model requests. The collector measures wall clock of the agent step, which is longer because it also
+  covers tool calls, file work and git operations. Neither is wrong, so the site labels which one it
+  shows.
+- **Cost is reported in tokens, not money.** Rates change, differ per account, and go stale in a
+  committed file, and a figure in euros invites comparison against a budget the repository knows
+  nothing about. Tokens are what the agents actually spend.
+
+Agent collection is also the expensive part: three API calls per run, so a first backfill of a month
+runs into thousands. A user token allows 5000 an hour against 15000 for a GitHub App installation,
+which is why backfilling more than a month or two wants an App token. Daily collection reads
+already-measured runs back from the stored file, so it only pays for what happened since yesterday.
+
+## What still needs a human
+
+This is the number that matters most once the pipeline is running, and it gets its own live panel:
+the issues labelled as needing a person and the open pull requests, per project, refreshed hourly
+while the rest refreshes daily.
+
+Bot authorship is counted separately, and that is the entire point of the panel. One project had
+seven open pull requests all raised by dependabot, so a single count would claim seven things needed
+attention when it was seven dependency bumps. Sorting by "waiting on a human" ignores bot pull
+requests for the same reason.
+
+Which labels mean a person must look differs per repository, so the label set is configuration. One
+project gets by with a single `review`, while another needs `needs-human-review`,
+`needs-maintainer-validation`, `needs-info` and `changes-requested`. Each is queried separately,
+because asking GitHub for several at once requires an issue to carry all of them.
+
+<Callout type="info" title="Collected server side, on purpose">
+  The obvious alternative is for the page to call the GitHub API from the browser. It will not: these
+  are private repositories, the page would need a token, and a token in client JavaScript can be read
+  by anyone who opens the page. Sitting behind authentication does not change that. So the data is up
+  to an hour behind, and every row links straight to the issue or pull request instead of asking you
+  to trust the page.
+</Callout>
+
+## Refusing to report
+
+The part that keeps the rest credible.
+
+- **Small samples are refused outright.** Below five releases in a period the collector records a
+  warning and will not place the project on the profile axes. One project has ten production
+  deployments in its entire history, and a rate computed from ten events moves a lot when the
+  eleventh arrives.
+- **A missing metric is a value, not a crash.** Every metric is stored as a block that is either
+  present with data or absent with a reason, so a project that cannot produce one is not an error and
+  one project failing never stops the others. The site renders the reason where the number would go.
+- **Some facts have to be supplied.** Rework rate needs to know whether a release was planned, which
+  GitHub cannot infer, so it comes from a marker set when shipping.
+
+The governing rule, worth repeating because it is the easy one to break: a missing metric is a fact
+about the data, not a gap to fill with a plausible number.
+
+## Adding a project
+
+The list of collected repositories is an explicit allowlist in `projects.json` rather than a scan of
+the organisation, so adding a project is a pull request against
+[that file](https://github.com/PlainConceptsPlatform/project-health/blob/main/projects.example.json).
+
+Each entry names which environments count as production and staging, because the names genuinely
+differ across the organisation and one hardcoded pattern would mark healthy projects as irregular. A
+project with no production environment yet has its production metrics skipped rather than reported as
+zero, and a planned project is listed but never collected.
+
+<Cards>
+  <Card title="Project Health" href="https://github.com/PlainConceptsPlatform/project-health" description="The collector, the config, and the published site." />
+  <Card title="3. Maintenance mode" href="/docs/how-we-work/maintenance" description="The phase these numbers are measuring." />
+  <Card title="AI x SDLC" href="/docs/ai#agentic-workflows" description="The router and worker shape the agent metrics are read from." />
+</Cards>

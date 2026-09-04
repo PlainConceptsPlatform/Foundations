@@ -1,0 +1,60 @@
+---
+title: "Dropdown Menu"
+description: "Displays a menu of actions, triggered by a button."
+---
+
+import { DropdownMenuDemo } from "@/components/previews/dropdown-menu-demo"
+
+<ComponentPreview>
+  <DropdownMenuDemo />
+</ComponentPreview>
+
+## When to use
+
+`DropdownMenu` holds actions on the current record, row, or account behind an explicit trigger. It is not a form control: pick a value with `Select`, filter a long list with `Combobox`, and offer a right-click shortcut with `ContextMenu`.
+
+## Platform notes
+
+Content sits on `--popover` with items highlighting through `--accent`, and `variant="destructive"` on the item is the only correct way to colour a destructive entry; hand-applying `text-destructive` skips the matching hover and focus treatment. Radix runs its own enter and exit animation on the content, so do not add a `transition` class on top of it, and the theme already drops those animations under `prefers-reduced-motion`. Item labels, section labels, and shortcut hints are all react-i18next messages, and the modifier glyph must be resolved per platform rather than shipped as a literal Command symbol. Menu content that acts on a domain object belongs in the feature or entity slice that owns the object, while the primitives stay in `shared/ui`.
+
+## Install
+
+```bash
+npx shadcn@latest add dropdown-menu
+```
+
+## Code
+
+```tsx
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export function DropdownMenuDemo() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Open menu</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+        <DropdownMenuLabel>My account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive">Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/dropdown-menu](https://ui.shadcn.com/docs/components/dropdown-menu)

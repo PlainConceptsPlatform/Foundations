@@ -1,0 +1,68 @@
+---
+title: "Drawer"
+description: "A panel that slides in from the edge of the screen."
+---
+
+import { DrawerDemo } from "@/components/previews/drawer-demo"
+
+<ComponentPreview>
+  <DrawerDemo />
+</ComponentPreview>
+
+## When to use
+
+Use Drawer for a bottom sheet on touch and narrow viewports where dragging to dismiss is the expected gesture. On desktop, a side panel should be a `Sheet` and a centred task should be a `Dialog`; the common Platform pattern is Dialog above `md` and Drawer below, switched by a media query hook in `shared/hooks`.
+
+## Platform notes
+
+This is the one overlay in the family built on vaul rather than Radix, so its motion is drag driven transform rather than tw-animate-css, and direction is expressed as `data-vaul-drawer-direction` rather than a class per side. The drag handle only renders for the `bottom` direction, and the content is full width by default, which is why the demo wraps its children in `mx-auto w-full max-w-sm`. Surface is `bg-background` with a single border on the edge it is anchored to, and the `bg-black/50` overlay does the rest of the separating since shadows are neutralised. `DrawerTitle` and `DrawerDescription` are required for the accessible name, and every string in them is a react-i18next message.
+
+## Install
+
+```bash
+npx shadcn@latest add drawer
+```
+
+## Code
+
+```tsx
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+
+export function DrawerDemo() {
+  return (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <Button variant="outline">Open drawer</Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <div className="mx-auto w-full max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle>Move goal</DrawerTitle>
+            <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter>
+            <Button>Submit</Button>
+            <DrawerClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/drawer](https://ui.shadcn.com/docs/components/drawer)

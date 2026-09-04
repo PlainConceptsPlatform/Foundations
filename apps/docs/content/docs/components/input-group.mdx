@@ -1,0 +1,65 @@
+---
+title: "Input Group"
+description: "An input component with prefix and suffix addons."
+---
+
+import { InputGroupDemo } from "@/components/previews/input-group-demo"
+
+<ComponentPreview>
+  <InputGroupDemo />
+</ComponentPreview>
+
+## When to use
+
+This is the wrapper when a text control needs something attached to it: a search icon, a unit or currency suffix, a URL scheme prefix, or a small inline button such as clear or reveal. A plain `Input` is enough with no affix, and a row of separate buttons beside a field is `ButtonGroup`, not this.
+
+## Platform notes
+
+Put `InputGroupInput` or `InputGroupTextarea` inside, never a bare `Input`: the wrapper owns the focus ring via `has-[[data-slot=input-group-control]:focus-visible]` while the inner control zeroes its own, so a plain `Input` gives you two rings and a group that never lights up. `InputGroupAddon` attaches an `onClick` that forwards focus to the sibling input (buttons inside it are excluded), which is what makes the whole group behave as one target. Border and the dark fill come from `--input` and addon text from `--muted-foreground`; the destructive state is lifted from the control's `aria-invalid` up to the wrapper, so set `aria-invalid` on the control and not on the group. Affix text such as a currency symbol or a unit is locale-dependent, so format it through i18n rather than hardcoding it, and give any icon-only `InputGroupButton` an accessible name.
+
+## Install
+
+```bash
+npx shadcn@latest add input-group
+```
+
+## Code
+
+```tsx
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
+import { Search } from "lucide-react";
+
+export function InputGroupDemo() {
+  return (
+    <div className="flex flex-col gap-4 max-w-sm">
+      <InputGroup>
+        <InputGroupAddon align="inline-start">
+          <InputGroupText>
+            <Search />
+          </InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput placeholder="Search components..." />
+      </InputGroup>
+
+      <InputGroup>
+        <InputGroupAddon align="inline-start">
+          <InputGroupText>https://</InputGroupText>
+        </InputGroupAddon>
+        <InputGroupInput placeholder="plainconcepts.com" />
+        <InputGroupAddon align="inline-end">
+          <InputGroupText>.com</InputGroupText>
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/input-group](https://ui.shadcn.com/docs/components/input-group)

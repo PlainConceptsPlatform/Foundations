@@ -1,0 +1,58 @@
+---
+title: "Accordion"
+description: "A vertically stacked set of interactive headings that each reveal a section of content."
+---
+
+import { AccordionDemo } from "@/components/previews/accordion-demo"
+
+<ComponentPreview>
+  <AccordionDemo />
+</ComponentPreview>
+
+## When to use
+
+Use an accordion to collapse a long screen into labelled sections a user opens one at a time: FAQ blocks, grouped settings, the steps of a long form. When there is only one region to show or hide, `Collapsible` is the smaller tool; when the sections are peers a user switches between rather than reads through, use `Tabs`.
+
+## Platform notes
+
+The only tokens in play are `border` on each item and `ring` on the trigger's focus outline, so an accordion sits straight on the page surface with no `bg-card` and nothing to lift it (the theme compiles `shadow-*` to a transparent value in any case). The open and close height animation comes from the `animate-accordion-down` / `animate-accordion-up` keyframes in `tw-animate-css`, imported once in `app/global.css`, and `base.css` already flattens it to 1ms under `prefers-reduced-motion`, so do not layer a transition of your own on top. Trigger labels and panel copy are user-facing text, which means react-i18next keys and no literals in JSX. The component lives in `shared/ui`; the list of sections and the content inside them belongs to the slice that owns the data.
+
+## Install
+
+```bash
+npx shadcn@latest add accordion
+```
+
+## Code
+
+```tsx
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+export function AccordionDemo() {
+  return (
+    <Accordion type="single" collapsible className="w-full max-w-md">
+      <AccordionItem value="item-1">
+        <AccordionTrigger>Is it themed?</AccordionTrigger>
+        <AccordionContent>
+          Yes. It uses the tokens from @plainconceptsplatform/ui-theme.
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="item-2">
+        <AccordionTrigger>Is it accessible?</AccordionTrigger>
+        <AccordionContent>
+          Yes. It adheres to the WAI-ARIA design pattern via Radix.
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+```
+
+## Full API
+
+[ui.shadcn.com/docs/components/accordion](https://ui.shadcn.com/docs/components/accordion)
