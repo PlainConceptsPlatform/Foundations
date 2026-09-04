@@ -10,6 +10,53 @@ Two skills anchor everything. `plain-engineering-conventions` is language-agnost
 boundaries, observability, testing, security). `plain-dotnet-guardrails` is the .NET side (VSA,
 EF Core, Aspire, DI, build hygiene, architecture tests). Read those two first.
 
+## Local orchestration with Aspire
+
+Every Platform .NET app runs its whole local system through **.NET Aspire**: the AppHost describes
+the composition in C# instead of docker-compose YAML, and the same `dotnet run --project
+src/{Project}.AppHost` (wired as `pnpm dev`) starts the database, the API, and the web frontend in
+dependency order with health gating. Three pieces:
+
+- **AppHost** — an executable project that declares resources and services. Containers get
+  persistent lifetimes and data volumes; services get injected connection strings and `WaitFor`
+  health gating; the frontend joins through the CommunityToolkit NodeJS extension with a fixed
+  dev port. It is the *only* composition: repos drop their docker-compose files rather than
+  carrying two definitions in parallel.
+- **ServiceDefaults** — a shared project every service references. `AddServiceDefaults()` brings
+  OpenTelemetry (logs, traces, metrics), service discovery, default resilience on every
+  `HttpClient`, and `/health` + `/alive` endpoints. The Aspire dashboard shows the whole system's
+  logs, traces, and resource health locally, with zero configuration.
+- **Client integrations** — packages such as `Aspire.Microsoft.EntityFrameworkCore.SqlServer` wire
+  pooling, health checks, and SQL spans into EF Core from the connection name the AppHost injects.
+  Connection strings are resolved by name at runtime and never hardcoded in `appsettings.json`.
+
+The shape in practice:
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var sql = builder.AddSqlServer("sql")
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithDataVolume();
+var db = sql.AddDatabase("appdb");
+
+var api = builder.AddProject<Projects.MyApp_Api>("api")
+    .WithReference(db).WaitFor(db)
+    .WithExternalHttpEndpoints();
+
+builder.AddPnpmApp("web", "../../apps/web", "dev")
+    .WithHttpEndpoint(port: 3000, env: "PORT")
+    .WithEnvironment("NEXT_PUBLIC_API_URL", api.GetEndpoint("http"))
+    .WithExternalHttpEndpoints()
+    .WaitFor(api);
+```
+
+Guardrails that every AppHost carries: `.WithDataVolume()` on stateful containers (data survives
+volume recreation, not just restarts), `.WithRedisCommander()` when Redis is in the graph, and
+`.WaitFor(...)` on every resource reference so services start only when dependencies are healthy.
+Resource names, connection string patterns, and the project-class naming pitfall are in the
+`aspire-conventions` reference of `plain-dotnet-guardrails`.
+
 ## Architecture
 
 Apps use Clean Architecture layers with the dependency arrow pointing inward:

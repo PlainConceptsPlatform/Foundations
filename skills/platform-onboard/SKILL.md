@@ -114,6 +114,10 @@ Skip if no `.csproj` or `.slnx` files. Otherwise:
 | Central Package Management | `Directory.Packages.props` exists | CPM enabled |
 | .editorconfig | `.editorconfig` exists at root | Code style rules present |
 | Architecture tests | Test project with arch test references | Arch test project exists |
+| Aspire AppHost | An `*.AppHost` project exists in the solution | Local orchestration is Aspire |
+| ServiceDefaults | An `*.ServiceDefaults` project exists and the API references it | Telemetry and health defaults shared |
+| AppHost dev script | Root `package.json` `dev` script runs the AppHost | One command starts the whole system |
+| No docker-compose | No `docker-compose.yml` at repo root | The AppHost is the only composition |
 
 ## Execution
 
@@ -195,6 +199,25 @@ the workflows reproduce their behaviour; they are the record of what to reproduc
 ### Domain 6: Backend guardrails
 
 Only for .NET projects. Read the `plain-dotnet-guardrails` skill for what to check. The key artifacts are `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`, and an architecture test project.
+
+For a repo still orchestrating locally with docker-compose, migrate it to the Platform Aspire
+pattern (it is one OpenSpec change, not part of the guardrails pass):
+
+1. Add a `{Project}.ServiceDefaults` project and reference it from every service; fold any
+   hand-rolled OpenTelemetry wiring from `Program.cs` into its exporter section.
+2. Add a `{Project}.AppHost` project: SQL Server with `WithLifetime(ContainerLifetime.Persistent)`
+   and `WithDataVolume()`, one database resource per connection name, the API with
+   `.WithReference(...).WaitFor(...)` on every resource, and the web frontend via
+   `AddPnpmApp` on its existing fixed dev port. Redis joins with `.WithRedisCommander()` where
+   used.
+3. Swap plain EF Core registration for the Aspire client integration
+   (`Aspire.Microsoft.EntityFrameworkCore.SqlServer`) so connection strings are injected by name;
+   remove hardcoded dev connection strings from `appsettings.Development.json`.
+4. Delete `docker-compose.yml` and `docker-compose.override.yml`. The AppHost is the only
+   composition; the production container keeps coming from the Dockerfile and Bicep, not Compose.
+5. Make the root `dev` script run `dotnet run --project` on the AppHost and update the README
+   quickstart around it. Verify with the full build, the AppHost run (`/health` returns 200,
+   web loads), and the test suite.
 
 ## Completion criteria
 

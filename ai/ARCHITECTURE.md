@@ -302,7 +302,12 @@ From `plain-dotnet-guardrails`:
   return values, not thrown exceptions.
 - **Dependency injection:** convention-based registration with **Scrutor** assembly scanning.
 - **Persistence:** **EF Core**.
-- **Orchestration:** **Aspire** conventions for resources and connection strings.
+- **Orchestration:** **Aspire**. The AppHost is the only composition root: one C# file declares the
+  database containers (persistent lifetime + data volume), the API with injected connection
+  strings and `WaitFor` health gating, and the web frontend with a fixed dev port. Every service
+  references the ServiceDefaults project for OpenTelemetry, service discovery, resilience, and
+  health endpoints, and consumes databases through the Aspire client integrations
+  (`Aspire.*` packages). Repos do not carry a docker-compose file alongside it.
 - **Build hygiene:** `Directory.Build.props` / `.targets`, **Central Package Management**
   (`Directory.Packages.props`), and a `.editorconfig` whose rules are enforced in CI.
 - **Architecture tests:** a dedicated test project asserts layer and dependency rules.
