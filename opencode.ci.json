@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "plainconcepts/glm-5-2",
+  "model": "forge/glm-5-2",
   "plugin": [],
   "default_agent": "ci-workflow-agent",
   "agent": {
@@ -23,18 +23,20 @@
     "reserved": 10000
   },
   "provider": {
-    "plainconcepts": {
-      "api": "http://172.30.0.30:10000",
+    "forge": {
+      "api": "{env:OPENAI_BASE_URL}",
       "options": {
-        "apiKey": "awf-openai-proxy",
+        "apiKey": "{env:OPENAI_API_KEY}",
         "setCacheKey": true
       },
       "models": {
         "glm-5-2": {
-          "name": "GLM 5.2"
+          "name": "GLM 5.2",
+          "attachment": true
         },
         "glm-5-1": {
-          "name": "GLM 5.1"
+          "name": "GLM 5.1",
+          "attachment": true
         }
       }
     }
