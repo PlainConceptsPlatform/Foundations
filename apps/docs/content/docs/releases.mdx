@@ -14,8 +14,7 @@ Both follow semver, with one wrinkle worth stating plainly.
 
 ## What counts as a breaking change
 
-A token package breaks things in a way types cannot catch. The version reflects **visual** impact, not
-just API impact.
+A token package breaks things in a way types cannot catch. The version reflects **visual** impact, not just API impact.
 
 | Change | Bump | Why |
 |---|---|---|
@@ -26,9 +25,7 @@ just API impact.
 | Neutralising a whole utility scale (for example shadows) | major | Existing markup silently renders differently. |
 
 <Callout type="warn">
-  A minor bump can still change how your app looks. That is the nature of a shared token package: the
-  alternative is calling every palette adjustment a major, which would stop anyone from upgrading.
-  Check the changelog for a "visual change" note.
+  A minor bump can still change how your app looks. That is the nature of a shared token package: the alternative is calling every palette adjustment a major, which would stop anyone from upgrading. Check the changelog for a "visual change" note.
 </Callout>
 
 ## Taking an update
@@ -37,12 +34,9 @@ just API impact.
 pnpm up @plainconceptsplatform/ui-theme @plainconceptsplatform/ui-components
 ```
 
-Then look at the app in both light and dark before merging. Token changes are exactly the kind of thing
-that looks fine in one mode and wrong in the other.
+Then look at the app in both light and dark before merging. Token changes are exactly the kind of thing that looks fine in one mode and wrong in the other.
 
-Never fork the theme in an app to avoid an upgrade. If an update is wrong for you, that is a bug worth
-[reporting](https://github.com/PlainConceptsPlatform/Foundations/issues), because it is probably wrong
-for the other apps too.
+Never fork the theme in an app to avoid an upgrade. If an update is wrong for you, that is a bug worth [reporting](https://github.com/PlainConceptsPlatform/Foundations/issues), because it is probably wrong for the other apps too.
 
 ## Changelogs
 
@@ -53,14 +47,10 @@ Each package keeps its own, generated from changesets:
 
 ## How a release happens
 
-Contributors add a changeset describing the change and the bump. Merging to `main` opens a
-"Version Packages" pull request that collects pending changesets into version bumps and changelog
-entries. Merging **that** publishes to npm with provenance.
+Contributors add a changeset describing the change and the bump. Merging to `main` opens a "Version Packages" pull request that collects pending changesets into version bumps and changelog entries. Merging **that** publishes to npm with provenance.
 
 Nobody publishes from a laptop. See [Contributing](/docs/contributing) for the contributor side.
 
 ## Deprecation
 
-Deprecated tokens and components keep working for at least one minor release, with the replacement
-named in the changelog. Removal is a major bump. If a deprecation window would be genuinely painful for
-an app, say so on the pull request rather than pinning an old version.
+Deprecated tokens and components keep working for at least one minor release, with the replacement named in the changelog. Removal is a major bump. If a deprecation window would be genuinely painful for an app, say so on the pull request rather than pinning an old version.

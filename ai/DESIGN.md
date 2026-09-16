@@ -62,65 +62,39 @@ domain-palettes:
 
 # Design
 
-The Platform styleguide, and the design intent behind it. This document is generated/updated
-from `@plainconceptsplatform/ui-theme`, `src/theme.css` is the source of truth; the tokens above
-mirror it for reference and tooling.
+The Platform styleguide, and the design intent behind it. This document is generated/updated from `@plainconceptsplatform/ui-theme`, `src/theme.css` is the source of truth; the tokens above mirror it for reference and tooling.
 
 ## Visual intent
 
-A calm, information-dense, professional look for internal line-of-business tools. **Outfit** is the
-single typeface, geometric, friendly, highly legible at small sizes, which suits data-heavy
-screens. A confident **royal blue (`#2f69ff`)** carries brand and primary actions; everything else
-is a restrained cool-neutral ramp so data and status colors stand out rather than the chrome.
+A calm, information-dense, professional look for internal line-of-business tools. **Outfit** is the single typeface, geometric, friendly, highly legible at small sizes, which suits data-heavy screens. A confident **royal blue (`#2f69ff`)** carries brand and primary actions; everything else is a restrained cool-neutral ramp so data and status colors stand out rather than the chrome.
 
-Status is communicated through the **functional palette**, red for destructive/error, amber for
-warning, teal for success, cyan for info, each with a light background tint, a solid base, and a
-dark variant for text-on-tint.
+Status is communicated through the **functional palette**, red for destructive/error, amber for warning, teal for success, cyan for info, each with a light background tint, a solid base, and a dark variant for text-on-tint.
 
 ## Working rules
 
-- **Check the library first.** Before building a component, look for it in shadcn/ui and the
-  companion libraries in `ARCHITECTURE.md`. Do not recreate what exists.
-- **Use semantic tokens, never hardcoded values.** `bg-primary`, `text-muted-foreground`,
-  `border`, `rounded-lg`, not raw hex or pixel values.
-- **Accessibility is a baseline, not a feature.** Meet WCAG 2.2 AA contrast; every interactive
-  element is keyboard reachable with a visible focus ring (`ring`); label all inputs; respect
-  `prefers-reduced-motion`.
-- **Design every state.** Loading (skeletons), empty, success, and error states are required, not
-  optional. Validate forms inline with clear messages.
+- **Check the library first.** Before building a component, look for it in shadcn/ui and the companion libraries in `ARCHITECTURE.md`. Do not recreate what exists.
+- **Use semantic tokens, never hardcoded values.** `bg-primary`, `text-muted-foreground`, `border`, `rounded-lg`, not raw hex or pixel values.
+- **Accessibility is a baseline, not a feature.** Meet WCAG 2.2 AA contrast; every interactive element is keyboard reachable with a visible focus ring (`ring`); label all inputs; respect `prefers-reduced-motion`.
+- **Design every state.** Loading (skeletons), empty, success, and error states are required, not optional. Validate forms inline with clear messages.
 - **Responsive by default.** Mobile-first; use the Tailwind breakpoints; verify at sm/md/lg.
 - **Consistency over cleverness.** Prefer the theme's tokens and shadcn patterns to bespoke styling.
 
 ## Motion and elevation
 
-A single contract, so nothing needs a bespoke hover and the whole surface feels
-deliberate rather than assembled.
+A single contract, so nothing needs a bespoke hover and the whole surface feels deliberate rather than assembled.
 
-- **Transition `color`, `background-color`, `border-color`, `opacity` and `transform` only.** Never
-  `width`, `height`, `top`/`left`, or `box-shadow`; they force layout or paint work on every frame.
-- **150ms, ease-out**, for anything triggered by hover, focus or a state change. Radix overlays keep
-  their own enter/exit animations (`tw-animate-css`); do not add a second transition on top.
-- **Motion follows a state change.** If nothing changed, nothing moves: no scroll-triggered reveals,
-  parallax, auto-rotating carousels, count-up numbers, or typewriter text.
+- **Transition `color`, `background-color`, `border-color`, `opacity` and `transform` only.** Never `width`, `height`, `top`/`left`, or `box-shadow`; they force layout or paint work on every frame.
+- **150ms, ease-out**, for anything triggered by hover, focus or a state change. Radix overlays keep their own enter/exit animations (`tw-animate-css`); do not add a second transition on top.
+- **Motion follows a state change.** If nothing changed, nothing moves: no scroll-triggered reveals, parallax, auto-rotating carousels, count-up numbers, or typewriter text.
 - **Always honour `prefers-reduced-motion: reduce`** by dropping to no transition.
-- **Elevation is a border plus a surface**, `border-border` with `bg-card`, not a shadow. This is
-  enforced by the theme, not by discipline: Tailwind's shadow scale is overridden to a transparent
-  value, so `shadow-*` classes on vendored shadcn components compile but paint nothing, and upstream
-  component source can be copied in unmodified. Focus rings are unaffected.
+- **Elevation is a border plus a surface**, `border-border` with `bg-card`, not a shadow. This is enforced by the theme, not by discipline: Tailwind's shadow scale is overridden to a transparent value, so `shadow-*` classes on vendored shadcn components compile but paint nothing, and upstream component source can be copied in unmodified. Focus rings are unaffected.
 
 ## Data visualization
 
-Use the shared categorical ramp `--chart-1` through `--chart-5` for series colour. Every entry clears
-3:1 against `--background` in both modes, so thin lines and small legend swatches stay visible, and
-the two blue-family hues sit at opposite ends so adjacent series never collide. Do not use `--accent`
-or other tint tokens as a series colour; they are hover surfaces and disappear against a card.
-Domain-specific palettes (Special Days, Unit, Area, Teams) stay in the app that owns them.
+Use the shared categorical ramp `--chart-1` through `--chart-5` for series colour. Every entry clears 3:1 against `--background` in both modes, so thin lines and small legend swatches stay visible, and the two blue-family hues sit at opposite ends so adjacent series never collide. Do not use `--accent` or other tint tokens as a series colour; they are hover surfaces and disappear against a card. Domain-specific palettes (Special Days, Unit, Area, Teams) stay in the app that owns them.
 
 ## Application-specific vs shared
 
-App-specific components stay in the app (in the slice that owns them). A component becomes a
-candidate for sharing **only** after the same real requirement appears in **multiple** apps, and
-even then it's reviewed before promotion. The shared layer owns tokens and conventions, not a
-component catalog.
+App-specific components stay in the app (in the slice that owns them). A component becomes a candidate for sharing **only** after the same real requirement appears in **multiple** apps, and even then it's reviewed before promotion. The shared layer owns tokens and conventions, not a component catalog.
 
 <!-- Last updated: 2026-07-23 -->
