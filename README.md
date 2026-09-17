@@ -69,7 +69,7 @@ Start with [`AGENTS.md`](AGENTS.md). It points to the [`ai/`](ai/) folder, which
 
 ### Agentic Workflow migration
 
-Reusable GitHub Agentic Workflow skills and copyable loops now live in [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows). Use its self-contained `workflow-author` and `workflow-consumer` skills when creating or adopting workflows.
+Reusable GitHub Agentic Workflow skills and copyable loops now live in [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic workflows). Use its self-contained `workflow-author` and `workflow-consumer` skills when creating or adopting workflows. The router is named `# Main Work Router` for sidebar sort order; run-names follow the `Agent:` / `Agentics:` / `Event:` prefix convention documented in the `workflow-author` skill.
 
 ## Documentation
 

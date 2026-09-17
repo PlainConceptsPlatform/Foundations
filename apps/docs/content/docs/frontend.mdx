@@ -125,7 +125,7 @@ Biome is the single tool for linting and formatting. Each app has a `biome.json`
 ### Rules every app follows
 
 - **Scope lint to the web package.** Root `package.json` runs `pnpm -r lint`, which delegates to each package's own `lint` script. Never run `biome check .` at the monorepo root: it scans everything and finds hundreds of pre-existing findings unrelated to your change.
-- **Exclude tool-managed directories.** Every `biome.json` excludes `node_modules`, `.next`, `dist`, `out`, `e2e`, `.codegraph`, `.opencode`, `.agents`, and `.claude` so Biome does not lint generated or agent-managed files.
+- **Exclude tool-managed directories.** Every `biome.json` excludes `node_modules`, `.next`, `dist`, `out`, `e2e`, `.codegraph`, `.opencode`, and `.agents` so Biome does not lint generated or agent-managed files.
 - **`biome check` not `pnpx biome`.** Always use the project's installed Biome via `pnpm exec biome` or the `lint` script. `pnpx` downloads a fresh copy and wastes time and memory.
 - **Scoped verification for agents.** When an agent fixes a lint failure, it should verify only the changed files: `pnpm exec biome check <changed-file>` — never the whole repository. Full-repo scans surface pre-existing findings and can exhaust runner memory.
 - **Pre-commit hook auto-formats.** Every repo has a husky `pre-commit` hook that runs `biome check --write` on staged `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files before the commit is created. This means no commit — human or agent — can introduce a formatting error. The hook re-stages the formatted files automatically.

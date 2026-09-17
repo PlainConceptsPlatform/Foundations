@@ -233,8 +233,8 @@ disk.
 Install the harness first: the workers call the skills and commands
 [agent-harness](https://github.com/PlainConceptsPlatform/agent-harness) provides.
 
-The full route set is `refine`, `implement`, `direct`, `apply-review`, `merge-gate`, `audit`,
-`propose`, and `triage`, each a
+The full route set is `refine`, `implement`, `direct`, `apply-review`, `merge-gate`,
+`visual-verify`, `audit`, `propose`, `release`, and `triage`, each a
 [worker in `loops/workflows/`](https://github.com/PlainConceptsPlatform/agentic-workflows/tree/main/loops/workflows).
 Two of them are documented below:
 
@@ -251,8 +251,14 @@ every trigger the repository has**, and the agentic workflows have none.
 ```text
 work-router.yml       every on: the repository has
   └── classify        one event in, exactly one route out
-        ├── call-refine     → refine.lock.yml       workflow_call only
-        ├── call-implement  → implement.lock.yml    workflow_call only
+        ├── call-refine         → refine.lock.yml          workflow_call only
+        ├── call-implement      → implement.lock.yml       workflow_call only
+        ├── call-apply-review   → apply-review.lock.yml    workflow_call only
+        ├── call-merge-gate     → merge-gate.lock.yml      workflow_call only
+        ├── call-visual-verify  → visual-verify.lock.yml   workflow_call only
+        ├── call-audit          → audit.lock.yml           workflow_call only
+        ├── call-release        → release.lock.yml         workflow_call only
+        ├── call-triage         → triage.lock.yml          workflow_call only
         └── deterministic jobs (no model)
 ```
 
