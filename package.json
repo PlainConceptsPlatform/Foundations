@@ -10,8 +10,12 @@
   "scripts": {
     "dev": "pnpm --filter @plainconceptsplatform/docs dev",
     "build": "pnpm -r build",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
+    "lint": "pnpm lint:code && pnpm lint:md",
+    "lint:code": "biome check .",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint:fix": "pnpm lint:code:fix && pnpm lint:md:fix",
+    "lint:code:fix": "biome check --write .",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
     "format": "biome format --write .",
     "typecheck": "pnpm -r typecheck",
     "release:theme": "pnpm typecheck && cd packages/theme && npm publish --access public",
@@ -19,12 +23,14 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{css,js,json,jsx,mjs,ts,tsx}": "biome check --write --no-errors-on-unmatched"
+    "*.{css,js,json,jsx,mjs,ts,tsx}": "biome check --write --no-errors-on-unmatched",
+    "*.md": "markdownlint-cli2 --no-globs"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
+    "markdownlint-cli2": "0.23.2",
     "typescript": "^5.6.3"
   }
 }

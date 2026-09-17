@@ -187,19 +187,15 @@ Capture Playwright characterization tests for every existing route. Take desktop
 
 **Actions:**
 
-1. Install `@plainconceptsplatform/ui-theme`; install `@plainconceptsplatform/ui-components` when the
-   app uses shared components such as `PlainLogo`.
-2. In the global stylesheet, import `@plainconceptsplatform/ui-theme`. The package supplies Tailwind
-   v4, semantic tokens, base styles, and the dark-mode variant.
-3. Use the semantic utility tokens directly. Do not create a parallel token layer or hardcode design
-   values.
+1. Install `@plainconceptsplatform/ui-theme`; install `@plainconceptsplatform/ui-components` when the app uses shared components such as `PlainLogo`.
+2. In the global stylesheet, import `@plainconceptsplatform/ui-theme`. The package supplies Tailwind v4, semantic tokens, base styles, and the dark-mode variant.
+3. Use the semantic utility tokens directly. Do not create a parallel token layer or hardcode design values.
 4. Load the Outfit font via `next/font/google` and expose it as `--font-sans` in the root layout.
 5. Toggle the `dark` class on `<html>` for dark mode.
 6. Replace custom `BrandMark` / logo components with `PlainLogo` from `@plainconceptsplatform/ui-components`.
 7. Remove now-redundant custom CSS that the Platform theme replaces.
 
-**Completion criterion:** Platform theme installed, semantic tokens are used, Outfit font loads, dark
-mode works, Playwright visual tests pass with updated baselines.
+**Completion criterion:** Platform theme installed, semantic tokens are used, Outfit font loads, dark mode works, Playwright visual tests pass with updated baselines.
 
 ## After migration
 

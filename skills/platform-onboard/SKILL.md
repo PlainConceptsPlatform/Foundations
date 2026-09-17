@@ -11,11 +11,7 @@ Bring a brownfield project onto the Plain Concepts Platform stack. The migration
 
 This checklist targets **consumer Platform applications**, not the foundation repo itself.
 
-The Foundations repo deliberately fails some of these checks, and that is correct rather than a gap to
-close: it keeps its canonical docs in `ai/` (so the docs site can sync them into a Reference section),
-it publishes the theme rather than consuming it, and it has no `views/` or `entities/` because it is a
-docs site and two packages, not a product app. Do not "fix" the foundation to satisfy a checklist
-written for the apps that depend on it.
+The Foundations repo deliberately fails some of these checks, and that is correct rather than a gap to close: it keeps its canonical docs in `ai/` (so the docs site can sync them into a Reference section), it publishes the theme rather than consuming it, and it has no `views/` or `entities/` because it is a docs site and two packages, not a product app. Do not "fix" the foundation to satisfy a checklist written for the apps that depend on it.
 
 ## The six domains
 
@@ -81,9 +77,7 @@ Scan all six domains before touching anything. Each check is binary: the artifac
 
 ### Domain 5: Agent automation
 
-The Platform default is **GitHub Agentic Workflows on `ubuntu-latest`**, with `engine: opencode`
-pointed at an OpenAI-compatible gateway. This applies to public repositories too: the model comes
-from the configured gateway, so nothing needs to run on a machine holding credentials.
+The Platform default is **GitHub Agentic Workflows on `ubuntu-latest`**, with `engine: opencode` pointed at an OpenAI-compatible gateway. This applies to public repositories too: the model comes from the configured gateway, so nothing needs to run on a machine holding credentials.
 
 | Check | How to detect | Pass condition |
 |---|---|---|
@@ -96,13 +90,9 @@ from the configured gateway, so nothing needs to run on a machine holding creden
 | Checks | A pull-request workflow runs actionlint, shellcheck, the route matrix, and the manifest lint | The gaps the compiler cannot see are covered |
 | GitHub labels | `gh label list` includes the workflow intent labels | Label set created |
 
-A self-hosted runner is optional, and only for private or internal repositories. Never attach
-one to a public repository: a pull request from a fork would execute arbitrary code on it, with
-whatever credentials it holds.
+A self-hosted runner is optional, and only for private or internal repositories. Never attach one to a public repository: a pull request from a fork would execute arbitrary code on it, with whatever credentials it holds.
 
-For a repository that is not on GitHub at all,
-[loop-task](https://github.com/PlainConceptsPlatform/loop-task) runs the same work on a
-schedule from any machine.
+For a repository that is not on GitHub at all, [loop-task](https://github.com/PlainConceptsPlatform/loop-task) runs the same work on a schedule from any machine.
 
 ### Domain 6: Backend guardrails (.NET only)
 
@@ -130,22 +120,15 @@ Process domains in order. For each domain:
 
 ### Domain 1: Agentic infra
 
-Run `npx @plainconceptsplatform/agent-harness@latest` in the repository root. That installs the
-Plain Concepts Platform Harness: `.opencode/` with agents and commands, the `pc-*` skills, and
-`harness.json`. Then run `/repo-initialize` to generate the architecture and design documentation
-for a brownfield project and activate the agent team.
+Run `npx @plainconceptsplatform/agent-harness@latest` in the repository root. That installs the Plain Concepts Platform Harness: `.opencode/` with agents and commands, the `pc-*` skills, and `harness.json`. Then run `/repo-initialize` to generate the architecture and design documentation for a brownfield project and activate the agent team.
 
-On a repository that already has the harness, `npx @plainconceptsplatform/agent-harness@latest update`
-pulls in the current release without prompting and preserves files anyone has edited by hand.
+On a repository that already has the harness, `npx @plainconceptsplatform/agent-harness@latest update` pulls in the current release without prompting and preserves files anyone has edited by hand.
 
-Keep reusable project skills in `skills/`. The agent definitions should include at minimum:
-`fullstack-engineer.md`, `frontend-engineer.md`, and `backend-engineer.md`.
+Keep reusable project skills in `skills/`. The agent definitions should include at minimum: `fullstack-engineer.md`, `frontend-engineer.md`, and `backend-engineer.md`.
 
 ### Domain 2: Architecture docs
 
-Run `/make-architecture` to generate `ARCHITECTURE.md` from the codebase and `/make-design` to
-generate `DESIGN.md`. Record project-specific conventions in a project guardrail skill when one is
-needed, and make it available to the agents that implement changes.
+Run `/make-architecture` to generate `ARCHITECTURE.md` from the codebase and `/make-design` to generate `DESIGN.md`. Record project-specific conventions in a project guardrail skill when one is needed, and make it available to the agents that implement changes.
 
 These commands are idempotent. Re-run them after any significant codebase change.
 
@@ -167,57 +150,30 @@ Each step is an OpenSpec change. Capture Playwright characterization tests befor
 
 ### Domain 5: Agent automation
 
-The Platform default is **Agentic Workflows on `ubuntu-latest`**, public repositories
-included.
+The Platform default is **Agentic Workflows on `ubuntu-latest`**, public repositories included.
 
-1. Run `gh aw init --no-mcp --no-skill --no-agent`. The extra flags matter: the scaffolding
-   they suppress is for authoring workflows with GitHub Copilot Chat, which Platform does not
-   use, and it comes back every time you rerun `init` without them.
-2. Copy the templates from Foundations `ai/workflows`: the router, the two workers, the shared
-   components, the composite actions, and `opencode.ci.json`. The shape is **one router that
-   owns every trigger and workers that have none**, so do not give a worker its own trigger.
-3. Add the per-repository `FORGE_API_KEY` for the configured gateway, plus the organization
-   `BOT_APP_ID` and `BOT_PRIVATE_KEY` secrets for the Platform App that lifecycle writes are
-   attributed to. Configure the gateway URL in the worker environment.
-4. Author or adapt workflows with the self-contained `workflow-author` and `workflow-consumer`
-   skills from
-   [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
-5. Create the GitHub labels the workflows read and write:
-   `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
-6. Compile, lint, and then **watch one real event end to end**. `gh aw compile --strict` and
-   actionlint both pass on workflows that produce zero jobs at runtime.
+1. Run `gh aw init --no-mcp --no-skill --no-agent`. The extra flags matter: the scaffolding they suppress is for authoring workflows with GitHub Copilot Chat, which Platform does not use, and it comes back every time you rerun `init` without them.
+2. Copy the templates from Foundations `ai/workflows`: the router, the two workers, the shared components, the composite actions, and `opencode.ci.json`. The shape is **one router that owns every trigger and workers that have none**, so do not give a worker its own trigger.
+3. Add the per-repository `FORGE_API_KEY` for the configured gateway, plus the organization `BOT_APP_ID` and `BOT_PRIVATE_KEY` secrets for the Platform App that lifecycle writes are attributed to. Configure the gateway URL in the worker environment.
+4. Author or adapt workflows with the self-contained `workflow-author` and `workflow-consumer` skills from [`PlainConceptsPlatform/agentic-workflows`](https://github.com/PlainConceptsPlatform/agentic-workflows).
+5. Create the GitHub labels the workflows read and write: `gh workflow run "Agentic Maintenance" -f operation=create_labels`.
+6. Compile, lint, and then **watch one real event end to end**. `gh aw compile --strict` and actionlint both pass on workflows that produce zero jobs at runtime.
 
-A self-hosted runner is supported for repositories that need one, but it is no longer the
-default: the model comes from Forge either way, so the runner was only ever providing a queue
-of one.
+A self-hosted runner is supported for repositories that need one, but it is no longer the default: the model comes from Forge either way, so the runner was only ever providing a queue of one.
 
-If the repository is not on GitHub,
-[loop-task](https://github.com/PlainConceptsPlatform/loop-task) covers the same ground on a
-schedule. When migrating a repository that still has `.loops/recipes/`, keep the recipes until
-the workflows reproduce their behaviour; they are the record of what to reproduce.
+If the repository is not on GitHub, [loop-task](https://github.com/PlainConceptsPlatform/loop-task) covers the same ground on a schedule. When migrating a repository that still has `.loops/recipes/`, keep the recipes until the workflows reproduce their behaviour; they are the record of what to reproduce.
 
 ### Domain 6: Backend guardrails
 
 Only for .NET projects. Read the `plain-dotnet-guardrails` skill for what to check. The key artifacts are `Directory.Build.props`, `Directory.Packages.props`, `.editorconfig`, and an architecture test project.
 
-For a repo still orchestrating locally with docker-compose, migrate it to the Platform Aspire
-pattern (it is one OpenSpec change, not part of the guardrails pass):
+For a repo still orchestrating locally with docker-compose, migrate it to the Platform Aspire pattern (it is one OpenSpec change, not part of the guardrails pass):
 
-1. Add a `{Project}.ServiceDefaults` project and reference it from every service; fold any
-   hand-rolled OpenTelemetry wiring from `Program.cs` into its exporter section.
-2. Add a `{Project}.AppHost` project: SQL Server with `WithLifetime(ContainerLifetime.Persistent)`
-   and `WithDataVolume()`, one database resource per connection name, the API with
-   `.WithReference(...).WaitFor(...)` on every resource, and the web frontend via
-   `AddPnpmApp` on its existing fixed dev port with `.WithPnpmPackageInstallation()`. Redis
-   joins with `.WithRedisCommander()` where used.
-3. Swap plain EF Core registration for the Aspire client integration
-   (`Aspire.Microsoft.EntityFrameworkCore.SqlServer`) so connection strings are injected by name;
-   remove hardcoded dev connection strings from `appsettings.Development.json`.
-4. Delete `docker-compose.yml` and `docker-compose.override.yml`. The AppHost is the only
-   composition; the production container keeps coming from the Dockerfile and Bicep, not Compose.
-5. Make the root `dev` script run `dotnet run --project` on the AppHost and update the README
-   quickstart around it. Verify with the full build, the AppHost run (`/health` returns 200,
-   web loads), and the test suite.
+1. Add a `{Project}.ServiceDefaults` project and reference it from every service; fold any hand-rolled OpenTelemetry wiring from `Program.cs` into its exporter section.
+2. Add a `{Project}.AppHost` project: SQL Server with `WithLifetime(ContainerLifetime.Persistent)` and `WithDataVolume()`, one database resource per connection name, the API with `.WithReference(...).WaitFor(...)` on every resource, and the web frontend via `AddPnpmApp` on its existing fixed dev port with `.WithPnpmPackageInstallation()`. Redis joins with `.WithRedisCommander()` where used.
+3. Swap plain EF Core registration for the Aspire client integration (`Aspire.Microsoft.EntityFrameworkCore.SqlServer`) so connection strings are injected by name; remove hardcoded dev connection strings from `appsettings.Development.json`.
+4. Delete `docker-compose.yml` and `docker-compose.override.yml`. The AppHost is the only composition; the production container keeps coming from the Dockerfile and Bicep, not Compose.
+5. Make the root `dev` script run `dotnet run --project` on the AppHost and update the README quickstart around it. Verify with the full build, the AppHost run (`/health` returns 200, web loads), and the test suite.
 
 ## Completion criteria
 
@@ -229,8 +185,7 @@ Each rule below comes from a real migration. Skipping one causes rework.
 
 1. Capture characterization tests before migrating. Playwright screenshots catch regressions that manual review misses.
 2. Every domain is a separate OpenSpec change. Batching domains into one change makes review impossible.
-3. Platform theme packages are public npm packages. Install them with pnpm; no custom registry or
-   package token is required.
+3. Platform theme packages are public npm packages. Install them with pnpm; no custom registry or package token is required.
 4. FSD layers use canonical names: `app/`, `pages/`, `widgets/`, `features/`, `entities/`, `shared/`. Do not use underscore-prefixed names like `_app/` or `_pages/`.
 5. inversify-hooks registration uses `cid` as the second argument to `addSingleton` for minification safety: `container.addSingleton<IContract>(HttpContract, cid.IContract)`.
 6. react-i18next from the first day of migration. Zero magic strings. Every user-facing text element must be a translation message.
