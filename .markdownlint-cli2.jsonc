@@ -8,10 +8,10 @@
     "**/node_modules/**",
     "**/.next/**",
     "**/dist/**",
-    // Docs-site content stays unlinted for now: 203 wrapped paragraphs across 9 files,
-    // concentrated in ai.mdx and how-we-work/. Reflowing them is a change of its own.
-    // The lint globs only match *.md, so this entry is what keeps that deliberate
-    // rather than accidental if the globs are ever widened.
+    // Docs-site content stays unlinted for now: around 200 wrapped paragraphs across
+    // nine files, concentrated in ai.mdx and how-we-work/. Reflowing them is a change
+    // of its own. The lint globs only match *.md, so this entry is what keeps that
+    // deliberate rather than accidental if the globs are ever widened.
     "**/*.mdx"
   ]
 }

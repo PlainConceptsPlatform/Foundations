@@ -151,7 +151,8 @@ Biome does not touch `.md` files, and `AGENTS.md`, `ARCHITECTURE.md`, ADRs, and 
 
 - **Every built-in rule is off, `MD013` included.** The one rule enabled is the custom `no-hard-wrapped-prose`, in `.markdownlint-rules.cjs`. An opt-in ruleset means a markdownlint release that adds a rule can never turn your build red on the next dependency bump.
 - **One config at the repo root**, `.markdownlint-cli2.jsonc`, not scoped per package like Biome: it has to reach `AGENTS.md` and `openspec/` wherever they live, not just the frontend package.
-- **`lint:md` is a sibling script to `lint`**, folded into the root `lint` composite and into `lint-staged` for staged `.md` files, the same way Biome is wired for `.ts`/`.tsx`.
+- **CI has to call `lint:md` on its own.** Root `lint` is `pnpm -r lint`, which delegates to each package's `lint` script, and markdown belongs to no package — so a repo that only runs `pnpm lint` in CI never lints a single `.md` file. Run `pnpm lint:md` as its own step, or change root `lint` to `pnpm -r lint && pnpm lint:md`.
+- **Ignore what you do not own.** Agent- and workflow-managed markdown is regenerated from elsewhere, so a finding in it is noise nobody can act on. Exclude `.agents/`, `.opencode/`, and the files `@plainconceptsplatform/workflows` writes (`.github/workflows/agent-*.md`, `.github/workflows/shared/platform-defaults.md`) — lyceum's config is the worked example.
 
 ### Adopting it
 
@@ -163,7 +164,9 @@ Biome does not touch `.md` files, and `AGENTS.md`, `ARCHITECTURE.md`, ADRs, and 
 }
 ```
 
-Copy `.markdownlint-cli2.jsonc` and `.markdownlint-rules.cjs` from this repo's root, or from any Platform app that already has them. There is no installer for this yet: the harness deliberately does not patch a consumer's `package.json` or hooks, so wiring it up is a five-minute hand edit, once, the same way it was done here.
+Copy `.markdownlint-rules.cjs` from this repo's root unchanged — the rule is the convention, and it should read the same everywhere. `.markdownlint-cli2.jsonc` is yours: take the shape from here, then add the ignores your repo actually needs, which is where this one and lyceum's legitimately differ.
+
+There is no installer. The harness does not patch a consumer's `package.json` or hooks, so this is a hand edit, once, per repo.
 
 ## Common pitfalls
 
