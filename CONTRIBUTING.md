@@ -69,6 +69,18 @@ Commit the generated file with your PR. On merge to `main`, the release workflow
 
 Pick the bump honestly: a token value change is a **minor** because it changes how every consuming app looks, even though nothing breaks at the type level. Removing or renaming a token is a **major**.
 
+## Writing Markdown
+
+Prose is not hard-wrapped. Keep each paragraph on one physical line and let your editor soft-wrap it.
+
+These files are read mostly by agents, and wrapping makes `\n` ambiguous: it could mean a new idea or just a column limit. One paragraph per line keeps newlines meaningful, which matters once Markdown passes through chunkers, embeddings, diffs, or agents doing line-based edits.
+
+`markdownlint-cli2` enforces exactly one rule, `no-hard-wrapped-prose`, defined in `.markdownlint-rules.cjs`. Every built-in rule is off (`"default": false`) so a markdownlint release that adds a rule can never turn the build red. `MD013` stays off in particular: it enforces the opposite of this convention.
+
+Run `pnpm lint:md`, or `pnpm lint:md:fix`. `lint-staged` runs it on staged `*.md` at commit time and CI runs it as part of `pnpm lint`. Other Platform repositories use the same rule and the same script name, so keep them aligned rather than renaming here.
+
+Docs-site `*.mdx` is not linted yet; the reason is in `.markdownlint-cli2.jsonc`.
+
 ## Pull requests
 
 - Keep it small and reversible. Explain the rationale, not just the diff.
