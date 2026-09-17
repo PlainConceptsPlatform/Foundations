@@ -26,14 +26,14 @@ packages/ui-components  @plainconceptsplatform/ui-components, shared React compo
 
 ## Stack
 
-Next.js (App Router) + React + TypeScript, shadcn/ui on Radix + Tailwind v4, themed by `@plainconceptsplatform/ui-theme`, icons from Lucide. DI via inversify-hooks (mandatory). Biome, Vitest + Playwright, pnpm. See [`ai/ARCHITECTURE.md`](ai/ARCHITECTURE.md).
+Next.js (App Router) + React + TypeScript, shadcn/ui on Radix + Tailwind v4, themed by `@plainconceptsplatform/ui-theme`, icons from Lucide. DI via inversify-hooks (mandatory). Biome, markdownlint-cli2, Vitest + Playwright, pnpm. See [`ai/ARCHITECTURE.md`](ai/ARCHITECTURE.md).
 
 ## Getting started (this repo)
 
 ```bash
 pnpm install
 pnpm dev          # run the docs/showcase site (Fumadocs)
-pnpm lint         # Biome
+pnpm lint         # Biome + Markdown
 pnpm test         # Vitest
 ```
 

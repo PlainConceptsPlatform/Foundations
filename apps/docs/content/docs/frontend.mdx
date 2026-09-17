@@ -20,6 +20,7 @@ The idea behind the foundation: share the **look** and the **conventions**, not 
 | Data fetching | TanStack Query (or RSC / Server Actions) |
 | Forms | react-hook-form + zod |
 | Lint and format | Biome |
+| Markdown lint | markdownlint-cli2 |
 | Tests | Vitest + Playwright |
 
 ## Architecture
@@ -141,6 +142,28 @@ Biome is the single tool for linting and formatting. Each app has a `biome.json`
 | Import sorting | Enabled (`organizeImports: on`) |
 
 Consumer apps may override line width and quote style to match their existing codebase, but the structure (scoped biome.json, excludes, scoped lint script) must match.
+
+## Linting Markdown
+
+Biome does not touch `.md` files, and `AGENTS.md`, `ARCHITECTURE.md`, ADRs, and OpenSpec specs are read mostly by agents, not people. `markdownlint-cli2` enforces one rule against them: no hard-wrapped prose. Keep each paragraph on a single physical line and let your editor soft-wrap it — a hard-wrapped `\n` is ambiguous between a real paragraph break and a column limit, and that ambiguity gets expensive once the file passes through a chunker, an embedding step, a diff, or an agent doing line-based edits.
+
+### Rules every app follows
+
+- **Every built-in rule is off, `MD013` included.** The one rule enabled is the custom `no-hard-wrapped-prose`, in `.markdownlint-rules.cjs`. An opt-in ruleset means a markdownlint release that adds a rule can never turn your build red on the next dependency bump.
+- **One config at the repo root**, `.markdownlint-cli2.jsonc`, not scoped per package like Biome: it has to reach `AGENTS.md` and `openspec/` wherever they live, not just the frontend package.
+- **`lint:md` is a sibling script to `lint`**, folded into the root `lint` composite and into `lint-staged` for staged `.md` files, the same way Biome is wired for `.ts`/`.tsx`.
+
+### Adopting it
+
+```json
+{
+  "scripts": { "lint:md": "markdownlint-cli2 \"**/*.md\"" },
+  "lint-staged": { "*.md": "markdownlint-cli2 --no-globs" },
+  "devDependencies": { "markdownlint-cli2": "0.23.2" }
+}
+```
+
+Copy `.markdownlint-cli2.jsonc` and `.markdownlint-rules.cjs` from this repo's root, or from any Platform app that already has them. There is no installer for this yet: the harness deliberately does not patch a consumer's `package.json` or hooks, so wiring it up is a five-minute hand edit, once, the same way it was done here.
 
 ## Common pitfalls
 

@@ -46,6 +46,7 @@ Every app picks the **same** library for the same job, so codebases (and AI agen
 |---|---|---|
 | Lint + format | **Biome** | one tool; scoped `biome.json` per package, never run at monorepo root |
 | Next-specific lint | **`next lint`** | Biome lacks Next rules, run both |
+| Markdown lint | **markdownlint-cli2** | one rule, `no-hard-wrapped-prose`; `.markdownlint-cli2.jsonc` at the repo root, not scoped per package |
 | Unit / component tests | **Vitest + Testing Library** | |
 | E2E tests | **Playwright** | |
 | Docs + showcase | **Fumadocs** (Next.js) | `apps/docs` |
@@ -66,8 +67,8 @@ Foundations/
 │   └── ui-components/         # @plainconceptsplatform/ui-components (shared React components)
 ├── ai/                        # ARCHITECTURE.md (incl. Stack), DESIGN.md, AGENTS.md (source of truth)
 │   └── workflows/             # README linking to the agentic-workflows repo
-├── biome.json · tsconfig.base.json · pnpm-workspace.yaml · package.json
-└── .github/workflows/         # CI (Biome), deploy (Fumadocs → Azure), agentic workflows
+├── biome.json · .markdownlint-cli2.jsonc · tsconfig.base.json · pnpm-workspace.yaml · package.json
+└── .github/workflows/         # CI (Biome, Markdown), deploy (Fumadocs → Azure), agentic workflows
 ```
 
 ## Foundation repo internals

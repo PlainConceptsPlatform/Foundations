@@ -15,7 +15,7 @@ skills/
 
 ## Stack (summary)
 
-**Next.js (App Router) + React + TypeScript (strict)**, **shadcn/ui** on **Radix** + **Tailwind v4**, themed by **`@plainconceptsplatform/ui-theme`**, shared components from **`@plainconceptsplatform/ui-components`** (Plain logo, ...), icons from **Lucide**. DI via **inversify-hooks** (mandatory). Translations: **react-i18next + i18next** (mandatory, the only translation library — zero magic strings). Package manager: **pnpm**. Lint/format **Biome** (scoped `biome.json` per package, never `biome check .` at monorepo root). Full list: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+**Next.js (App Router) + React + TypeScript (strict)**, **shadcn/ui** on **Radix** + **Tailwind v4**, themed by **`@plainconceptsplatform/ui-theme`**, shared components from **`@plainconceptsplatform/ui-components`** (Plain logo, ...), icons from **Lucide**. DI via **inversify-hooks** (mandatory). Translations: **react-i18next + i18next** (mandatory, the only translation library — zero magic strings). Package manager: **pnpm**. Lint/format **Biome** (scoped `biome.json` per package, never `biome check .` at monorepo root). Markdown: **markdownlint-cli2**, one rule, no hard-wrapped prose. Full list: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Read these first
 
