@@ -1,0 +1,105 @@
+# Managed by @plainconceptsplatform/workflows@0.27.5. Source: loops/workflows/authorize-bot-work.yml. Update with `workflows update --force`; consumer edits may be overwritten.
+# Human adds implement/refine/direct/feature label → validates permission → bot adds bot-working
+# This ensures the bot is the actor for all agentic workflows.
+#
+# IMPORTANT: Only triggers for HUMAN actors. When the bot transitions refine→implement,
+# it adds bot-working itself, so authorize-bot-work must not fire again.
+name: "Authorize Bot Work"
+
+run-name: "Authorizing: ${{ github.event.issue.title }} (#${{ github.event.issue.number }})"
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    # Only trigger for work labels from HUMANS (not bots), and only if another bot run does not
+    # already own the issue.
+    #
+    # `review` is deliberately NOT excluded. It used to be, and that made the label a one-way
+    # door: the classifier refuses to route while `review` is set, so a person adding `refine`
+    # to a parked issue got no run, no comment and no error anywhere. Triage's own
+    # needs-maintainer verdict tells the maintainer to add `refine`, which could not work.
+    #
+    # A person adding a work label IS the human review the label was waiting for, so this
+    # workflow clears it below before handing the issue to the bot. The classifier's own guard
+    # stays as it is: it exists to stop the *bot* re-triggering itself, and by the time
+    # bot-working is added `review` is already gone.
+    if: >
+      (github.event.label.name == 'implement' ||
+       github.event.label.name == 'refine') &&
+      !contains(github.event.issue.labels.*.name, 'bot-working') &&
+      !endsWith(github.actor, '[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: authorize-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check actor permission
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          
+          permission=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" \
+            --jq '.permission' 2>/dev/null || echo "none")
+          
+          case "$permission" in
+            admin | maintain | write)
+              echo "authorized=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::$ACTOR has $permission permission - authorized"
+              ;;
+            *)
+              echo "authorized=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::$ACTOR has '$permission' permission - not authorized"
+              ;;
+          esac
+
+      - name: Checkout for App token action
+        if: steps.check.outputs.authorized == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate App token
+        if: steps.check.outputs.authorized == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+
+      - name: Bot takes the issue over
+        if: steps.check.outputs.authorized == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          LABEL: ${{ github.event.label.name }}
+        run: |
+          set -euo pipefail
+
+          # Clear review FIRST. A person adding a work label is the human review the label was
+          # waiting for, and the classifier refuses to route an issue that still carries it, so
+          # removing it here is what makes the hand-off work at all. It also has to happen
+          # before bot-working, because that is the event the classifier reads: adding
+          # bot-working first would raise an event whose payload still shows review.
+          # --remove-label on an absent label is a no-op, so this is safe on a fresh issue.
+          # `stalled` goes with it: a person taking the issue on restarts the work, so the
+          # marker the janitor retries on must not survive into the new run.
+          gh issue edit "$ISSUE_NUMBER" --remove-label "review" --remove-label "stalled" 2>/dev/null ||
+            echo "::notice::no review or stalled label to clear on #$ISSUE_NUMBER"
+
+          echo "Adding bot-working label to issue #$ISSUE_NUMBER (triggered by $LABEL)"
+          gh issue edit "$ISSUE_NUMBER" --add-label "bot-working"
+
+          echo "::notice::bot-working label added - bot will now own the $LABEL workflow"

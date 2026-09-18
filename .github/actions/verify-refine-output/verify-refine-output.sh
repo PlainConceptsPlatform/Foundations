@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Managed by @plainconceptsplatform/workflows@0.27.5. Source: loops/actions/verify-refine-output/verify-refine-output.sh. Update with `workflows update --force`; consumer edits may be overwritten.
+# Exercise real validation script so incomplete agent output cannot be applied.
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VALIDATOR="${HERE}/../validate-refine-output/validate-refine-output.sh"
+MARKER='<!-- agent-refine -->'
+DRAFT_MARK='<!-- agent-refine-draft -->'
+PREFIX='Refinement update'
+TEMP_DIR="$(mktemp -d)"
+
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+PASS=0
+FAIL=0
+
+assert_output() {
+  local label="$1"
+  local expected="$2"
+  local payload="$3"
+  local output_file="${TEMP_DIR}/agent_output.json"
+  local actual
+
+  printf '%s' "$payload" > "$output_file"
+  actual="$(bash "$VALIDATOR" "$output_file" "$MARKER" "$PREFIX" 42 "$DRAFT_MARK")"
+
+  if [ "$actual" = "$expected" ]; then
+    PASS=$((PASS + 1))
+  else
+    FAIL=$((FAIL + 1))
+    printf 'FAIL: %s\n  expected: %s\n  actual:   %s\n' "$label" "$expected" "$actual" >&2
+  fi
+}
+
+assert_output 'complete refinement is classified without labels' complete \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# User story"}]}'
+assert_output 'fallback-targeted refinement is complete' complete \
+  '{"items":[{"type":"update_issue","body":"# User story"}]}'
+assert_output 'clarification is classified without labels' questions \
+  '{"items":[{"type":"add_comment","item_number":42,"body":"<!-- agent-refine -->\nRefinement update\nWhich users need this feature?"}]}'
+assert_output 'agent label actions are invalid' invalid \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# User story"},{"type":"add_labels","item_number":42,"labels":[{"name":"review"}]}]}'
+assert_output 'single hyphen comment is invalid' invalid \
+  '{"items":[{"type":"add_comment","body":"-"}]}'
+assert_output 'marker and prefix alone are invalid' invalid \
+  '{"items":[{"type":"add_comment","body":"<!-- agent-refine -->\nRefinement update\n---"}]}'
+assert_output 'blank issue body is invalid' invalid \
+  '{"items":[{"type":"update_issue","item_number":42,"body":" \n\t "}]}'
+assert_output 'question with an update is complete' complete \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# User story"},{"type":"add_comment","item_number":42,"body":"Which users need this feature?"}]}'
+assert_output 'question with a blank update is invalid' invalid \
+  '{"items":[{"type":"update_issue","item_number":42,"body":" "},{"type":"add_comment","item_number":42,"body":"Which users need this feature?"}]}'
+assert_output 'wrong issue output is invalid' invalid \
+  '{"items":[{"type":"add_comment","item_number":7,"body":"Which users need this feature?"}]}'
+assert_output 'complete output cannot update another issue' invalid \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# User story"},{"type":"update_issue","item_number":7,"body":"# Other story"}]}'
+assert_output 'draft update with questions comment is questions' questions \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"<!-- agent-refine-draft -->\n### Proposal\n_pending — see questions below_"},{"type":"add_comment","item_number":42,"body":"<!-- agent-refine -->\nRefinement update\nI have some questions about this issue. Please reply in one comment and I''ll process your answers.\nWhich area owns this behavior?"}]}'
+assert_output 'draft update alone is invalid' invalid \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"<!-- agent-refine-draft -->\n### Proposal\n_pending — see questions below_"}]}'
+
+# From a real run. The agent's first update_issue went out malformed, the bridge counted it
+# as spent, the retry carrying the body was refused, and the "Refinement complete" comment
+# went out regardless. Invalid is the only safe reading: the body was never replaced. Note
+# what it must not be read as — a question. Nobody asked one, so "questions" would leave the
+# issue waiting on an answer that is never coming.
+assert_output 'a completion claim with no body is invalid' invalid \
+  '{"items":[{"type":"add_comment","item_number":42,"body":"<!-- agent-refine -->\nRefinement update\nRefinement complete. The implement label has been added and the implement workflow will start shortly."},{"type":"report_incomplete","reason":"update_issue limit reached"}]}'
+
+# The other side of it: a run that did replace the body and also reported a difficulty has
+# done the work, and its work is not thrown away for having said so.
+assert_output 'a refined body survives a reported difficulty' complete \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# User story"},{"type":"report_incomplete","reason":"a tool was slow"}]}'
+assert_output 'a split survives a note about a missing tool' split \
+  '{"items":[{"type":"update_issue","item_number":42,"body":"# Epic"},{"type":"create_issue","title":"One","body":"First"},{"type":"create_issue","title":"Two","body":"Second"},{"type":"missing_tool","reason":"no browser"}]}'
+
+# And a run that left nothing but a signal has done nothing.
+assert_output 'only a run signal is invalid' invalid \
+  '{"items":[{"type":"report_incomplete","reason":"gave up"}]}'
+
+
+echo
+if [ "$FAIL" -eq 0 ]; then
+  echo "Refine output validation: ${PASS} passed"
+else
+  echo "Refine output validation: ${PASS} passed, ${FAIL} FAILED" >&2
+fi
+
+exit $((FAIL > 0))

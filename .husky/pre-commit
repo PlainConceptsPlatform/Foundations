@@ -13,3 +13,8 @@ git add -- .github/workflows/*.lock.yml
 # deploy only runs after a green CI run, both times it silently blocked publishing.
 pnpm --filter @plainconceptsplatform/docs gen
 git add -- apps/docs/content/docs/components apps/docs/lib/tokens.generated.ts
+if git diff --cached --name-only -- .github | grep -q .; then
+  node scripts/compile-agent-workflows.mjs
+  git add -- .github/workflows/*.lock.yml
+  [ ! -f .github/aw/actions-lock.json ] || git add -- .github/aw/actions-lock.json
+fi

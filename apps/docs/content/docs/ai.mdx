@@ -46,7 +46,7 @@ Five things make this work for us rather than a compromise:
     env:
       OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
 
-  model: openai/glm-5-2   # `openai` only satisfies gh-aw's validation
+  model: openai/quasar-438b   # `openai` only satisfies gh-aw's validation
   ```
 
   That `openai` is not a mistake and nothing reaches OpenAI. gh-aw rejects any provider outside a
@@ -434,7 +434,7 @@ engine:
   env:
     OPENAI_BASE_URL: https://forge.plainconcepts.com/v1
 
-model: openai/glm-5-2             # `openai` only satisfies gh-aw's validation
+model: openai/quasar-438b             # `openai` only satisfies gh-aw's validation
 secrets:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 max-turns: 30                     # bounds tool loops
@@ -555,10 +555,10 @@ fewer job. Assert the compiled job list rather than trusting a clean compile.
 
 ### `engine.args` is discarded
 
-Reaching for `args: ["--model", "plainconcepts/glm-5-2"]` to be explicit about the model is a
+Reaching for `args: ["--model", "plainconcepts/quasar-438b"]` to be explicit about the model is a
 reasonable instinct and it does nothing. The compiler drops it: a lock built with that block is
 byte-identical to one built without, with no `--model` anywhere in it and `OPENCODE_MODEL` set to
-gh-aw's own `awf-proxy/glm-5-2` either way. Verified on gh-aw v0.83.4 by compiling both.
+gh-aw's own `awf-proxy/quasar-438b` either way. Verified on gh-aw v0.83.4 by compiling both.
 
 The model therefore comes from `model:` plus whatever `opencode.ci.json` declares, and the
 provider is selected by gh-aw rather than by you. Do not add `args` expecting to override it.

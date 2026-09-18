@@ -1,0 +1,279 @@
+#!/usr/bin/env bash
+# Managed by @plainconceptsplatform/workflows@0.27.5. Source: loops/actions/classify-route/classify-route.sh. Update with `workflows update --force`; consumer edits may be overwritten.
+# Classify one GitHub event into exactly one route. Pure: no network, no gh calls, so
+# verify-route-matrix.sh can source this file and exercise the same code the router runs.
+#
+# Reads the event facts from the environment and writes `key=value` lines to stdout.
+# The caller appends them to $GITHUB_OUTPUT.
+
+set -euo pipefail
+
+# The audit slot is per repository, so it comes from the router's own env: block rather than
+# from here. The fallback is the package default and matches the cron the router ships; a run
+# fired on a cron this file does not know classifies to no route and dies silently, so the
+# route matrix asserts the two still agree.
+readonly AUDIT_CRON="${AUDIT_CRON:-17 1 * * 1}"
+readonly AUDIT_CLOSE_CRON="43 3 * * *"
+readonly CLEANUP_ARTIFACTS_CRON="0 6 * * *"
+readonly RECONCILE_BOT_PR_RUNS_CRON="17 * * * *"
+readonly HOUSEKEEPING_CRON="23 */6 * * *"
+
+has_label() {
+  jq -e --arg name "$1" 'index($name)' >/dev/null 2>&1 <<<"${ISSUE_LABELS:-[]}"
+}
+
+is_issue_number() {
+  [[ "${1:-}" =~ ^[1-9][0-9]*$ ]]
+}
+
+classify_route() {
+  local route="none" error=""
+  local issue_number="" pr_number="" ci_conclusion="" ci_run_id="" merge_gate_attempts="0" attempts="0"
+  local refine_mode="" triage_mode="" trigger_kind=""
+
+  case "${EVENT:-}" in
+    issues)
+      # A closed issue is finished work, but label edits on one still arrive as events.
+      if [ "${ISSUE_STATE:-}" = "closed" ]; then
+        error="issue is closed"
+      elif [ "${ACTION:-}" = "opened" ]; then
+        # Issue opened with a work label → skip triage.
+        # The label event will trigger authorize-bot-work → bot-working → the
+        # correct worker. Triage would only interfere.
+        if has_label refine || has_label implement; then
+          error="issue opened with a work label; triage skipped"
+        else
+          # Issue opened by an outside collaborator → triage. The authorize job
+          # gates the caller on is_outside_collaborator; this routes unconditionally
+          # so write+ openers classify to triage but the caller job skips them.
+          route="triage"
+          triage_mode="first"
+          issue_number="${EVENT_ISSUE_NUMBER:-}"
+        fi
+      elif [ "${ACTION:-}" = "labeled" ]; then
+        case "${LABEL:-}" in
+          bot-working)
+            # Bot adds bot-working → route based on which work label is present
+            # BUT: if review label is present, do NOT route (human review required)
+            if has_label review; then
+              error="issue has review label; bot-working does not re-trigger while human review is required"
+            elif has_label implement; then
+              route="implement"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+            elif has_label refine; then
+              route="refine"
+              refine_mode="first"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+            else
+              error="bot-working added but no work label found"
+            fi
+            ;;
+          triage)
+            # A maintainer can explicitly re-run triage by adding this label. The
+            # triage worker adds it after claiming the issue, so bot label events
+            # and an existing claim must not start a second worker.
+            if [ "${ACTOR:-}" != "" ] && echo "${ACTOR:-}" | grep -q '\[bot\]$'; then
+              error="bot-added triage label does not re-trigger triage"
+            elif has_label bot-working; then
+              error="issue already has bot-working label; triage already in progress"
+            else
+              route="triage"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+              triage_mode="first"
+            fi
+            ;;
+          refine | implement)
+            # If the actor is a bot (e.g. refine→implement transition), route directly.
+            # If the actor is a human, authorize-bot-work.yml will add bot-working which triggers the workflow.
+            if [ "${ACTOR:-}" != "" ] && echo "${ACTOR:-}" | grep -q '\[bot\]$'; then
+              route="${LABEL:-}"
+              issue_number="${EVENT_ISSUE_NUMBER:-}"
+              if [ "${LABEL:-}" = "refine" ]; then
+                refine_mode="first"
+              fi
+            elif has_label bot-working; then
+              # Already has bot-working - the workflow is already running or queued.
+              # Don't re-trigger.
+              error="issue already has bot-working label; implement/refine already in progress"
+            else
+              error="waiting for bot to add bot-working label"
+            fi
+            ;;
+        esac
+      fi
+      ;;
+
+    issue_comment)
+      if [ "${COMMENT_ON_PR:-false}" = "true" ]; then
+        if [ "${COMMENT_SENDER_TYPE:-}" = "Bot" ]; then
+          # Every App-token comment on a pull request is an issue_comment event, and the
+          # workers comment on pull requests they own. None of that is reviewer feedback.
+          error="comment authored by a bot"
+        else
+          route="apply-review"
+          pr_number="${EVENT_ISSUE_NUMBER:-}"
+        fi
+      elif [ "${ISSUE_STATE:-}" = "closed" ]; then
+        # A closing comment on a refine-labelled issue used to start a full re-refine, which
+        # held a runner for 35 minutes and filed split children under an already-shut parent.
+        error="issue is closed"
+      elif [ "${COMMENT_SENDER_TYPE:-}" = "Bot" ]; then
+        error="comment authored by a bot"
+      elif has_label triage; then
+        route="triage"
+        triage_mode="retriage"
+        issue_number="${EVENT_ISSUE_NUMBER:-}"
+      elif has_label implement; then
+        error="issue has implement label; comments do not re-trigger implement"
+      elif ! has_label refine; then
+        error="issue does not carry the refine label"
+      else
+        route="refine"
+        refine_mode="rerefine"
+        issue_number="${EVENT_ISSUE_NUMBER:-}"
+      fi
+      ;;
+
+    pull_request_review_comment | pull_request_review)
+      route="apply-review"
+      pr_number="${EVENT_PR_NUMBER:-}"
+      ;;
+
+    pull_request_target)
+      if [ "${ACTION:-}" = "labeled" ] && [ "${LABEL:-}" = "merge-gate" ]; then
+        # Human adds merge-gate label to bot PR → triggers merge-gate with human actor
+        # This bypasses gh-aw's bot membership check since the actor is human
+        route="merge-gate"
+        pr_number="${EVENT_PR_NUMBER:-}"
+        # CI status will be fetched by the merge-gate workflow
+        ci_conclusion=""
+        ci_run_id=""
+      else
+        route="bot-approve"
+      fi
+      ;;
+
+    workflow_run)
+      # Only a FAILED CI run on an attached pull request auto-dispatches the gate. A green
+      # run reaches the gate through the consumer CI's dispatch-merge-gate job and the
+      # reconcile belt, so routing success here would double-fire the gate for every passing
+      # pull request. GitHub delivers workflow_run only for CI runs whose actor is a human;
+      # a bot pull request's CI never arrives here at all, and the same two paths cover it.
+      if [ "${RUN_CONCLUSION:-}" != "failure" ]; then
+        error="CI concluded '${RUN_CONCLUSION:-}'; the gate auto-triggers only on failure"
+      elif is_issue_number "${RUN_PR_NUMBER:-}"; then
+        route="merge-gate"
+        pr_number="${RUN_PR_NUMBER}"
+        ci_conclusion="failure"
+        ci_run_id="${RUN_ID:-}"
+      else
+        error="CI run has no attached pull request"
+      fi
+      ;;
+
+    schedule)
+      trigger_kind="scheduled"
+      case "${SCHEDULE:-}" in
+        "$AUDIT_CRON") route="audit" ;;
+        "$AUDIT_CLOSE_CRON") route="audit-close" ;;
+        "$CLEANUP_ARTIFACTS_CRON") route="cleanup-artifacts" ;;
+        "$RECONCILE_BOT_PR_RUNS_CRON") route="reconcile-bot-pr-runs" ;;
+        "$HOUSEKEEPING_CRON") route="housekeeping" ;;
+        *) error="no route for cron '${SCHEDULE:-}'" ;;
+      esac
+      ;;
+
+    workflow_dispatch)
+      trigger_kind="manual"
+      case "${OPERATION:-}" in
+        refine | implement)
+          if is_issue_number "${INPUT_ISSUE_NUMBER:-}"; then
+            route="${OPERATION}"
+            issue_number="${INPUT_ISSUE_NUMBER}"
+            # Both, not one or the other. A worker re-dispatches itself when a run dies before
+            # doing any work and carries the count so the budget is bounded; refine also carries
+            # the mode it was started in. Written as an if/else, a refine retry arrived as attempt
+            # zero every time and could never reach the park.
+            [ "$OPERATION" = "refine" ] && refine_mode="${INPUT_MODE:-first}"
+            attempts="${INPUT_ATTEMPTS_SO_FAR:-0}"
+          else
+            error="operation '${OPERATION}' needs a positive issue-number, got '${INPUT_ISSUE_NUMBER:-}'"
+          fi
+          ;;
+        triage)
+          if is_issue_number "${INPUT_ISSUE_NUMBER:-}"; then
+            route="triage"
+            issue_number="${INPUT_ISSUE_NUMBER}"
+            triage_mode="${INPUT_MODE:-first}"
+            attempts="${INPUT_ATTEMPTS_SO_FAR:-0}"
+          else
+            error="operation 'triage' needs a positive issue-number, got '${INPUT_ISSUE_NUMBER:-}'"
+          fi
+          ;;
+        apply-review)
+          if is_issue_number "${INPUT_PR_NUMBER:-}"; then
+            route="apply-review"
+            pr_number="${INPUT_PR_NUMBER}"
+            attempts="${INPUT_ATTEMPTS_SO_FAR:-0}"
+          else
+            error="operation 'apply-review' needs a positive pr-number, got '${INPUT_PR_NUMBER:-}'"
+          fi
+          ;;
+        merge-gate)
+          if is_issue_number "${INPUT_PR_NUMBER:-}"; then
+            route="merge-gate"
+            pr_number="${INPUT_PR_NUMBER}"
+            ci_conclusion="${INPUT_CI_CONCLUSION:-}"
+            ci_run_id="${INPUT_CI_RUN_ID:-}"
+            merge_gate_attempts="${INPUT_ATTEMPTS_SO_FAR:-0}"
+          else
+            error="operation 'merge-gate' needs a positive pr-number, got '${INPUT_PR_NUMBER:-}'"
+          fi
+          ;;
+        visual-verify)
+          if is_issue_number "${INPUT_PR_NUMBER:-}"; then
+            route="visual-verify"
+            pr_number="${INPUT_PR_NUMBER}"
+          else
+            error="operation 'visual-verify' needs a positive pr-number, got '${INPUT_PR_NUMBER:-}'"
+          fi
+          ;;
+        audit)
+          route="${OPERATION}"
+          trigger_kind="${INPUT_TRIGGER_KIND:-manual}"
+          ;;
+        audit-close | cleanup-artifacts | reconcile-bot-pr-runs | housekeeping | validate)
+          route="${OPERATION}"
+          ;;
+        release)
+          route="release"
+          ;;
+        *)
+          error="unknown operation '${OPERATION:-}'"
+          ;;
+      esac
+      ;;
+
+    *)
+      error="unsupported event '${EVENT:-}'"
+      ;;
+  esac
+
+  cat <<EOF
+route=${route}
+issue-number=${issue_number}
+pr-number=${pr_number}
+ci-conclusion=${ci_conclusion}
+ci-run-id=${ci_run_id}
+merge-gate-attempts=${merge_gate_attempts}
+attempts=${attempts}
+refine-mode=${refine_mode}
+triage-mode=${triage_mode}
+trigger-kind=${trigger_kind}
+error=${error}
+EOF
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  classify_route
+fi
